@@ -88,6 +88,8 @@ class NotificationServiceImplTest {
 			1L
 		);
 
+		when(userRepository.existsByIdAndIsDeletedFalse(userId))
+			.thenReturn(true);
 		when(notificationRepository.count())
 			.thenReturn(1L);
 		when(notificationRepository.findAllByUserId(eq(userId), any(), any()))
