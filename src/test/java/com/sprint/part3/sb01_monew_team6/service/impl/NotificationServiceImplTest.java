@@ -23,8 +23,10 @@ import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationDto;
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
+import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationException;
 import com.sprint.part3.sb01_monew_team6.mapper.NotificationMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
+import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.repository.notification.NotificationRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +34,8 @@ class NotificationServiceImplTest {
 
 	@Mock
 	private NotificationRepository notificationRepository;
+	@Mock
+	private UserRepository userRepository;
 	@Mock
 	private NotificationMapper notificationMapper;
 	@Mock
@@ -114,15 +118,11 @@ class NotificationServiceImplTest {
 		Instant createdAt = Instant.parse("2025-04-22T00:00:00Z");
 		Pageable pageable = PageRequest.of(0, 50, DESC, "createdAt");
 
-		when(notificationRepository.count()).thenReturn(1L);
-		when(notificationRepository.findAllByUserId(eq(userId), any(), any())).thenReturn(null);
-		when(notificationMapper.toDto(any(Notification.class))).thenReturn(null);
-		when(pageResponseMapper.fromSlice(any(Slice.class), any(), any(), any())).thenReturn(null);
+		when(userRepository.existsByIdAndIsDeletedFalse(2L)).thenReturn(false);
 
 		//when & then
 		assertThatThrownBy(()->
 			notificationService.findAllByUserId(userId, createdAt, pageable)
 		).isInstanceOf(NotificationException.class);
-
 	}
 }
