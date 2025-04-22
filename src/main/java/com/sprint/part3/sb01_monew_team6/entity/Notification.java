@@ -55,30 +55,43 @@ public class Notification extends BaseUpdatableEntity {
 	public static Notification createNotification(User user, String content, ResourceType resourceType, Long resourceId,
 		boolean confirmed) throws NotificationDomainException {
 
-		if (Objects.isNull(user)) {
-			throw new NotificationDomainException("유저가 null 일 수 없습니다.", Map.of("user", "null"));
-		}
+		validateUser(user);
+		validateContent(content);
+		validateResourceType(resourceType);
+		validateResourceId(resourceId);
 
-		if (Objects.isNull(content)) {
-			throw new NotificationDomainException("내용이 null 일 수 없습니다.", Map.of("content", "null"));
-		}
+		return new Notification(user, content, resourceType, resourceId, confirmed);
+	}
 
-		if (Objects.isNull(resourceType)) {
-			throw new NotificationDomainException("리소스 타입이 null 일 수 없습니다.", Map.of("resourceType", "null"));
-		}
-
+	private static void validateResourceId(Long resourceId) {
 		if (Objects.isNull(resourceId)) {
 			throw new NotificationDomainException("리소스 id가 null 일 수 없습니다.", Map.of("resourceId", "null"));
-		}
-
-		if (content.isBlank()) {
-			throw new NotificationDomainException("내용이 빈 값(공백)일 수 없습니다.", Map.of("content", content));
 		}
 
 		if (resourceId <= 0L) {
 			throw new NotificationDomainException("리소스 id가 0 이하일 수 없습니다.", Map.of("resourceId", resourceId));
 		}
+	}
 
-		return new Notification(user, content, resourceType, resourceId, confirmed);
+	private static void validateResourceType(ResourceType resourceType) {
+		if (Objects.isNull(resourceType)) {
+			throw new NotificationDomainException("리소스 타입이 null 일 수 없습니다.", Map.of("resourceType", "null"));
+		}
+	}
+
+	private static void validateUser(User user) {
+		if (Objects.isNull(user)) {
+			throw new NotificationDomainException("유저가 null 일 수 없습니다.", Map.of("user", "null"));
+		}
+	}
+
+	private static void validateContent(String content) {
+		if (Objects.isNull(content)) {
+			throw new NotificationDomainException("내용이 null 일 수 없습니다.", Map.of("content", "null"));
+		}
+
+		if (content.isBlank()) {
+			throw new NotificationDomainException("내용이 빈 값(공백)일 수 없습니다.", Map.of("content", content));
+		}
 	}
 }
