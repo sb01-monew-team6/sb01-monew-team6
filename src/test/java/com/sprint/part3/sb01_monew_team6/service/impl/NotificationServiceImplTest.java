@@ -15,12 +15,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
 import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationDto;
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
+import com.sprint.part3.sb01_monew_team6.mapper.NotificationMapper;
+import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
 import com.sprint.part3.sb01_monew_team6.repository.notification.NotificationRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,6 +32,10 @@ class NotificationServiceImplTest {
 
 	@Mock
 	private NotificationRepository notificationRepository;
+	@Mock
+	private NotificationMapper notificationMapper;
+	@Mock
+	private PageResponseMapper pageResponseMapper;
 
 	@InjectMocks
 	private NotificationServiceImpl notificationService;
@@ -47,7 +55,43 @@ class NotificationServiceImplTest {
 			1L,
 			false
 		);
-		when(notificationRepository.findAllByUserId(eq(userId), any(), any())).thenReturn(List.of(notification));
+		NotificationDto notificationDto = new NotificationDto(
+			1L,
+			createdAt,
+			Instant.now(),
+			false,
+			userId,
+			"hello",
+			ResourceType.COMMENT,
+			1L
+		);
+		Slice<Notification> slice = new SliceImpl<>(
+			List.of(notification),
+			pageable,
+			false
+		);
+		Slice<NotificationDto> sliceDto = new SliceImpl<>(
+			List.of(notificationDto),
+			pageable,
+			false
+		);
+		PageResponse<NotificationDto> pageResponse = new PageResponse<>(
+			sliceDto.getContent(),
+			createdAt,
+			createdAt,
+			slice.getSize(),
+			slice.hasNext(),
+			1L
+		);
+
+		when(notificationRepository.count())
+			.thenReturn(1L);
+		when(notificationRepository.findAllByUserId(eq(userId), any(), any()))
+			.thenReturn(slice);
+		when(notificationMapper.toDto(any(Notification.class)))
+			.thenReturn(notificationDto);
+		when(pageResponseMapper.fromSlice(any(Slice.class), any(), any(), any()))
+			.thenReturn(pageResponse);
 
 		//when
 		PageResponse<NotificationDto> notifications = notificationService.findAllByUserId(userId, createdAt, pageable);
@@ -56,8 +100,8 @@ class NotificationServiceImplTest {
 		assertThat(notifications.contents().size()).isEqualTo(1);
 		assertThat(notifications.size()).isEqualTo(50);
 		assertThat(notifications.hasNext()).isFalse();
-		assertThat(notifications.nextCursor()).isEqualTo(createdAt.toString());
-		assertThat(notifications.nextAfter()).isEqualTo(createdAt.toString());
+		assertThat(notifications.nextCursor()).isEqualTo(createdAt);
+		assertThat(notifications.nextAfter()).isEqualTo(createdAt);
 		assertThat(notifications.totalElements()).isEqualTo(1);
 
 	}
