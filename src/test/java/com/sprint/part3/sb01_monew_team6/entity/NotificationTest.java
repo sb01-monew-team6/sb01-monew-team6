@@ -11,11 +11,24 @@ import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDoma
 class NotificationTest {
 
 	@Test
-	@DisplayName("알림 생성 시 content 필드가 null 이면 NotificationException 발생")
+	@DisplayName("알림 생성 시 content 필드가 null 이면 NotificationDomainException 발생")
 	public void throwExceptionWhenContentIsNull() throws Exception {
 		//given
 		String content = null;
 		User user = new User();
+
+		//when & then
+		assertThatThrownBy(() ->
+			Notification.createNotification(user, content, ResourceType.COMMENT, 1L, false)
+		).isInstanceOf(NotificationDomainException.class);
+	}
+
+	@Test
+	@DisplayName("알림 생성 시 user 필드가 null 이면 NotificationDomainException 발생")
+	public void throwExceptionWhenUserIsNull() throws Exception {
+		//given
+		String content = "";
+		User user = null;
 
 		//when & then
 		assertThatThrownBy(() ->
