@@ -1,0 +1,48 @@
+{
+  "family": "team6-monew-task",
+
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+
+  "cpu": "512",
+  "memory": "1024",
+
+  "executionRoleArn": "arn:aws:iam::366080762812:role/ecsTaskExecutionRole",
+
+  "containerDefinitions": [
+    {
+      "name": "team6-monew-container",
+
+      "image": "366080762812.dkr.ecr.ap-northeast-2.amazonaws.com/dev/team6-monew:latest",
+
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+
+      "essential": true,
+
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "prod"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "value": "dummy"
+        }
+      ],
+
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/team6-monew-task",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
