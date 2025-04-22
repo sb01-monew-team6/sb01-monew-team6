@@ -1,5 +1,8 @@
 package com.sprint.part3.sb01_monew_team6.exception;
 
+import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
+import static org.springframework.http.HttpStatus.*;
+
 import java.time.Instant;
 
 import org.springframework.http.HttpStatus;
@@ -10,8 +13,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.sprint.part3.sb01_monew_team6.dto.ErrorResponse;
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestException;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
-import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
+import com.sprint.part3.sb01_monew_team6.validation.group.NotificationValidationGroup;
+
+import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -48,8 +53,8 @@ public class GlobalExceptionHandler {
 					code.getMessage(),
 					InterestException.class.getSimpleName(),
 					e.getStatus().value()
-			)
-		);
+				)
+			);
 	}
 
 	@ExceptionHandler(exception = NewsException.class)
@@ -67,19 +72,29 @@ public class GlobalExceptionHandler {
 			);
 	}
 
-	@ExceptionHandler(exception = NotificationException.class)
-	public ResponseEntity<ErrorResponse> handleNotificationException(NotificationException e) {
+	@ExceptionHandler(ConstraintViolationException.class)
+	public ResponseEntity<ErrorResponse> handleNotificationException(ConstraintViolationException e) {
 
-		ErrorCode code = e.getCode();
+		boolean isNotificationGroup = e.getConstraintViolations().stream()
+			.anyMatch(v ->
+				v.getConstraintDescriptor().getGroups().contains(NotificationValidationGroup.class)
+			);
+
+		if (!isNotificationGroup) {
+			throw e;
+		}
+
+		ErrorCode code = NOTIFICATION_INVALID_EXCEPTION;
+		HttpStatus status = BAD_REQUEST;
 		return ResponseEntity
-			.status(e.getStatus())
+			.status(status)
 			.body(
 				new ErrorResponse(
-					e.getTimestamp(),
+					Instant.now(),
 					code.toString(),
-					e.getMessage(),
-					NotificationException.class.getSimpleName(),
-					e.getStatus().value()
+					code.getMessage(),
+					e.getClass().getSimpleName(),
+					status.value()
 				)
 			);
 	}
