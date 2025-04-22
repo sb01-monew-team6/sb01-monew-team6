@@ -35,6 +35,10 @@ out/
 
 ### VS Code ###
 .vscode/
-
 ### 숨김 파일 ###
-.*/
+.*
+!.gitignore
+
+.env
+.jon
+lifecycle-policy.json
