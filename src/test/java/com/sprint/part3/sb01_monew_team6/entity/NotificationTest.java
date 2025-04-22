@@ -58,4 +58,15 @@ class NotificationTest {
 		).isInstanceOf(NotificationDomainException.class);
 	}
 
+	@Test
+	@DisplayName("알림 생성 시 content 필드가 빈 값이면 NotificationDomainException 발생")
+	public void throwExceptionWhenContentIsEmpty() throws Exception {
+		//given
+		String content = "";
+
+		//when & then
+		assertThatThrownBy(() ->
+			Notification.createNotification(new User(), content, ResourceType.COMMENT, 1L, false)
+		).isInstanceOf(NotificationDomainException.class);
+	}
 }
