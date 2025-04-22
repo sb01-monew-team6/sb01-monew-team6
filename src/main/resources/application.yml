@@ -1,0 +1,17 @@
+spring:
+  profiles:
+    active: dev
+
+  application:
+    name: sb01-monew-team6
+    version: 0.0.1
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 30MB
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false

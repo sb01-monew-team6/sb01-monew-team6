@@ -1,0 +1,20 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+
+#  datasource:
+#    driver-class-name: org.postgresql.Driver
+#    url:
+#    username:
+#    password:
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
