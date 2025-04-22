@@ -42,7 +42,7 @@ class NotificationServiceImplTest {
 
 	@Test
 	@DisplayName("findAllByUserId 정상 호출 시 정상 조회 반환")
-	public void throwNotificationExceptionWhenUserIdNonExistWhileFindAllByUserId() throws Exception {
+	public void findAllByUserIdSuccessfully() throws Exception {
 		//given
 		Long userId = 1L;
 		Instant createdAt = Instant.parse("2025-04-22T00:00:00Z");
@@ -103,6 +103,26 @@ class NotificationServiceImplTest {
 		assertThat(notifications.nextCursor()).isEqualTo(createdAt);
 		assertThat(notifications.nextAfter()).isEqualTo(createdAt);
 		assertThat(notifications.totalElements()).isEqualTo(1);
+
+	}
+
+	@Test
+	@DisplayName("findAllByUserId 호출 시 userId 가 존재하지 않는다면 NotificationException 발생")
+	public void throwNotificationExceptionWhenUserIdNonExistWhileFindAllByUserId() throws Exception {
+		//given
+		Long userId = 2L;
+		Instant createdAt = Instant.parse("2025-04-22T00:00:00Z");
+		Pageable pageable = PageRequest.of(0, 50, DESC, "createdAt");
+
+		when(notificationRepository.count()).thenReturn(1L);
+		when(notificationRepository.findAllByUserId(eq(userId), any(), any())).thenReturn(null);
+		when(notificationMapper.toDto(any(Notification.class))).thenReturn(null);
+		when(pageResponseMapper.fromSlice(any(Slice.class), any(), any(), any())).thenReturn(null);
+
+		//when & then
+		assertThatThrownBy(()->
+			notificationService.findAllByUserId(userId, createdAt, pageable)
+		).isInstanceOf(NotificationException.class);
 
 	}
 }
