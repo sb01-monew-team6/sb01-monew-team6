@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.sprint.part3.sb01_monew_team6.dto.ErrorResponse;
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestException;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
+import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
 
 @RestControllerAdvice
@@ -61,6 +62,23 @@ public class GlobalExceptionHandler {
 					e.getCode().toString(),
 					e.getMessage(),
 					NewsException.class.getSimpleName(),
+					e.getStatus().value()
+				)
+			);
+	}
+
+	@ExceptionHandler(exception = NotificationException.class)
+	public ResponseEntity<ErrorResponse> handleNotificationException(NotificationException e) {
+
+		ErrorCode code = e.getCode();
+		return ResponseEntity
+			.status(e.getStatus())
+			.body(
+				new ErrorResponse(
+					e.getTimestamp(),
+					code.toString(),
+					e.getMessage(),
+					NotificationException.class.getSimpleName(),
 					e.getStatus().value()
 				)
 			);
