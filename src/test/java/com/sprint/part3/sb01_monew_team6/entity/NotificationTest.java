@@ -15,11 +15,10 @@ class NotificationTest {
 	public void throwExceptionWhenContentIsNull() throws Exception {
 		//given
 		String content = null;
-		User user = new User();
 
 		//when & then
 		assertThatThrownBy(() ->
-			Notification.createNotification(user, content, ResourceType.COMMENT, 1L, false)
+			Notification.createNotification(new User(), content, ResourceType.COMMENT, 1L, false)
 		).isInstanceOf(NotificationDomainException.class);
 	}
 
@@ -27,12 +26,23 @@ class NotificationTest {
 	@DisplayName("알림 생성 시 user 필드가 null 이면 NotificationDomainException 발생")
 	public void throwExceptionWhenUserIsNull() throws Exception {
 		//given
-		String content = "";
 		User user = null;
 
 		//when & then
 		assertThatThrownBy(() ->
-			Notification.createNotification(user, content, ResourceType.COMMENT, 1L, false)
+			Notification.createNotification(user, "", ResourceType.COMMENT, 1L, false)
+		).isInstanceOf(NotificationDomainException.class);
+	}
+
+	@Test
+	@DisplayName("알림 생성 시 resourceType 필드가 null 이면 NotificationDomainException 발생")
+	public void throwExceptionWhenResourceTypeIsNull() throws Exception {
+		//given
+		ResourceType resourceType = null;
+
+		//when & then
+		assertThatThrownBy(() ->
+			Notification.createNotification(new User(), "", resourceType, 1L, false)
 		).isInstanceOf(NotificationDomainException.class);
 	}
 
