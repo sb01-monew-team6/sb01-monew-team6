@@ -1,12 +1,14 @@
 package com.sprint.part3.sb01_monew_team6.controller;
 
 import static org.springframework.data.domain.Sort.Direction.*;
+import static org.springframework.http.HttpStatus.*;
 
 import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificationController {
 
-	@Autowired
 	private final NotificationService notificationService;
 
 	@GetMapping
@@ -42,7 +43,9 @@ public class NotificationController {
 			direction = DESC
 		) Pageable pageable
 	) {
+		PageResponse<NotificationDto> notifications = notificationService.findAllByUserId(userId, cursor, pageable);
 
-		return ResponseEntity.ok(notificationService.findAllByUserId(userId, cursor, pageable));
+		return ResponseEntity.status(OK)
+			.body(notifications);
 	}
 }
