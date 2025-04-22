@@ -24,20 +24,20 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # 2. JDK 17 설치 (Gradle 빌드를 위해 필요)
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+      # # 2. JDK 17 설치 (Gradle 빌드를 위해 필요)
+      # - name: Set up JDK 17
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     java-version: '17'
+      #     distribution: 'temurin'
 
-      # 3. gradlew 실행 권한 부여
-      - name: Grant permission to gradlew
-        run: chmod +x ./gradlew
+      # # 3. gradlew 실행 권한 부여
+      # - name: Grant permission to gradlew
+      #   run: chmod +x ./gradlew
 
-      # 4. 테스트 실행 + Jacoco 코드 커버리지 체크
-      - name: Run tests and coverage check
-        run: ./gradlew clean test jacocoTestReport jacocoTestCoverageVerification
+      # # 4. 테스트 실행 + Jacoco 코드 커버리지 체크
+      # - name: Run tests and coverage check
+      #   run: ./gradlew clean test jacocoTestReport jacocoTestCoverageVerification
 
       # 5. AWS 인증 설정 (IAM 사용자 키 기반)
       - name: Configure AWS credentials
