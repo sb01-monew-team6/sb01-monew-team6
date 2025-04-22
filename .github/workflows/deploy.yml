@@ -69,7 +69,7 @@ jobs:
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: task-definition.json  # 앞 단계에서 렌더링된 Task Definition
+          task-definition: ecs/task-definition.json  # 앞 단계에서 렌더링된 Task Definition
           cluster: team6-cluster  # 배포 대상 ECS 클러스터
           service: team6-service  # 배포 대상 ECS 서비스
           wait-for-service-stability: true  # 배포 완료 후 안정화 상태까지 기다림
