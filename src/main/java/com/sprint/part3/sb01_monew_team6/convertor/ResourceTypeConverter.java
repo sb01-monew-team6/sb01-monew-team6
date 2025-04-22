@@ -1,4 +1,4 @@
-package com.sprint.part3.sb01_monew_team6.entity.convertor;
+package com.sprint.part3.sb01_monew_team6.convertor;
 
 import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
 
