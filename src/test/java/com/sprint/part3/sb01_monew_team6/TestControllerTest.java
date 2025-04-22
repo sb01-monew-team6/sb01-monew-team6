@@ -47,7 +47,7 @@ class TestControllerTest {
 	}
 
 	@Test
-	@DisplayName("관심사를_찾을_수_없는_예외가_발생")
+	@DisplayName("관심사를 찾을 수 없는 예외가 발생")
 	void InterestExceptionSuccess() throws Exception {
 
 		//given
