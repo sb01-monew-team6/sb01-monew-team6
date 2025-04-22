@@ -10,7 +10,7 @@ public class ResourceTypeConverter implements AttributeConverter<ResourceType, S
 
 	@Override
 	public String convertToDatabaseColumn(ResourceType resourceType) {
-		return resourceType == null ? null : resourceType.name().toLowerCase();
+		return resourceType == null ? null : resourceType.toString().toLowerCase();
 	}
 
 	@Override
