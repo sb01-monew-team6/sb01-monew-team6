@@ -46,4 +46,16 @@ class NotificationTest {
 		).isInstanceOf(NotificationDomainException.class);
 	}
 
+	@Test
+	@DisplayName("알림 생성 시 resourceId 필드가 null 이면 NotificationDomainException 발생")
+	public void throwExceptionWhenResourceIdIsNull() throws Exception {
+		//given
+		Long resourceId = null;
+
+		//when & then
+		assertThatThrownBy(() ->
+			Notification.createNotification(new User(), "", ResourceType.COMMENT, resourceId, false)
+		).isInstanceOf(NotificationDomainException.class);
+	}
+
 }
