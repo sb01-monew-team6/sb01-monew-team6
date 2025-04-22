@@ -6,6 +6,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build-and-deploy:
@@ -49,6 +52,7 @@ jobs:
 
       # 5. AWS 인증 설정 (IAM 사용자 키 기반)
       - name: Configure AWS credentials
+        if: github.event_name == 'push'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}  # GitHub Secrets에서 가져온 액세스 키
@@ -57,16 +61,19 @@ jobs:
 
       # 6. AWS ECR에 로그인
       - name: Login to Amazon ECR
+        if: github.event_name == 'push'
         uses: aws-actions/amazon-ecr-login@v2
 
       # 7. Docker 이미지 빌드 & ECR에 푸시
       - name: Build & Push Docker image
+        if: github.event_name == 'push'
         run: |
           docker build --platform linux/amd64 --provenance=false -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       # 8. ECS Task Definition을 수정하여 최신 이미지 반영
       - name: Render ECS task definition
+        if: github.event_name == 'push'
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ecs/task-definition.json  # 사전 정의된 JSON 템플릿 경로
@@ -75,9 +82,10 @@ jobs:
 
       # 9. ECS 서비스에 새 Task Definition 적용 → 무중단 롤링 배포 수행
       - name: Deploy to ECS
+        if: github.event_name == 'push'
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ecs/task-definition.json  # 앞 단계에서 렌더링된 Task Definition
           cluster: monew-cluster  # 배포 대상 ECS 클러스터
           service: monew-service  # 배포 대상 ECS 서비스
-          wait-for-service-stability: true  
+          wait-for-service-stability: true
