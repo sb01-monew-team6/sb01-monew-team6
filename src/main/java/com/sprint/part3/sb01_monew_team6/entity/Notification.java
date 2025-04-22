@@ -63,6 +63,10 @@ public class Notification extends BaseUpdatableEntity {
 			throw new NotificationDomainException("내용이 null 일 수 없습니다.", Map.of("content", "null"));
 		}
 
+		if (Objects.isNull(resourceType)) {
+			throw new NotificationDomainException("리소스 타입이 null 일 수 없습니다.", Map.of("resourceType", "null"));
+		}
+
 		return new Notification(user, content, resourceType, resourceId, confirmed);
 	}
 }
