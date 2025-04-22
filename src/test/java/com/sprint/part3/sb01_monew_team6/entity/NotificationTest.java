@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
+import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
 
 class NotificationTest {
 
@@ -14,11 +15,12 @@ class NotificationTest {
 	public void throwExceptionWhenContentIsNull() throws Exception {
 		//given
 		String content = null;
+		User user = new User();
 
 		//when & then
-		assertThatThrownBy(
-			new Notification(user, null, ResourceType.COMMENT, 1L, false)
-		).isInstanceOf(NotificationException.class);
+		assertThatThrownBy(() ->
+			Notification.createNotification(user, content, ResourceType.COMMENT, 1L, false)
+		).isInstanceOf(NotificationDomainException.class);
 	}
 
 }
