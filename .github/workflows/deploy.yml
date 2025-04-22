@@ -38,6 +38,14 @@ jobs:
       # 4. 테스트 실행 + Jacoco 코드 커버리지 체크
       - name: Run tests and coverage check
         run: ./gradlew clean test jacocoTestReport jacocoTestCoverageVerification
+     
+      # 4.5. 커버리지 리포트를 Codecov에 업로드
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/reports/jacoco/test/jacocoTestReport.xml
+
 
       # 5. AWS 인증 설정 (IAM 사용자 키 기반)
       - name: Configure AWS credentials
@@ -72,4 +80,4 @@ jobs:
           task-definition: ecs/task-definition.json  # 앞 단계에서 렌더링된 Task Definition
           cluster: monew-cluster  # 배포 대상 ECS 클러스터
           service: monew-service  # 배포 대상 ECS 서비스
-          wait-for-service-stability: true  # 배포 완료 후 안정화 상태까지 기다림
+          wait-for-service-stability: true  
