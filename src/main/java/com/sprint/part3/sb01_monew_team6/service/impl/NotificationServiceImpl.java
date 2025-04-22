@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -31,7 +32,9 @@ public class NotificationServiceImpl implements NotificationService {
 
 		Instant nextCursor = null;
 		if (!slice.getContent().isEmpty()) {
-			nextCursor = slice.getContent().get(slice.getContent().size() - 1).createdAt();
+			int lastIndex = slice.getContent().size() - 1;
+			List<NotificationDto> content = slice.getContent();
+			nextCursor = content.get(lastIndex).createdAt();
 		}
 
 		Long totalElements = notificationRepository.count();
