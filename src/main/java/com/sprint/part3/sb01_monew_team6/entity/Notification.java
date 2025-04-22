@@ -75,6 +75,10 @@ public class Notification extends BaseUpdatableEntity {
 			throw new NotificationDomainException("내용이 빈 값(공백)일 수 없습니다.", Map.of("content", content));
 		}
 
+		if (resourceId <= 0L) {
+			throw new NotificationDomainException("리소스 id가 0 이하일 수 없습니다.", Map.of("resourceId", resourceId));
+		}
+
 		return new Notification(user, content, resourceType, resourceId, confirmed);
 	}
 }
