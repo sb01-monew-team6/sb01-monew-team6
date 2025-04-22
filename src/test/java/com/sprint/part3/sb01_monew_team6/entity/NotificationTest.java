@@ -60,9 +60,9 @@ class NotificationTest {
 
 	@Test
 	@DisplayName("알림 생성 시 content 필드가 빈 값이면 NotificationDomainException 발생")
-	public void throwExceptionWhenContentIsEmpty() throws Exception {
+	public void throwExceptionWhenContentIsBlank() throws Exception {
 		//given
-		String content = "";
+		String content = "   ";
 
 		//when & then
 		assertThatThrownBy(() ->
