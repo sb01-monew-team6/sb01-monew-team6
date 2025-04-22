@@ -14,7 +14,8 @@ public enum ErrorCode {
 	NEWS_INVALID_EXCEPTION("유효하지 않은 요청입니다."), // TODO: 나중에 프로토타입의 예외 메시지로 수정할 것
 
 	//notification
-	NOTIFICATION_INVALID_EXCEPTION("유효하지 않은 요청입니다.")
+	NOTIFICATION_INVALID_EXCEPTION("유효하지 않은 요청입니다."),
+	NOTIFICATION_USER_NOT_FOUND_EXCEPTION("존재하지 않는 유저입니다."),
 	;
 
 	ErrorCode(String message) {
