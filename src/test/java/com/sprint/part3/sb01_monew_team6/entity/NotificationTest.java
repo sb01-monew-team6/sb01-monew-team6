@@ -69,4 +69,16 @@ class NotificationTest {
 			Notification.createNotification(new User(), content, ResourceType.COMMENT, 1L, false)
 		).isInstanceOf(NotificationDomainException.class);
 	}
+
+	@Test
+	@DisplayName("알림 생성 시 resourceId 필드가 0 이하의 값이면 NotificationDomainException 발생")
+	public void throwExceptionWhenResourceIdIsBelowZero() throws Exception {
+		//given
+		Long resourceId = 0L;
+
+		//when & then
+		assertThatThrownBy(() ->
+			Notification.createNotification(new User(), "content", ResourceType.COMMENT, resourceId, false)
+		).isInstanceOf(NotificationDomainException.class);
+	}
 }
