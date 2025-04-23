@@ -63,6 +63,6 @@ public class NotificationServiceImpl implements NotificationService {
 
 	@Override
 	public void updateAllByUserId(Long userId) {
-
+		notificationRepository.updateAllByUserId(userId);
 	}
 }

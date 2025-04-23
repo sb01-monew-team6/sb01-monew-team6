@@ -20,4 +20,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 				AND (n.confirmed = false)
 		""")
 	long countByUserIdAndConfirmedFalse(Long userId);
+
+	void updateAllByUserId(Long userId);
 }
