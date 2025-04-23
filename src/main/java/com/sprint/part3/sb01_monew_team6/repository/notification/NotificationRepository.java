@@ -42,7 +42,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query(value = """
 			DELETE FROM Notification n
-			WHERE n.confirmed = true
+			WHERE (n.confirmed = true)
+				AND (n.createdAt <= :weekAgo)
 		""")
-	void deleteAll();
+	void deleteAllOlderThanWeek(Instant weekAgo);
 }
