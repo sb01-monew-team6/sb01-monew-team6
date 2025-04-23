@@ -113,6 +113,7 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 
 	@Override
+	@Transactional
 	public void createFromEvent(NotificationCreateEvent event) {
 
 		User user = userRepository.findById(event.userId())
