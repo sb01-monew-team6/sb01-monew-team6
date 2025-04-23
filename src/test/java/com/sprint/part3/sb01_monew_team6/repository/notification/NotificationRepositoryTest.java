@@ -6,6 +6,7 @@ import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTest
 import static org.springframework.data.domain.Sort.Direction.*;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -125,5 +126,36 @@ class NotificationRepositoryTest {
 
 		//then
 		assertThat(count).isEqualTo(0);
+	}
+
+	@Test
+	@DisplayName("updateAllByUserId 정상 호출 시 정상 값 반환")
+	public void updateAllByUserIdSuccessfully() throws Exception {
+	    //given
+		User user = new User("email@email.com", "nickname", "123456", false);
+		userRepository.save(user);
+
+		Notification notification = Notification.createNotification(
+			user,
+			"hello",
+			COMMENT,
+			1L,
+			false
+		);
+
+		notificationRepository.save(notification);
+		em.flush();
+		em.clear();
+
+		Long userId = 1L;
+
+	    //when
+		notificationRepository.updateAllByUserId(userId);
+		em.flush();
+		em.clear();
+
+	    //then
+		List<Notification> all = notificationRepository.findAll();
+		assertThat(all).allMatch(Notification::isConfirmed);
 	}
 }
