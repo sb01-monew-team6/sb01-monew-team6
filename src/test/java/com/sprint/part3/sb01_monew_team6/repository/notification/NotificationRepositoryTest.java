@@ -157,4 +157,35 @@ class NotificationRepositoryTest {
 		List<Notification> all = notificationRepository.findAll();
 		assertThat(all).allMatch(Notification::isConfirmed);
 	}
+
+	@Test
+	@DisplayName("updateByUserId 정상 호출 시 정상 값 반환")
+	public void updateByUserIdSuccessfully() throws Exception {
+	    //given
+		User user = new User("email@email.com", "nickname", "123456", false);
+		userRepository.save(user);
+
+		Notification notification = Notification.createNotification(
+			user,
+			"hello",
+			COMMENT,
+			1L,
+			false
+		);
+
+		notificationRepository.save(notification);
+		em.flush();
+		em.clear();
+
+		Long userId = user.getId();
+		Long notificationId = notification.getId();
+
+	    //when
+		notificationRepository.updateByUserId(userId, notificationId);
+
+	    //then
+		Notification found = notificationRepository.findById(notificationId).orElse(null);
+		assertThat(found).isNotNull();
+		assertThat(found.isConfirmed()).isTrue();
+	}
 }
