@@ -172,4 +172,20 @@ class NotificationServiceImplTest {
 			notificationService.updateByUserId(userId, notificationId)
 		).isInstanceOf(NotificationException.class);
 	}
+
+	@Test
+	@DisplayName("updateByUserId 호출 시 notificationId 가 존재하지 않는다면 NotificationException 발생")
+	public void throwNotificationExceptionWhenNotificationIdNonExistWhileUpdateByUserId() throws Exception {
+	    //given
+		Long userId = 1L;
+		Long notificationId = 1L;
+
+		when(userRepository.existsByIdAndIsDeletedFalse(userId)).thenReturn(true);
+		when(notificationRepository.existsById(notificationId)).thenReturn(false);
+
+	    //when & then
+		assertThatThrownBy(() ->
+			notificationService.updateByUserId(userId, notificationId)
+		).isInstanceOf(NotificationException.class);
+	}
 }
