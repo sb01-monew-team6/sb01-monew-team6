@@ -24,12 +24,14 @@ class NotificationSchedulerTest {
 	@DisplayName("deleteConfirmedNotificationsOlderThanWeek 가 알림 삭제 로직을 호출한다")
 	public void deleteConfirmedNotificationsOlderThanWeekCallsDeleteAll() throws Exception {
 		//given
-		doNothing().when(notificationService).deleteAllOlderThanWeek();
+		when(notificationService.deleteAllOlderThanWeek(any(), any()))
+			.thenReturn(1)
+			.thenReturn(0);
 
 		//when
 		notificationScheduler.deleteConfirmedNotificationsOlderThanWeek();
 
 		//then
-		verify(notificationService).deleteAllOlderThanWeek();
+		verify(notificationService, times(2)).deleteAllOlderThanWeek(any(), any());
 	}
 }

@@ -16,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -210,7 +211,10 @@ class NotificationRepositoryTest {
 		em.clear();
 
 	    //when
-		notificationRepository.deleteAllOlderThanWeek(Instant.parse("9999-04-22T00:00:00Z"));
+		notificationRepository.deleteAllOlderThanWeek(
+			Instant.parse("9999-04-22T00:00:00Z"),
+			Limit.of(1)
+		);
 
 	    //then
 		List<Notification> found = notificationRepository.findAll();

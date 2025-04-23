@@ -215,13 +215,13 @@ class NotificationServiceImplTest {
 	@DisplayName("deleteAll 정상 호출 시 정상 값 반환")
 	public void deleteAllOlderThanWeekSuccessfully() throws Exception {
 		//given
-		doNothing().when(notificationRepository).deleteAllOlderThanWeek(any());
+		when(notificationRepository.deleteAllOlderThanWeek(any(), any())).thenReturn(0);
 
 		//when
-		notificationService.deleteAllOlderThanWeek();
+		notificationService.deleteAllOlderThanWeek(any(), any());
 
 		//then // 행위 기반 검증
-		verify(notificationRepository, times(1)).deleteAllOlderThanWeek(any());
+		verify(notificationRepository, times(1)).deleteAllOlderThanWeek(any(), any());
 	}
 
 	@Test
