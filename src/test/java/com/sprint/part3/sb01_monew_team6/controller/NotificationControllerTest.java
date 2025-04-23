@@ -100,8 +100,8 @@ class NotificationControllerTest {
 	}
 
 	@Test
-	@DisplayName("updateAll 정상 호출 시 정상 상태 코드 반환")
-	public void respondOkStatusWhenUpdateAllSucceed() throws Exception {
+	@DisplayName("updateAllByUserId 정상 호출 시 정상 상태 코드 반환")
+	public void respondOkStatusWhenUpdateAllByUserIdSucceed() throws Exception {
 
 		//given & when
 		ResultActions perform = mockMvc.perform(
