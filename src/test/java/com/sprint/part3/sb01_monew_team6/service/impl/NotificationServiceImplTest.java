@@ -127,4 +127,19 @@ class NotificationServiceImplTest {
 			notificationService.findAllByUserId(userId, createdAt, pageable)
 		).isInstanceOf(NotificationException.class);
 	}
+
+	@Test
+	@DisplayName("updateAllByUserId 정상 호출 시 정상 값 반환")
+	public void updateAllByUserIdSuccessfully() throws Exception {
+	    //given
+		Long userId = 1L;
+
+		doNothing().when(notificationRepository).updateAllByUserId(eq(userId));
+
+	    //when
+		notificationService.updateAllByUserId(userId);
+
+	    //then
+		verify(notificationRepository).updateAllByUserId(eq(userId));
+	}
 }
