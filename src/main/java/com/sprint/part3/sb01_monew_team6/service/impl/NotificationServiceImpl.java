@@ -60,4 +60,9 @@ public class NotificationServiceImpl implements NotificationService {
 			totalElements
 		);
 	}
+
+	@Override
+	public void updateAll(Long userId) {
+
+	}
 }

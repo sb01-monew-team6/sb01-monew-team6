@@ -2,8 +2,8 @@ package com.sprint.part3.sb01_monew_team6.controller;
 
 import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -15,9 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -106,7 +103,7 @@ class NotificationControllerTest {
 	@DisplayName("updateAll 정상 호출 시 정상 상태 코드 반환")
 	public void respondOkStatusWhenUpdateAllSucceed() throws Exception {
 
-	    //given & when
+		//given & when
 		ResultActions perform = mockMvc.perform(
 			MockMvcRequestBuilders.patch("/api/v1/notifications")
 				.header("Monew-Request-User-Id", 1L)

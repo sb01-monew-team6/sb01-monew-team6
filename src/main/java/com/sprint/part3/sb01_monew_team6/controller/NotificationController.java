@@ -55,7 +55,8 @@ public class NotificationController {
 	public ResponseEntity<Void> updateAll(
 		@RequestHeader("Monew-Request-User-Id") @Min(value = 1, groups = NotificationValidationGroup.class) Long userId
 	) {
+		notificationService.updateAll(userId);
 
-		return ResponseEntity.status(200).build();
+		return ResponseEntity.ok().build();
 	}
 }
