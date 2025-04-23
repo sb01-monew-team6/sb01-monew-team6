@@ -12,4 +12,6 @@ public interface NotificationService {
 	PageResponse<NotificationDto> findAllByUserId(Long userId, Instant createdAt, Pageable pageable);
 
 	void updateAllByUserId(Long userId);
+
+	void updateByUserId(Long userId, Long notificationId);
 }

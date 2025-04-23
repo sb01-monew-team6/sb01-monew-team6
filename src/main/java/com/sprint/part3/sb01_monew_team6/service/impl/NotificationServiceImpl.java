@@ -74,4 +74,10 @@ public class NotificationServiceImpl implements NotificationService {
 
 		notificationRepository.updateAllByUserId(userId);
 	}
+
+	@Override
+	@Transactional
+	public void updateByUserId(Long userId, Long notificationId) {
+
+	}
 }
