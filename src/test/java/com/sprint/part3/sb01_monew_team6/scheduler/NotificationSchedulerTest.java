@@ -2,31 +2,34 @@ package com.sprint.part3.sb01_monew_team6.scheduler;
 
 import static org.mockito.Mockito.*;
 
-import java.util.concurrent.TimeUnit;
-
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.sprint.part3.sb01_monew_team6.service.NotificationService;
 
+@ExtendWith(MockitoExtension.class)
 class NotificationSchedulerTest {
 
-	@MockitoBean
+	@Mock
 	private NotificationService notificationService;
 
-	@Test
-	@DisplayName("스케줄러에 의해 1주일이 지난 확인된 알림은 삭제된다")
-	public void deleteConfirmedNotificationsOlderThanWeekDueToTheScheduler() throws Exception {
-		//given
-		Long userId = 1L;
+	@InjectMocks
+	private NotificationScheduler notificationScheduler;
 
-		//when & then
-		Awaitility.await()
-			.atMost(3, TimeUnit.SECONDS)
-			.untilAsserted(() ->
-				verify(notificationService).deleteAllByUserId(userId)
-			);
+	@Test
+	@DisplayName("deleteConfirmedNotificationsOlderThanWeek 가 알림 삭제 로직을 호출한다")
+	public void deleteConfirmedNotificationsOlderThanWeekCallsDeleteAll() throws Exception {
+		//given
+		doNothing().when(notificationService).deleteAll();
+
+		//when
+		notificationScheduler.deleteConfirmedNotificationsOlderThanWeek();
+
+		//then
+		verify(notificationService).deleteAll();
 	}
 }
