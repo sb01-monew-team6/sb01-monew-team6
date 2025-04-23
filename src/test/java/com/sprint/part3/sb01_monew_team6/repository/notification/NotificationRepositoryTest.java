@@ -19,7 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.sprint.part3.sb01_monew_team6.config.JpaConfig;
+import com.sprint.part3.sb01_monew_team6.config.TestConfig;
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
@@ -27,7 +27,7 @@ import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = NONE)
 @ActiveProfiles("test")
-@Import(JpaConfig.class)
+@Import(TestConfig.class)
 class NotificationRepositoryTest {
 
 	@Autowired

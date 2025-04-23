@@ -4,14 +4,10 @@ import java.time.Instant;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 
-public interface NotificationRepository extends JpaRepository<Notification, Long>, NotificationRepositoryCustom {
+public interface NotificationRepositoryCustom {
 
-	@Override
 	Slice<Notification> findAllByUserId(Long userId, Instant createdAt, Pageable pageable);
-
-	long countByUserIdAndConfirmedFalse(Long userId);
 }
