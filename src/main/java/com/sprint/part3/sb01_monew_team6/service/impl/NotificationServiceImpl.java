@@ -34,9 +34,7 @@ public class NotificationServiceImpl implements NotificationService {
 	@Override
 	public PageResponse<NotificationDto> findAllByUserId(Long userId, Instant createdAt, Pageable pageable) {
 
-		if (!userRepository.existsByIdAndIsDeletedFalse(userId)) {
-			throw new NotificationException(NOTIFICATION_USER_NOT_FOUND_EXCEPTION, Instant.now(), BAD_REQUEST);
-		}
+		validateUserId(userId);
 
 		Slice<NotificationDto> slice = notificationRepository.findAllByUserId(
 				userId,
@@ -61,8 +59,17 @@ public class NotificationServiceImpl implements NotificationService {
 		);
 	}
 
+	private void validateUserId(Long userId) {
+		if (!userRepository.existsByIdAndIsDeletedFalse(userId)) {
+			throw new NotificationException(NOTIFICATION_USER_NOT_FOUND_EXCEPTION, Instant.now(), BAD_REQUEST);
+		}
+	}
+
 	@Override
 	public void updateAllByUserId(Long userId) {
+
+		validateUserId(userId);
+
 		notificationRepository.updateAllByUserId(userId);
 	}
 }

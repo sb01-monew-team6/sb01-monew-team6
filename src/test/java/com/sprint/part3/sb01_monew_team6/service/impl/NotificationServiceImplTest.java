@@ -134,6 +134,7 @@ class NotificationServiceImplTest {
 	    //given
 		Long userId = 1L;
 
+		when(userRepository.existsByIdAndIsDeletedFalse(userId)).thenReturn(true);
 		doNothing().when(notificationRepository).updateAllByUserId(eq(userId));
 
 	    //when
