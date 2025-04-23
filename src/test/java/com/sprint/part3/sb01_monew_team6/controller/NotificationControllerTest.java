@@ -112,4 +112,21 @@ class NotificationControllerTest {
 		//then
 		perform.andExpect(status().isOk());
 	}
+
+	@Test
+	@DisplayName("updateByUserId 정상 호출 시 정상 상태 코드 반환")
+	public void respondOkStatusWhenUpdateByUserIdSucceed() throws Exception {
+
+		//given
+		Long notificationId = 1L;
+
+		//given & when
+		ResultActions perform = mockMvc.perform(
+			MockMvcRequestBuilders.patch("/api/v1/notifications/{notificationId}", notificationId)
+				.header("Monew-Request-User-Id", 1L)
+		);
+
+		//then
+		perform.andExpect(status().isOk());
+	}
 }
