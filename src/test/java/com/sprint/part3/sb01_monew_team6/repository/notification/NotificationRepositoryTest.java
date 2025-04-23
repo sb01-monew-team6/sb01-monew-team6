@@ -8,6 +8,7 @@ import static org.springframework.data.domain.Sort.Direction.*;
 import java.time.Instant;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ class NotificationRepositoryTest {
 		em.flush();
 		em.clear();
 
-		Long userId = 1L;
+		Long userId = user.getId();
 		Instant createdAt = Instant.now();
 		Pageable pageable = PageRequest.of(0, 50, DESC, "createdAt");
 
@@ -91,7 +92,7 @@ class NotificationRepositoryTest {
 		em.flush();
 		em.clear();
 
-		Long userId = 1L;
+		Long userId = user.getId();
 
 		//when
 		long count = notificationRepository.countByUserIdAndConfirmedFalse(userId);
@@ -119,7 +120,7 @@ class NotificationRepositoryTest {
 		em.flush();
 		em.clear();
 
-		Long userId = 1L;
+		Long userId = user.getId();
 
 		//when
 		long count = notificationRepository.countByUserIdAndConfirmedFalse(userId);
@@ -147,12 +148,10 @@ class NotificationRepositoryTest {
 		em.flush();
 		em.clear();
 
-		Long userId = 1L;
+		Long userId = user.getId();
 
 	    //when
 		notificationRepository.updateAllByUserId(userId);
-		em.flush();
-		em.clear();
 
 	    //then
 		List<Notification> all = notificationRepository.findAll();
