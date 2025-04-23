@@ -129,4 +129,25 @@ class NotificationControllerTest {
 		//then
 		perform.andExpect(status().isOk());
 	}
+
+	@Test
+	@DisplayName("updateByUserId 호출 시 notificationId 가 0 이하면 NotificationInvalidException 에러 반환")
+	public void respondErrorResponseWhenNotificationIdIsBelowZeroWhileUpdateByUserId() throws Exception {
+
+		//given
+		Long notificationId = 0L;
+
+		//given & when
+		ResultActions perform = mockMvc.perform(
+			MockMvcRequestBuilders.patch("/api/v1/notifications/{notificationId}", notificationId)
+				.header("Monew-Request-User-Id", 1L)
+		);
+
+		//then
+		ErrorCode notificationInvalidException = NOTIFICATION_INVALID_EXCEPTION;
+
+		perform.andExpect(jsonPath("$.status").value(equalTo(BAD_REQUEST.value())))
+			.andExpect(jsonPath("$.code").value(equalTo(notificationInvalidException.toString())))
+			.andExpect(jsonPath("$.message").value(equalTo(notificationInvalidException.getMessage())));
+	}
 }
