@@ -30,4 +30,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 			WHERE n.user.id = :userId
 		""")
 	void updateAllByUserId(Long userId);
+
+	void updateByUserId(Long userId, Long notificationId);
 }
