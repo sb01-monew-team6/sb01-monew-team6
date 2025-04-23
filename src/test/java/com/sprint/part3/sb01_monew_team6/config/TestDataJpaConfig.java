@@ -10,7 +10,7 @@ import jakarta.persistence.EntityManager;
 
 @TestConfiguration
 @EnableJpaAuditing
-public class TestConfig {
+public class TestDataJpaConfig {
 
 	@Bean
 	public JPAQueryFactory jpaQueryFactory(EntityManager em) {
