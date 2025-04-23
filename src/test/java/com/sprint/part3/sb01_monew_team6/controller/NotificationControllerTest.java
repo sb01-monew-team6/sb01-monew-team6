@@ -81,7 +81,7 @@ class NotificationControllerTest {
 			false,
 			1L
 		);
-		when(notificationService.findAllByUserId(eq(userId), any(), any())).thenReturn(pageResponse);
+		when(notificationService.findAllByUserId(eq(userId), any(), any(), any())).thenReturn(pageResponse);
 
 		//when
 		ResultActions perform = mockMvc.perform(

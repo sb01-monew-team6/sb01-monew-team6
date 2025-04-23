@@ -92,7 +92,7 @@ class NotificationServiceImplTest {
 			.thenReturn(true);
 		when(notificationRepository.countByUserIdAndConfirmedFalse(userId))
 			.thenReturn(1L);
-		when(notificationRepository.findAllByUserId(eq(userId), any(), any()))
+		when(notificationRepository.findAllByUserId(eq(userId), any(), any(), any()))
 			.thenReturn(slice);
 		when(notificationMapper.toDto(any(Notification.class)))
 			.thenReturn(notificationDto);
@@ -100,7 +100,8 @@ class NotificationServiceImplTest {
 			.thenReturn(pageResponse);
 
 		//when
-		PageResponse<NotificationDto> notifications = notificationService.findAllByUserId(userId, createdAt, pageable);
+		PageResponse<NotificationDto> notifications = notificationService.findAllByUserId(userId, createdAt, createdAt,
+			pageable);
 
 		//then // 상태 기반 검증
 		assertThat(notifications.contents().size()).isEqualTo(1);
@@ -123,37 +124,37 @@ class NotificationServiceImplTest {
 		when(userRepository.existsByIdAndIsDeletedFalse(2L)).thenReturn(false);
 
 		//when & then
-		assertThatThrownBy(()->
-			notificationService.findAllByUserId(userId, createdAt, pageable)
+		assertThatThrownBy(() ->
+			notificationService.findAllByUserId(userId, createdAt, createdAt, pageable)
 		).isInstanceOf(NotificationException.class);
 	}
 
 	@Test
 	@DisplayName("updateAllByUserId 정상 호출 시 정상 값 반환")
 	public void updateAllByUserIdSuccessfully() throws Exception {
-	    //given
+		//given
 		Long userId = 1L;
 
 		when(userRepository.existsByIdAndIsDeletedFalse(userId)).thenReturn(true);
 		doNothing().when(notificationRepository).updateAllByUserId(eq(userId));
 
-	    //when
+		//when
 		notificationService.updateAllByUserId(userId);
 
-	    //then // 행위 기반 검증
+		//then // 행위 기반 검증
 		verify(notificationRepository).updateAllByUserId(eq(userId));
 	}
 
 	@Test
 	@DisplayName("updateAllByUserId 호출 시 userId 가 존재하지 않는다면 NotificationException 발생")
 	public void throwNotificationExceptionWhenUserIdNonExistWhileUpdateAllByUserId() throws Exception {
-	    //given
+		//given
 		Long userId = 1L;
 
 		when(userRepository.existsByIdAndIsDeletedFalse(userId)).thenReturn(false);
 
-	    //when & then
-		assertThatThrownBy(()->
+		//when & then
+		assertThatThrownBy(() ->
 			notificationService.updateAllByUserId(userId)
 		).isInstanceOf(NotificationException.class);
 	}
@@ -161,13 +162,13 @@ class NotificationServiceImplTest {
 	@Test
 	@DisplayName("updateByUserId 호출 시 userId 가 존재하지 않는다면 NotificationException 발생")
 	public void throwNotificationExceptionWhenUserIdNonExistWhileUpdateByUserId() throws Exception {
-	    //given
+		//given
 		Long userId = 1L;
 		Long notificationId = 1L;
 
 		when(userRepository.existsByIdAndIsDeletedFalse(userId)).thenReturn(false);
 
-	    //when & then
+		//when & then
 		assertThatThrownBy(() ->
 			notificationService.updateByUserId(userId, notificationId)
 		).isInstanceOf(NotificationException.class);
@@ -176,14 +177,14 @@ class NotificationServiceImplTest {
 	@Test
 	@DisplayName("updateByUserId 호출 시 notificationId 가 존재하지 않는다면 NotificationException 발생")
 	public void throwNotificationExceptionWhenNotificationIdNonExistWhileUpdateByUserId() throws Exception {
-	    //given
+		//given
 		Long userId = 1L;
 		Long notificationId = 1L;
 
 		when(userRepository.existsByIdAndIsDeletedFalse(userId)).thenReturn(true);
 		when(notificationRepository.existsById(notificationId)).thenReturn(false);
 
-	    //when & then
+		//when & then
 		assertThatThrownBy(() ->
 			notificationService.updateByUserId(userId, notificationId)
 		).isInstanceOf(NotificationException.class);

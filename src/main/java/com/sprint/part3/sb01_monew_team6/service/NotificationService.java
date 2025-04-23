@@ -9,7 +9,7 @@ import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationDto;
 
 public interface NotificationService {
 
-	PageResponse<NotificationDto> findAllByUserId(Long userId, Instant createdAt, Pageable pageable);
+	PageResponse<NotificationDto> findAllByUserId(Long userId, Instant cursor, Instant after, Pageable pageable);
 
 	void updateAllByUserId(Long userId);
 

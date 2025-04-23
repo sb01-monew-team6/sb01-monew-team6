@@ -13,7 +13,7 @@ import com.sprint.part3.sb01_monew_team6.entity.Notification;
 public interface NotificationRepository extends JpaRepository<Notification, Long>, NotificationRepositoryCustom {
 
 	@Override
-	Slice<Notification> findAllByUserId(Long userId, Instant createdAt, Pageable pageable);
+	Slice<Notification> findAllByUserId(Long userId, Instant cursor, Instant after, Pageable pageable);
 
 	@Query(value = """
 			SELECT COUNT(n) FROM Notification n
