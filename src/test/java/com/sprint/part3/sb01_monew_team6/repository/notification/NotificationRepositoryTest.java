@@ -188,4 +188,31 @@ class NotificationRepositoryTest {
 		assertThat(found).isNotNull();
 		assertThat(found.isConfirmed()).isTrue();
 	}
+
+	@Test
+	@DisplayName("deleteAll 정상 호출 시 정상 값 반환")
+	public void deleteAllSuccessfully() throws Exception {
+	    //given
+		User user = new User("email@email.com", "nickname", "123456", false);
+		userRepository.save(user);
+
+		Notification notification = Notification.createNotification(
+			user,
+			"hello",
+			COMMENT,
+			1L,
+			true
+		);
+
+		notificationRepository.save(notification);
+		em.flush();
+		em.clear();
+
+	    //when
+		notificationRepository.deleteAll();
+
+	    //then
+		List<Notification> found = notificationRepository.findAll();
+		assertThat(found.isEmpty()).isTrue();
+	}
 }
