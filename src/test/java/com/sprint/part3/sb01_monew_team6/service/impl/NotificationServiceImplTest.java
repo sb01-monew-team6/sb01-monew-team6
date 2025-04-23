@@ -207,4 +207,17 @@ class NotificationServiceImplTest {
 		//then // 행위 기반 검증
 		verify(notificationRepository).updateByUserId(eq(userId), eq(notificationId));
 	}
+
+	@Test
+	@DisplayName("deleteAll 정상 호출 시 정상 값 반환")
+	public void deleteAllSuccessfully() throws Exception {
+		//given
+		doNothing().when(notificationRepository).deleteAll();
+
+		//when
+		notificationService.deleteAll();
+
+		//then // 행위 기반 검증
+		verify(notificationRepository, times(1)).deleteAll();
+	}
 }
