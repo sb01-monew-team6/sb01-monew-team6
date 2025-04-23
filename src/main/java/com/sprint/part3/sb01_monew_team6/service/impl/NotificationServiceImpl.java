@@ -51,7 +51,7 @@ public class NotificationServiceImpl implements NotificationService {
 			nextCursor = content.get(lastIndex).createdAt();
 		}
 
-		Long totalElements = notificationRepository.count();
+		Long totalElements = notificationRepository.countByUserIdAndConfirmedFalse(userId);
 
 		return pageResponseMapper.fromSlice(
 			slice,
