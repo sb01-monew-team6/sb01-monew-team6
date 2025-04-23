@@ -101,4 +101,17 @@ class NotificationControllerTest {
 			.andExpect(jsonPath("$.size").value(equalTo(50)))
 			.andExpect(jsonPath("$.totalElements").value(equalTo(1)));
 	}
+
+	@Test
+	@DisplayName("updateAll 정상 호출 시 정상 상태 코드 반환")
+	public void respondOkStatusWhenUpdateAllSucceed() throws Exception {
+
+	    //given & when
+		ResultActions perform = mockMvc.perform(
+			MockMvcRequestBuilders.patch("/api/v1/notifications")
+		);
+
+		//then
+		perform.andExpect(status().isOk());
+	}
 }
