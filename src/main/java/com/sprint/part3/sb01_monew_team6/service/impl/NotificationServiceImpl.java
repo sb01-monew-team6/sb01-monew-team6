@@ -93,4 +93,9 @@ public class NotificationServiceImpl implements NotificationService {
 
 		notificationRepository.updateByUserId(userId, notificationId);
 	}
+
+	@Override
+	public void deleteAll() {
+
+	}
 }

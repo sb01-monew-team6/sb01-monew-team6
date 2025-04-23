@@ -14,4 +14,6 @@ public interface NotificationService {
 	void updateAllByUserId(Long userId);
 
 	void updateByUserId(Long userId, Long notificationId);
+
+	void deleteAll();
 }
