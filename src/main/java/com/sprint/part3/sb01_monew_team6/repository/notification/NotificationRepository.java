@@ -23,7 +23,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 		""")
 	long countByUserIdAndConfirmedFalse(Long userId);
 
-	@Modifying
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query(value = """
 			UPDATE Notification n
 			SET n.confirmed = true
