@@ -19,6 +19,7 @@ import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationCreateRequ
 import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationDto;
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationException;
 import com.sprint.part3.sb01_monew_team6.mapper.NotificationMapper;
@@ -51,23 +52,26 @@ public class NotificationServiceImpl implements NotificationService {
 				pageable)
 			.map(notificationMapper::toDto);
 
-		Instant nextCursor = null;
-		Instant nextAfter = null;
-		if (!slice.getContent().isEmpty()) {
-			int lastIndex = slice.getContent().size() - 1;
-			List<NotificationDto> content = slice.getContent();
-			nextCursor = content.get(lastIndex).createdAt();
-			nextAfter = nextCursor;
-		}
+		Instant nextCursor = getNextCursor(slice);
 
 		Long totalElements = notificationRepository.countByUserIdAndConfirmedFalse(userId);
 
 		return pageResponseMapper.fromSlice(
 			slice,
 			nextCursor,
-			nextAfter,
+			nextCursor,
 			totalElements
 		);
+	}
+
+	private static Instant getNextCursor(Slice<NotificationDto> slice) {
+		Instant nextCursor = null;
+		if (!slice.getContent().isEmpty()) {
+			int lastIndex = slice.getContent().size() - 1;
+			List<NotificationDto> content = slice.getContent();
+			nextCursor = content.get(lastIndex).createdAt();
+		}
+		return nextCursor;
 	}
 
 	private void validateUserId(Long userId) {
@@ -110,23 +114,25 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 
 	@Override
-	public void create(NotificationCreateRequest request) {
+	@Transactional
+	public void create(NotificationCreateEvent event) {
 
-		User user = userRepository.findById(request.userId())
+		User user = userRepository.findById(event.userId())
 			.orElseThrow(() -> new NotificationDomainException("유저를 찾을 수 없습니다.", Map.of("userId", request.userId())));
-		String content = generateContent(request);
+
+		String content = generateContent(event, user);
 
 		Notification notification = Notification.createNotification(
 			user,
 			content,
-			request.resourceType(),
-			request.resourceId()
+			event.resourceType(),
+			event.resourceId()
 		);
 
 		notificationRepository.save(notification);
 	}
 
-	private String generateContent(NotificationCreateRequest request) {
+	private static String generateContent(NotificationCreateRequest request, User user) {
 		return switch (request.resourceType()) {
 			case INTEREST -> String.format(
 				"[%s]와 관련된 기사가 %d건 등록되었습니다.",
@@ -134,7 +140,7 @@ public class NotificationServiceImpl implements NotificationService {
 			);
 			case COMMENT -> String.format(
 				"[%s]님이 나의 댓글을 좋아합니다.",
-				request.resourceContent()
+				user.getNickname()
 			);
 		};
 	}
