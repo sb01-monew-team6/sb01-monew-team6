@@ -1,0 +1,105 @@
+# GitHub Actions CI/CD 파이프라인 설정 파일
+# PR 요청 시: 테스트 + 커버리지 체크만 수행
+# main, develop 브랜치로 push 시: ECR에 이미지 업로드 + ECS 배포까지 전체 스탭 실행
+
+name: CI/CD to ECS with SHA Tag
+
+on:
+  push:
+    branches: [main, develop]  # 운영, 개발 브랜치 push 시 전체 워크플로우 실행
+  pull_request:
+    branches: [main, develop]  # PR 시 테스트만 수행
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    # 공통 환경 변수 설정
+    env:
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      ECR_REPOSITORY: ${{ (github.ref_name == 'main' && 'prod/team6-monew') || (github.ref_name == 'develop' && 'dev/team6-monew') }}
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      # 0. push 이벤트 발생 시, 어떤 ECR 리포지토리에 어떤 태그의 이미지가 배포되는지 출력해줌
+      - name: Show image info
+        if: github.event_name == 'push'
+        run: echo "🚀 Deploying to $ECR_REPOSITORY with tag $IMAGE_TAG"
+        
+      # 1. 소스 코드 체크아웃
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # # 2. JDK 17 설정
+      # - name: Set up JDK 17
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     java-version: '17'
+      #     distribution: 'temurin'
+
+      # # 3. gradlew 실행 권한 부여
+      # - name: Grant permission to gradlew
+      #   run: chmod +x ./gradlew
+
+      # # 4. 테스트 및 커버리지 체크 (PR & Push 공통)
+      # - name: Run tests and coverage check
+      #   run: ./gradlew clean test jacocoTestReport jacocoTestCoverageVerification
+
+      # # 5. Codecov 업로드 (커버리지 리포트)
+      # - name: Upload coverage to Codecov
+      #   uses: codecov/codecov-action@v5
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: build/reports/jacoco/test/jacocoTestReport.xml
+
+      # === 아래 단계는 Push 이벤트일 때만 실행됨 ===
+      # 6-1. AWS 인증 (운영)
+      - name: Configure AWS credentials (PROD)
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 6-2. AWS 인증 (개발)
+      - name: Configure AWS credentials (DEV)
+        if: github.event_name == 'push' && github.ref_name == 'develop'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 7. ECR 로그인
+      - name: Login to Amazon ECR
+        if: github.event_name == 'push'
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 8. Docker 이미지 빌드 및 ECR 업로드
+      - name: Build & Push Docker image
+        if: github.event_name == 'push'
+        run: |
+          docker build --platform linux/amd64 --provenance=false -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+     # 9. Task Definition 렌더링
+      - name: Render ECS task definition
+        if: github.event_name == 'push'
+        id: render-task-def  # ← 이 ID를 통해 output을 다음 step에서 가져올 수 있음
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ (github.ref_name == 'main' && 'ecs/prod/task-definition.json') || (github.ref_name == 'develop' && 'ecs/dev/task-definition.json') }}
+          container-name: ${{ (github.ref_name == 'main' && 'team6-monew-prod-container') || (github.ref_name == 'develop' && 'team6-monew-dev-container') }}
+          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+
+    # 10. ECS 서비스에 새 Task 적용 (무중단 배포)
+      - name: Deploy to ECS
+        if: github.event_name == 'push'
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}  # ← 렌더링 결과 파일 사용
+          cluster: ${{ (github.ref_name == 'main' && 'team6-monew-prod-cluster') || (github.ref_name == 'develop' && 'team6-monew-dev-cluster') }}
+          service: ${{ (github.ref_name == 'main' && 'team6-monew-prod-service') || (github.ref_name == 'develop' && 'team6-monew-dev-service') }}
+          wait-for-service-stability: true
+

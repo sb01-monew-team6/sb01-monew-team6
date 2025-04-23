@@ -1,0 +1,37 @@
+{
+  "family": "team6-monew-prod-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::366080762812:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::366080762812:role/team6-monew-task-rules",
+  "containerDefinitions": [
+    {
+      "name": "team6-monew-prod-container",
+      "image": "<IMAGE_PLACEHOLDER>",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "DB_PASSWORD",
+          "value": "dummy"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/team6-monew-prod-task",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
