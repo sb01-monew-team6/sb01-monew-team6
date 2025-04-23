@@ -66,6 +66,12 @@ public class NotificationServiceImpl implements NotificationService {
 		}
 	}
 
+	private void validateNotificationId(Long notificationId) {
+		if (!notificationRepository.existsById(notificationId)) {
+			throw new NotificationException(NOTIFICATION_USER_NOT_FOUND_EXCEPTION, Instant.now(), BAD_REQUEST);
+		}
+	}
+
 	@Override
 	@Transactional
 	public void updateAllByUserId(Long userId) {
@@ -80,5 +86,6 @@ public class NotificationServiceImpl implements NotificationService {
 	public void updateByUserId(Long userId, Long notificationId) {
 
 		validateUserId(userId);
+		validateNotificationId(notificationId);
 	}
 }
