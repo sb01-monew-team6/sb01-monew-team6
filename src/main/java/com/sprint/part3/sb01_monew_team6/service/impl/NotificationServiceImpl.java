@@ -96,6 +96,6 @@ public class NotificationServiceImpl implements NotificationService {
 
 	@Override
 	public void deleteAll() {
-
+		notificationRepository.deleteAll();
 	}
 }
