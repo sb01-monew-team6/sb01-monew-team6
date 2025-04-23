@@ -98,4 +98,32 @@ class NotificationRepositoryTest {
 		//then
 		assertThat(count).isEqualTo(1);
 	}
+
+	@Test
+	@DisplayName("countByUserIdAndConfirmedFalse 호출 시 알림이 없다면 0 반환 ")
+	public void getZeroWhenFilteredNotificationNonExistWhileCountByUserIdAndConfirmedFalse() throws Exception {
+		//given
+		User user = new User("email@email.com", "nickname", "123456", false);
+		userRepository.save(user);
+
+		Notification notification = Notification.createNotification(
+			user,
+			"hello",
+			COMMENT,
+			1L,
+			true
+		);
+
+		notificationRepository.save(notification);
+		em.flush();
+		em.clear();
+
+		Long userId = 1L;
+
+		//when
+		long count = notificationRepository.countByUserIdAndConfirmedFalse(userId);
+
+		//then
+		assertThat(count).isEqualTo(0);
+	}
 }
