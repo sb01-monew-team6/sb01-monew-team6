@@ -120,8 +120,7 @@ public class NotificationServiceImpl implements NotificationService {
 			user,
 			content,
 			request.resourceType(),
-			request.resourceId(),
-			false
+			request.resourceId()
 		);
 
 		notificationRepository.save(notification);

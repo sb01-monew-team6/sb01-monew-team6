@@ -63,6 +63,16 @@ public class Notification extends BaseUpdatableEntity {
 		return new Notification(user, content, resourceType, resourceId, confirmed);
 	}
 
+	public static Notification createNotification(User user, String content, ResourceType resourceType, Long resourceId) throws NotificationDomainException {
+
+		validateUser(user);
+		validateContent(content);
+		validateResourceType(resourceType);
+		validateResourceId(resourceId);
+
+		return new Notification(user, content, resourceType, resourceId, false);
+	}
+
 	private static void validateResourceId(Long resourceId) {
 		if (Objects.isNull(resourceId)) {
 			throw new NotificationDomainException("리소스 id가 null 일 수 없습니다.", Map.of("resourceId", "null"));
