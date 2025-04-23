@@ -70,4 +70,32 @@ class NotificationRepositoryTest {
 		assertThat(notifications.getSize()).isEqualTo(50);
 		assertThat(notifications.hasNext()).isFalse();
 	}
+
+	@Test
+	@DisplayName("countByUserIdAndConfirmedFalse 정상 호출 시 정상 count 반환 ")
+	public void countByUserIdAndConfirmedFalseSuccessfully() throws Exception {
+		//given
+		User user = new User("email@email.com", "nickname", "123456", false);
+		userRepository.save(user);
+
+		Notification notification = Notification.createNotification(
+			user,
+			"hello",
+			COMMENT,
+			1L,
+			false
+		);
+
+		notificationRepository.save(notification);
+		em.flush();
+		em.clear();
+
+		Long userId = 1L;
+
+		//when
+		long count = notificationRepository.countByUserIdAndConfirmedFalse(userId);
+
+		//then
+		assertThat(count).isEqualTo(1);
+	}
 }
