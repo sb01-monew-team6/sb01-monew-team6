@@ -25,6 +25,7 @@ import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationDto;
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
+import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationException;
 import com.sprint.part3.sb01_monew_team6.mapper.NotificationMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
@@ -244,5 +245,25 @@ class NotificationServiceImplTest {
 
 		//then
 		verify(notificationRepository, times(1)).save(any());
+	}
+
+	@Test
+	@DisplayName("create 호출 시 user 가 존재하지 않는다면 NotificationDomainException 발생")
+	public void throwNotificationDomainExceptionWhenUserNonExistWhileCreate() throws Exception {
+		//given
+		Long userId = 1L;
+		NotificationCreateRequest request = new NotificationCreateRequest(
+			userId,
+			2L,
+			ResourceType.COMMENT,
+			"버즈",
+			null
+		);
+		when(userRepository.findById(eq(userId))).thenReturn(Optional.empty());
+
+		//when & then
+		assertThatThrownBy(() ->
+			notificationService.create(request)
+		).isInstanceOf(NotificationDomainException.class);
 	}
 }
