@@ -20,10 +20,6 @@
       "essential": true,
       "environment": [
         {
-          "name": "SPRING_PROFILES_ACTIVE",
-          "value": "prod"
-        },
-        {
           "name": "DB_PASSWORD",
           "value": "dummy"
         }
