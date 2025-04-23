@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
-import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationCreateRequest;
 import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationDto;
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 import com.sprint.part3.sb01_monew_team6.entity.User;
@@ -114,11 +113,10 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 
 	@Override
-	@Transactional
-	public void create(NotificationCreateEvent event) {
+	public void createFromEvent(NotificationCreateEvent event) {
 
 		User user = userRepository.findById(event.userId())
-			.orElseThrow(() -> new NotificationDomainException("유저를 찾을 수 없습니다.", Map.of("userId", request.userId())));
+			.orElseThrow(() -> new NotificationDomainException("유저를 찾을 수 없습니다.", Map.of("userId", event.userId())));
 
 		String content = generateContent(event, user);
 
@@ -132,11 +130,11 @@ public class NotificationServiceImpl implements NotificationService {
 		notificationRepository.save(notification);
 	}
 
-	private static String generateContent(NotificationCreateRequest request, User user) {
-		return switch (request.resourceType()) {
+	private static String generateContent(NotificationCreateEvent event, User user) {
+		return switch (event.resourceType()) {
 			case INTEREST -> String.format(
 				"[%s]와 관련된 기사가 %d건 등록되었습니다.",
-				request.resourceContent(), request.articleCount()
+				event.resourceContent(), event.articleCount()
 			);
 			case COMMENT -> String.format(
 				"[%s]님이 나의 댓글을 좋아합니다.",

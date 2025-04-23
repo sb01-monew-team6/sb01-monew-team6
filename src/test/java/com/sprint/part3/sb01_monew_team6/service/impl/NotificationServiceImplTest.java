@@ -20,11 +20,11 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
-import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationCreateRequest;
 import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationDto;
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
+import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationException;
 import com.sprint.part3.sb01_monew_team6.mapper.NotificationMapper;
@@ -226,9 +226,9 @@ class NotificationServiceImplTest {
 
 	@Test
 	@DisplayName("create 정상 호출 시 정상 값 반환")
-	public void createSuccessfully() throws Exception {
+	public void createFromEventSuccessfully() throws Exception {
 		//given
-		NotificationCreateRequest request = new NotificationCreateRequest(
+		NotificationCreateEvent event = new NotificationCreateEvent(
 			1L,
 			2L,
 			ResourceType.COMMENT,
@@ -241,7 +241,7 @@ class NotificationServiceImplTest {
 		when(notificationRepository.save(any(Notification.class))).thenReturn(any(Notification.class));
 
 		//when
-		notificationService.create(request);
+		notificationService.createFromEvent(event);
 
 		//then
 		verify(notificationRepository, times(1)).save(any());
@@ -249,10 +249,10 @@ class NotificationServiceImplTest {
 
 	@Test
 	@DisplayName("create 호출 시 user 가 존재하지 않는다면 NotificationDomainException 발생")
-	public void throwNotificationDomainExceptionWhenUserNonExistWhileCreate() throws Exception {
+	public void throwNotificationDomainExceptionWhenUserNonExistWhileCreateFromEvent() throws Exception {
 		//given
 		Long userId = 1L;
-		NotificationCreateRequest request = new NotificationCreateRequest(
+		NotificationCreateEvent event = new NotificationCreateEvent(
 			userId,
 			2L,
 			ResourceType.COMMENT,
@@ -263,7 +263,7 @@ class NotificationServiceImplTest {
 
 		//when & then
 		assertThatThrownBy(() ->
-			notificationService.create(request)
+			notificationService.createFromEvent(event)
 		).isInstanceOf(NotificationDomainException.class);
 	}
 }
