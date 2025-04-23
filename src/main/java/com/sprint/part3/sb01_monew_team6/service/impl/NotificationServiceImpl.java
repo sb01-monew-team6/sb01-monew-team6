@@ -95,6 +95,7 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 
 	@Override
+	@Transactional
 	public void deleteAll() {
 		notificationRepository.deleteAll();
 	}
