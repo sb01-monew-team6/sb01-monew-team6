@@ -24,7 +24,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 	long countByUserIdAndConfirmedFalse(Long userId);
 
 	@Modifying
-	@Transactional
 	@Query(value = """
 			UPDATE Notification n
 			SET n.confirmed = true
