@@ -33,21 +33,24 @@ public class NotificationServiceImpl implements NotificationService {
 	private final UserRepository userRepository;
 
 	@Override
-	public PageResponse<NotificationDto> findAllByUserId(Long userId, Instant createdAt, Pageable pageable) {
+	public PageResponse<NotificationDto> findAllByUserId(Long userId, Instant cursor, Instant after, Pageable pageable) {
 
 		validateUserId(userId);
 
 		Slice<NotificationDto> slice = notificationRepository.findAllByUserId(
 				userId,
-				Optional.ofNullable(createdAt).orElse(Instant.now()),
+				Optional.ofNullable(cursor).orElse(Instant.now()),
+				Optional.ofNullable(after).orElse(Instant.now()),
 				pageable)
 			.map(notificationMapper::toDto);
 
 		Instant nextCursor = null;
+		Instant nextAfter = null;
 		if (!slice.getContent().isEmpty()) {
 			int lastIndex = slice.getContent().size() - 1;
 			List<NotificationDto> content = slice.getContent();
 			nextCursor = content.get(lastIndex).createdAt();
+			nextAfter = nextCursor;
 		}
 
 		Long totalElements = notificationRepository.countByUserIdAndConfirmedFalse(userId);
@@ -55,7 +58,7 @@ public class NotificationServiceImpl implements NotificationService {
 		return pageResponseMapper.fromSlice(
 			slice,
 			nextCursor,
-			nextCursor,
+			nextAfter,
 			totalElements
 		);
 	}

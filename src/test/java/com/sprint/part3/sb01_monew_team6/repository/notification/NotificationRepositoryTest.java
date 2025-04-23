@@ -64,7 +64,7 @@ class NotificationRepositoryTest {
 		Pageable pageable = PageRequest.of(0, 50, DESC, "createdAt");
 
 		//when
-		Slice<Notification> notifications = notificationRepository.findAllByUserId(userId, createdAt, pageable);
+		Slice<Notification> notifications = notificationRepository.findAllByUserId(userId, createdAt, createdAt, pageable);
 
 		//then
 		assertThat(notifications.getContent().size()).isEqualTo(1);

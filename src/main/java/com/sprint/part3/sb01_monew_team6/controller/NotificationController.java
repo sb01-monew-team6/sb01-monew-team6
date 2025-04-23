@@ -37,13 +37,15 @@ public class NotificationController {
 	public ResponseEntity<PageResponse<NotificationDto>> findAllByUserId(
 		@RequestHeader("Monew-Request-User-Id") @Min(value = 1, groups = NotificationValidationGroup.class) Long userId,
 		@RequestParam(required = false) Instant cursor,
+		@RequestParam(required = false) Instant after,
 		@PageableDefault(
 			size = 50,
 			sort = "createdAt",
 			direction = DESC
 		) Pageable pageable
 	) {
-		PageResponse<NotificationDto> notifications = notificationService.findAllByUserId(userId, cursor, pageable);
+		PageResponse<NotificationDto> notifications =
+			notificationService.findAllByUserId(userId, cursor, after, pageable);
 
 		return ResponseEntity.status(OK)
 			.body(notifications);

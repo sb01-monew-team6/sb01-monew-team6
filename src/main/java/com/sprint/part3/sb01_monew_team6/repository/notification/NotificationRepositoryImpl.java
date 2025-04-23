@@ -26,7 +26,7 @@ public class NotificationRepositoryImpl implements NotificationRepositoryCustom 
 	private final JPAQueryFactory queryFactory;
 
 	@Override
-	public Slice<Notification> findAllByUserId(Long userId, Instant createdAt, Pageable pageable) {
+	public Slice<Notification> findAllByUserId(Long userId, Instant cursor, Instant after, Pageable pageable) {
 
 		QNotification notification = QNotification.notification;
 
@@ -35,7 +35,8 @@ public class NotificationRepositoryImpl implements NotificationRepositoryCustom 
 			.where(
 				userIdEq(userId),
 				notification.confirmed.isFalse(),
-				createdAtBefore(createdAt)
+				createdAtBefore(cursor),
+				createdAtBefore(after)
 			)
 			.orderBy(getOrderSpecifier(pageable.getSort()).toArray(new OrderSpecifier[0]))
 			.limit(pageable.getPageSize() + 1)
