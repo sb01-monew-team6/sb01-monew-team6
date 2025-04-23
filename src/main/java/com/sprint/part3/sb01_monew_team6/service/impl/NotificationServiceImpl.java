@@ -79,5 +79,6 @@ public class NotificationServiceImpl implements NotificationService {
 	@Transactional
 	public void updateByUserId(Long userId, Long notificationId) {
 
+		validateUserId(userId);
 	}
 }
