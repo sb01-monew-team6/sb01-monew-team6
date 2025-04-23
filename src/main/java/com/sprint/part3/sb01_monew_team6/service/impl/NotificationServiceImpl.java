@@ -5,6 +5,7 @@ import static org.springframework.http.HttpStatus.*;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -37,7 +38,10 @@ public class NotificationServiceImpl implements NotificationService {
 			throw new NotificationException(NOTIFICATION_USER_NOT_FOUND_EXCEPTION, Instant.now(), BAD_REQUEST);
 		}
 
-		Slice<NotificationDto> slice = notificationRepository.findAllByUserId(userId, createdAt, pageable)
+		Slice<NotificationDto> slice = notificationRepository.findAllByUserId(
+				userId,
+				Optional.ofNullable(createdAt).orElse(Instant.now()),
+				pageable)
 			.map(notificationMapper::toDto);
 
 		Instant nextCursor = null;
