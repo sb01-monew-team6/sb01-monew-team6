@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.repository.notification;
 
 import java.time.Instant;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -45,5 +46,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 			WHERE (n.confirmed = true)
 				AND (n.createdAt <= :weekAgo)
 		""")
-	void deleteAllOlderThanWeek(Instant weekAgo);
+	int deleteAllOlderThanWeek(Instant weekAgo, Limit limit);
 }
