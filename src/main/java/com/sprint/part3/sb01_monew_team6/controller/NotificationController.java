@@ -63,6 +63,7 @@ public class NotificationController {
 		@RequestHeader("Monew-Request-User-Id") @Min(value = 1, groups = NotificationValidationGroup.class) Long userId,
 		@PathVariable @Min(value = 1, groups = NotificationValidationGroup.class) Long notificationId
 	) {
+		notificationService.updateByUserId(userId, notificationId);
 
 		return ResponseEntity.ok().build();
 	}
