@@ -6,6 +6,7 @@ import static org.springframework.data.domain.Sort.Direction.*;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
+import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationCreateRequest;
 import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationDto;
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 import com.sprint.part3.sb01_monew_team6.entity.User;
@@ -222,13 +224,23 @@ class NotificationServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("createInterestNotification 정상 호출 시 정상 값 반환")
-	public void createInterestNotificationSuccessfully() throws Exception {
+	@DisplayName("create 정상 호출 시 정상 값 반환")
+	public void createSuccessfully() throws Exception {
 		//given
+		NotificationCreateRequest request = new NotificationCreateRequest(
+			1L,
+			2L,
+			ResourceType.COMMENT,
+			"버즈",
+			null
+		);
+		User user = new User();
+
+		when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 		when(notificationRepository.save(any(Notification.class))).thenReturn(any(Notification.class));
 
 		//when
-		notificationService.createInterestNotification();
+		notificationService.create(request);
 
 		//then
 		verify(notificationRepository, times(1)).save(any());

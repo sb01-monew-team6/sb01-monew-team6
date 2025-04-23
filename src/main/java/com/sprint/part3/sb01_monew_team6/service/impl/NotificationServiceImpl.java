@@ -6,6 +6,7 @@ import static org.springframework.http.HttpStatus.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
@@ -14,7 +15,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
+import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationCreateRequest;
 import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationDto;
+import com.sprint.part3.sb01_monew_team6.entity.Notification;
+import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationException;
 import com.sprint.part3.sb01_monew_team6.mapper.NotificationMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
@@ -34,7 +39,8 @@ public class NotificationServiceImpl implements NotificationService {
 	private final UserRepository userRepository;
 
 	@Override
-	public PageResponse<NotificationDto> findAllByUserId(Long userId, Instant cursor, Instant after, Pageable pageable) {
+	public PageResponse<NotificationDto> findAllByUserId(Long userId, Instant cursor, Instant after,
+		Pageable pageable) {
 
 		validateUserId(userId);
 
@@ -101,5 +107,36 @@ public class NotificationServiceImpl implements NotificationService {
 		Instant weekAgo = Instant.now().minus(7, ChronoUnit.DAYS);
 
 		notificationRepository.deleteAllOlderThanWeek(weekAgo);
+	}
+
+	@Override
+	public void create(NotificationCreateRequest request) {
+
+		User user = userRepository.findById(request.userId())
+			.orElseThrow(() -> new NotificationDomainException("유저를 찾을 수 없습니다.", Map.of("userId", request.userId())));
+		String content = generateContent(request);
+
+		Notification notification = Notification.createNotification(
+			user,
+			content,
+			request.resourceType(),
+			request.resourceId(),
+			false
+		);
+
+		notificationRepository.save(notification);
+	}
+
+	private String generateContent(NotificationCreateRequest request) {
+		return switch (request.resourceType()) {
+			case INTEREST -> String.format(
+				"[%s]와 관련된 기사가 %d건 등록되었습니다.",
+				request.resourceContent(), request.articleCount()
+			);
+			case COMMENT -> String.format(
+				"[%s]님이 나의 댓글을 좋아합니다.",
+				request.resourceContent()
+			);
+		};
 	}
 }

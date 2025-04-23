@@ -5,7 +5,9 @@ import java.time.Instant;
 import org.springframework.data.domain.Pageable;
 
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
+import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationCreateRequest;
 import com.sprint.part3.sb01_monew_team6.dto.notification.NotificationDto;
+import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
 
 public interface NotificationService {
 
@@ -16,4 +18,6 @@ public interface NotificationService {
 	void updateByUserId(Long userId, Long notificationId);
 
 	void deleteAllOlderThanWeek();
+
+	void create(NotificationCreateRequest request);
 }
