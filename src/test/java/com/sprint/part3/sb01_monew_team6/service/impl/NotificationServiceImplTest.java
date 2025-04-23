@@ -102,7 +102,7 @@ class NotificationServiceImplTest {
 		//when
 		PageResponse<NotificationDto> notifications = notificationService.findAllByUserId(userId, createdAt, pageable);
 
-		//then
+		//then // 상태 기반 검증
 		assertThat(notifications.contents().size()).isEqualTo(1);
 		assertThat(notifications.size()).isEqualTo(50);
 		assertThat(notifications.hasNext()).isFalse();
@@ -140,7 +140,7 @@ class NotificationServiceImplTest {
 	    //when
 		notificationService.updateAllByUserId(userId);
 
-	    //then
+	    //then // 행위 기반 검증
 		verify(notificationRepository).updateAllByUserId(eq(userId));
 	}
 
