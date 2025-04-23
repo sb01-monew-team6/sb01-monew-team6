@@ -5,7 +5,9 @@ import java.time.Instant;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 
@@ -21,5 +23,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 		""")
 	long countByUserIdAndConfirmedFalse(Long userId);
 
+	@Modifying
+	@Transactional
+	@Query(value = """
+			UPDATE Notification n
+			SET n.confirmed = true
+			WHERE n.user.id = :userId
+		""")
 	void updateAllByUserId(Long userId);
 }
