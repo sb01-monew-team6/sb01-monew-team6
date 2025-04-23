@@ -8,7 +8,6 @@ import static org.springframework.data.domain.Sort.Direction.*;
 import java.time.Instant;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +20,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.util.ReflectionTestUtils;
 
-import com.sprint.part3.sb01_monew_team6.config.TestConfig;
+import com.sprint.part3.sb01_monew_team6.config.TestDataJpaConfig;
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
@@ -31,7 +29,7 @@ import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = NONE)
 @ActiveProfiles("test")
-@Import(TestConfig.class)
+@Import(TestDataJpaConfig.class)
 class NotificationRepositoryTest {
 
 	@Autowired
