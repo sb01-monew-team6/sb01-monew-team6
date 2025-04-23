@@ -38,4 +38,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 				AND (n.id = :notificationId)
 		""")
 	void updateByUserId(Long userId, Long notificationId);
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query(value = """
+			DELETE FROM Notification n
+			WHERE n.confirmed = true
+		""")
+	void deleteAll();
 }
