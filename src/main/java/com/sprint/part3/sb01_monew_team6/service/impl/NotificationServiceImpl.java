@@ -87,5 +87,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 		validateUserId(userId);
 		validateNotificationId(notificationId);
+
+		notificationRepository.updateByUserId(userId, notificationId);
 	}
 }

@@ -188,4 +188,22 @@ class NotificationServiceImplTest {
 			notificationService.updateByUserId(userId, notificationId)
 		).isInstanceOf(NotificationException.class);
 	}
+
+	@Test
+	@DisplayName("updateByUserId 정상 호출 시 정상 값 반환")
+	public void updateByUserIdSuccessfully() throws Exception {
+		//given
+		Long userId = 1L;
+		Long notificationId = 1L;
+
+		when(userRepository.existsByIdAndIsDeletedFalse(userId)).thenReturn(true);
+		when(notificationRepository.existsById(notificationId)).thenReturn(true);
+		doNothing().when(notificationRepository).updateByUserId(eq(userId), eq(notificationId));
+
+		//when
+		notificationService.updateByUserId(userId, notificationId);
+
+		//then // 행위 기반 검증
+		verify(notificationRepository).updateByUserId(eq(userId), eq(notificationId));
+	}
 }
