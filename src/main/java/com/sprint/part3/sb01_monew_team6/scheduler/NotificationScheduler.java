@@ -13,9 +13,9 @@ public class NotificationScheduler {
 
 	private final NotificationService notificationService;
 
-	@Scheduled(cron = "0 0 9 * * Mon")
+	@Scheduled(cron = "0 0 0 * * *")
 	public void deleteConfirmedNotificationsOlderThanWeek() {
-		notificationService.deleteAll();
+		notificationService.deleteAllOlderThanWeek();
 	}
 
 }

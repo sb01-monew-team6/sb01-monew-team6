@@ -15,5 +15,5 @@ public interface NotificationService {
 
 	void updateByUserId(Long userId, Long notificationId);
 
-	void deleteAll();
+	void deleteAllOlderThanWeek();
 }

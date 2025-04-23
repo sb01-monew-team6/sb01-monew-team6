@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.sprint.part3.sb01_monew_team6.config.TestConfig;
 import com.sprint.part3.sb01_monew_team6.entity.Notification;
@@ -209,7 +210,7 @@ class NotificationRepositoryTest {
 		em.clear();
 
 	    //when
-		notificationRepository.deleteAll();
+		notificationRepository.deleteAllOlderThanWeek(Instant.parse("9999-04-22T00:00:00Z"));
 
 	    //then
 		List<Notification> found = notificationRepository.findAll();

@@ -4,6 +4,7 @@ import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
 import static org.springframework.http.HttpStatus.*;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -96,7 +97,9 @@ public class NotificationServiceImpl implements NotificationService {
 
 	@Override
 	@Transactional
-	public void deleteAll() {
-		notificationRepository.deleteAll();
+	public void deleteAllOlderThanWeek() {
+		Instant weekAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+
+		notificationRepository.deleteAllOlderThanWeek(weekAgo);
 	}
 }
