@@ -220,4 +220,17 @@ class NotificationServiceImplTest {
 		//then // 행위 기반 검증
 		verify(notificationRepository, times(1)).deleteAllOlderThanWeek(any());
 	}
+
+	@Test
+	@DisplayName("createInterestNotification 정상 호출 시 정상 값 반환")
+	public void createInterestNotificationSuccessfully() throws Exception {
+		//given
+		when(notificationRepository.save(any(Notification.class))).thenReturn(any(Notification.class));
+
+		//when
+		notificationService.createInterestNotification();
+
+		//then
+		verify(notificationRepository, times(1)).save(any());
+	}
 }
