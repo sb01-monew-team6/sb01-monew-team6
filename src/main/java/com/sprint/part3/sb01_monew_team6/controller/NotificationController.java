@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -47,5 +49,13 @@ public class NotificationController {
 
 		return ResponseEntity.status(OK)
 			.body(notifications);
+	}
+
+	@PatchMapping
+	public ResponseEntity<Void> updateAll(
+		@RequestHeader("Monew-Request-User-Id") @Min(value = 1, groups = NotificationValidationGroup.class) Long userId
+	) {
+
+		return ResponseEntity.status(200).build();
 	}
 }

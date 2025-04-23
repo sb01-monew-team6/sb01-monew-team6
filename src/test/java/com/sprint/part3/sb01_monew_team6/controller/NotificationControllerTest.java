@@ -109,6 +109,7 @@ class NotificationControllerTest {
 	    //given & when
 		ResultActions perform = mockMvc.perform(
 			MockMvcRequestBuilders.patch("/api/v1/notifications")
+				.header("Monew-Request-User-Id", 1L)
 		);
 
 		//then
