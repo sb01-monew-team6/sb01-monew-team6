@@ -19,7 +19,6 @@ import org.hibernate.annotations.CreationTimestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Builder
 public class ArticleView extends BaseUpdatableEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)

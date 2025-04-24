@@ -5,15 +5,23 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
+import com.sprint.part3.sb01_monew_team6.client.impl.NaverNewsClientImpl;
+import com.sprint.part3.sb01_monew_team6.client.impl.NaverNewsClientImpl.NaverResponse;
+import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
+@ExtendWith(MockitoExtension.class)
 public class NaverNewsClientImplTest {
 
   //WebClient.Builder Mock
@@ -21,9 +29,11 @@ public class NaverNewsClientImplTest {
   //WebClient Mock
   @Mock WebClient webClient;
   //Get 요청 URI 설정
-  @Mock WebClient.RequestHeadersUriSpec<?> uriSpec;
+  @SuppressWarnings("rawtypes")
+  @Mock WebClient.RequestHeadersUriSpec uriSpec;
   //헤더,URI 등 설정된 후 요청 스펙
-  @Mock WebClient.RequestHeadersSpec<?> headersSpec;
+  @SuppressWarnings("rawtypes")
+  @Mock WebClient.RequestHeadersSpec headersSpec;
   //응답 스펙
   @Mock WebClient.ResponseSpec responseSpec;
 
@@ -55,7 +65,7 @@ public class NaverNewsClientImplTest {
     //응답 객체
     NaverResponse response = new NaverResponse();
     NaverResponse.Item item = new NaverResponse.Item();
-    item.originallink = "o1";
+    item.originalLink = "o1";
     item.link          = "l1";
     item.title         = "t1";
     item.pubDate       = ZonedDateTime.parse("2025-04-23T10:00:00Z");
@@ -69,8 +79,8 @@ public class NaverNewsClientImplTest {
 
     //then
     assertThat(result).hasSize(1)
-        .extracting(ExternalNewsItem::getTitle)
-        .containExactly("t1");
+        .extracting(ExternalNewsItem::title)
+        .containsExactly("t1");
   }
   @Test
   @DisplayName("빈 Mono 반환 → When fetchNews → Then 빈 리스트 반환")

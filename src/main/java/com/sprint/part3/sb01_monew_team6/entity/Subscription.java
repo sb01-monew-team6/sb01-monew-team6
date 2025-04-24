@@ -16,7 +16,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Builder
 public class Subscription extends BaseEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)

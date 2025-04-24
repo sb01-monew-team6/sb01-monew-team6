@@ -21,7 +21,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Builder
 public class Interest extends BaseUpdatableEntity {
 
   @Column(nullable = false, unique = true)

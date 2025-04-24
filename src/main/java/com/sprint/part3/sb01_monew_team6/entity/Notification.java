@@ -17,7 +17,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Builder
 public class Notification extends BaseUpdatableEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)
