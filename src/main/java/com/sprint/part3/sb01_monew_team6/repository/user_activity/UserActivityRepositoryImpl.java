@@ -55,6 +55,15 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
 	}
 
+	@Override
+	public void removeComment(Long userId, Long articleId) {
+		Query query = queryByUserId(userId);
+		Update update = new Update().pull("comments",
+			Query.query(Criteria.where("articleId").is(articleId)).getQueryObject()
+		);
+		mongoTemplate.updateFirst(query, update, UserActivity.class);
+	}
+
 	private static Query queryByUserId(Long userId) {
 		return new Query(Criteria.where("userId").is(userId));
 	}
