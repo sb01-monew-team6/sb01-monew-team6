@@ -68,6 +68,17 @@ jacocoTestReport {
 		xml.required = true
 		html.required = true
 	}
+
+	// Q클래스(QueryDSL 자동 생성 클래스) 제외
+	afterEvaluate {
+		classDirectories.setFrom(
+				files(classDirectories.files.collect {
+					fileTree(dir: it, exclude: [
+							'*/Q.class' // QUser, QArticle 등 QueryDSL 클래스 전체 제외
+					])
+				})
+		)
+	}
 }
 
 jacocoTestCoverageVerification {
