@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.sprint.part3.sb01_monew_team6.entity.base.BaseDocument;
@@ -22,6 +23,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserActivity extends BaseDocument {
 
+	@Indexed
 	private Long userId;
 	private String email;
 	private String nickName;
