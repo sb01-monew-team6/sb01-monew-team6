@@ -5,20 +5,12 @@ plugins {
 	id 'jacoco'
 }
 
-test {
-	finalizedBy jacocoTestReport
-}
-
-jacocoTestReport {
-	dependsOn test
-	reports {
-		xml.required = true
-		html.required = true
-	}
-}
-
 group = 'com.sprint.part3'
 version = '0.0.1-Monew'
+
+bootJar {
+	archiveFileName = 'monew.jar'
+}
 
 java {
 	toolchain {
@@ -67,7 +59,25 @@ tasks.named('test') {
 	useJUnitPlatform()
 	jvmArgs '-Xshare:off'
 }
-
-clean {
-	delete file('src/main/generated')
+jacoco {
+	toolVersion = "0.8.10"
 }
+
+jacocoTestReport {
+	reports {
+		xml.required = true
+		html.required = true
+	}
+}
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.80
+			}
+		}
+	}
+}
+
+check.dependsOn jacocoTestCoverageVerification
