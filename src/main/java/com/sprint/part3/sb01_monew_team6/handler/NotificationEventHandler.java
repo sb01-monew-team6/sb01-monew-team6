@@ -39,12 +39,12 @@ public class NotificationEventHandler {
 			case INTEREST:
 				if (Objects.isNull(event.resourceContent()) || event.resourceContent().isBlank()) {
 					throw new NotificationDomainException("리소스 내용이 유효하지 않습니다.",
-						Map.of("resourceContent", event.resourceContent()));
+						Map.of("resourceContent", String.valueOf(event.resourceContent())));
 				}
 
 				if (Objects.isNull(event.articleCount()) || event.articleCount() <= 0) {
 					throw new NotificationDomainException("기사의 개수가 유효하지 않습니다.",
-						Map.of("articleCount", event.articleCount()));
+						Map.of("articleCount", String.valueOf(event.articleCount())));
 				}
 				break;
 		}

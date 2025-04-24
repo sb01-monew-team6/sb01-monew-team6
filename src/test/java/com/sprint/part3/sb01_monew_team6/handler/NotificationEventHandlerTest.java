@@ -62,4 +62,23 @@ class NotificationEventHandlerTest {
 			notificationEventHandler.handleNotificationCreateEvent(event)
 		).isInstanceOf(NotificationDomainException.class);
 	}
+
+	@Test
+	@DisplayName("createNotificationByEventHandler 호출 시 INTEREST 리소스 타입일 때 content 혹은 articleCount 가 유효하지 않다면 예외를 던진다")
+	public void throwNotificationDomainExceptionWhenResourceTypeIsInterestAndContentOrArticleCountIsInvalidWhileCreateNotificationByEventHandler() throws
+		Exception {
+		//given
+		NotificationCreateEvent event = new NotificationCreateEvent(
+			1L,
+			null,
+			ResourceType.INTEREST,
+			"여행",
+			null
+		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			notificationEventHandler.handleNotificationCreateEvent(event)
+		).isInstanceOf(NotificationDomainException.class);
+	}
 }
