@@ -11,6 +11,7 @@ import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDt
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
+import com.sprint.part3.sb01_monew_team6.mapper.CommentHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentLikeHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.SubscriptionHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
@@ -27,6 +28,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 	private final UserRepository userRepository;
 	private final SubscriptionHistoryMapper subscriptionHistoryMapper;
 	private final CommentLikeHistoryMapper commentLikeHistoryMapper;
+	private final CommentHistoryMapper commentHistoryMapper;
 
 	@Override
 	public void addSubscriptionFromEvent(Long userId, SubscriptionHistoryDto subscriptionHistory) {
@@ -46,7 +48,10 @@ public class UserActivityServiceImpl implements UserActivityService {
 
 	@Override
 	public void addCommentFromEvent(Long userId, CommentHistoryDto commentHistory) {
+		userRepository.findById(userId)
+			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
 
+		userActivityRepository.addComment(userId, commentHistoryMapper.fromDto(commentHistory));
 	}
 
 	@Override
