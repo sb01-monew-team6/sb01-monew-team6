@@ -296,6 +296,6 @@ class UserActivityRepositoryTest {
 
 		//then
 		assertThat(found).isPresent();
-		assertThat(found.get().getCommentLikes()).isEmpty();
+		assertThat(found.get().getComments()).isEmpty();
 	}
 }
