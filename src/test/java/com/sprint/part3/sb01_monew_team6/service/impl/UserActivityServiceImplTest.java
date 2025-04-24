@@ -14,13 +14,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
-import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
-import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
-import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentLikeHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.SubscriptionHistoryMapper;
@@ -34,6 +32,8 @@ class UserActivityServiceImplTest {
 	private SubscriptionHistoryMapper subscriptionHistoryMapper;
 	@Mock
 	private CommentLikeHistoryMapper commentLikeHistoryMapper;
+	@Mock
+	private CommentHistoryMapper commentHistoryMapper;
 	@Mock
 	private UserActivityRepository userActivityRepository;
 	@Mock
@@ -63,7 +63,8 @@ class UserActivityServiceImplTest {
 		when(subscriptionHistoryMapper.fromDto(any(SubscriptionHistoryDto.class))).thenReturn(
 			history);
 		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
-		doNothing().when(userActivityRepository).addSubscription(anyLong(), any(UserActivity.SubscriptionHistory.class));
+		doNothing().when(userActivityRepository)
+			.addSubscription(anyLong(), any(UserActivity.SubscriptionHistory.class));
 
 		//when
 		userActivityService.addSubscriptionFromEvent(userId, historyDto);
@@ -153,6 +154,40 @@ class UserActivityServiceImplTest {
 		assertThatThrownBy(() ->
 			userActivityService.addCommentLikeFromEvent(userId, historyDto)
 		).isInstanceOf(UserActivityDomainException.class);
+	}
 
+	@Test
+	@DisplayName("addCommentFromEvent 정상 호출 시 정상적으로 레포지토리가 호출된다")
+	public void addCommentFromEvent() throws Exception {
+		//given
+		Long userId = 1L;
+		UserActivity.CommentHistory history = new UserActivity.CommentHistory(
+			1L,
+			"title",
+			1L,
+			"nickName",
+			"content",
+			3L
+		);
+		CommentHistoryDto historyDto = new CommentHistoryDto(
+			1L,
+			"title",
+			1L,
+			"nickName",
+			"content",
+			3L
+		);
+
+		when(commentHistoryMapper.fromDto(any(CommentHistoryDto.class))).thenReturn(
+			history);
+		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		doNothing().when(userActivityRepository).addComment(anyLong(), any(UserActivity.CommentHistory.class));
+
+		//when
+		userActivityService.addCommentFromEvent(userId, historyDto);
+
+		//then
+		verify(userActivityRepository, times(1)).addComment(anyLong(),
+			any(UserActivity.CommentHistory.class));
 	}
 }
