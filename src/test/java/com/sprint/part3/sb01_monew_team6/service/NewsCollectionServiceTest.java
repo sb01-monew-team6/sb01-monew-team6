@@ -35,7 +35,7 @@ public class NewsCollectionServiceTest {
 
   @BeforeEach
   void init() {
-    MockitoAnnotations.openMocks(this);                   
+    MockitoAnnotations.openMocks(this);
     service = new NewsCollectionService(naverClient, List.of(rssClient), newsArticleRepository, interestRepository);
   }
 
@@ -67,4 +67,28 @@ public class NewsCollectionServiceTest {
       return cnt == 1;
     }));
   }
+
+  @Test
+  @DisplayName("중복 URL 하나만 저장")
+  void duplicatedUrl_save_oneUrl() {
+    //given
+    Interest i = new Interest();
+    i.setName("스포츠");
+    i.setKeyword(List.of("축구", "야구"));
+    given(interestRepository.findAll()).willReturn(List.of(i));
+
+    ExternalNewsItem e1 = new ExternalNewsItem(
+        "Naver", "url1", "url1", "축구제목", ZonedDateTime.now(), "요약"
+    );
+    given(naverClient.fetchNews("축구")).willReturn(List.of(e1, e1));
+    given(rssClient.fetchNews()).willReturn(List.of());
+    given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
+
+    // when
+    service.collectAndSave();
+
+    // then
+    then(newsArticleRepository).should().saveAll(argThat(iter ->
+        ((java.util.Collection<?>) iter).size() == 1
+    ));  }
 }
