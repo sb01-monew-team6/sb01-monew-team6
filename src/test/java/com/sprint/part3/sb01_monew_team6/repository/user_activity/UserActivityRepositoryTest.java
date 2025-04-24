@@ -258,4 +258,44 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getComments().get(0).getArticleId()).isEqualTo(1);
 		assertThat(found.get().getComments().get(11).getArticleId()).isEqualTo(12);
 	}
+
+	@Test
+	@DisplayName("removeComment 정상 호출 시 정상적으로 몽고 db 에서 삭제된다")
+	public void removeCommentSuccessfully() throws Exception {
+		//given
+		Long userId = 1L;
+
+		UserActivity userActivity = UserActivity.builder()
+			.userId(userId)
+			.email("email@google.com")
+			.nickName("구글러")
+			.build();
+
+		userActivityRepository.save(userActivity);
+
+		//when
+		for (int i = 0; i < 12; ++i) {
+			UserActivity.CommentHistory comment = UserActivity.CommentHistory.builder()
+				.articleId(1L + i)
+				.userId(10L + i)
+				.articleTitle("title" + i)
+				.userNickname("nickname" + i)
+				.content("content" + i)
+				.likeCount(100L + i)
+				.build();
+
+			userActivityRepository.addComment(userId, comment);
+		}
+
+		//when
+		for (int i = 0; i < 12; ++i) {
+			userActivityRepository.removeComment(userId, 1L + i);
+		}
+
+		Optional<UserActivity> found = userActivityRepository.findById(userActivity.getId());
+
+		//then
+		assertThat(found).isPresent();
+		assertThat(found.get().getCommentLikes()).isEmpty();
+	}
 }
