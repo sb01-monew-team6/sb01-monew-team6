@@ -92,8 +92,12 @@ jobs:
           task-definition: ${{ (github.ref_name == 'main' && 'ecs/prod/task-definition.json') || (github.ref_name == 'develop' && 'ecs/dev/task-definition.json') }}
           container-name: ${{ (github.ref_name == 'main' && 'team6-monew-prod-container') || (github.ref_name == 'develop' && 'team6-monew-dev-container') }}
           image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          environment-variables: |
+            DB_URL=${{ github.ref_name == 'main' && secrets.DB_URL_PROD || (github.ref_name == 'develop' && secrets.DB_URL_DEV) }}
+            DB_USERNAME=${{ github.ref_name == 'main' && secrets.DB_USERNAME_PROD || (github.ref_name == 'develop' && secrets.DB_USERNAME_DEV) }}
+            DB_PASSWORD=${{ github.ref_name == 'main' && secrets.DB_PASSWORD_PROD || (github.ref_name == 'develop' && secrets.DB_PASSWORD_DEV) }}
 
-    # 10. ECS 서비스에 새 Task 적용 (무중단 배포)
+    # 10. ECS 서비스에 새 Task 적용
       - name: Deploy to ECS
         if: github.event_name == 'push'
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
