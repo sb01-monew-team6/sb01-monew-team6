@@ -12,16 +12,14 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "comments")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Getter
 public class Comment extends BaseUpdatableEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)

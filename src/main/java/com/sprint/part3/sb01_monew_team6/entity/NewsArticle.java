@@ -15,16 +15,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "news_article")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Builder
+@Setter
 public class NewsArticle extends BaseEntity {
 
   @Column(nullable = false)
@@ -43,7 +43,6 @@ public class NewsArticle extends BaseEntity {
   private String articleSummary;
 
   @Column(nullable = false)
-  @Builder.Default
   private boolean isDeleted = false;
 
   @ManyToMany

@@ -18,7 +18,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Builder
 public class User extends BaseUpdatableEntity {
 
   @Column(nullable = false, unique = true)
