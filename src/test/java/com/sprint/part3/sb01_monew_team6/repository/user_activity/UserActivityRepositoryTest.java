@@ -334,4 +334,38 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getArticleViews().get(0).getViewedBy()).isEqualTo(1);
 		assertThat(found.get().getArticleViews().get(11).getViewedBy()).isEqualTo(12);
 	}
+
+	@Test
+	@DisplayName("removeArticleView 정상 호출 시 정상적으로 몽고 db 에서 삭제된다")
+	public void removeArticleViewSuccessfully() throws Exception {
+		//given
+		Long userId = 1L;
+
+		UserActivity userActivity = UserActivity.builder()
+			.userId(userId)
+			.email("email@google.com")
+			.nickName("구글러")
+			.build();
+
+		userActivityRepository.save(userActivity);
+
+		for (int i = 0; i < 12; ++i) {
+			UserActivity.ArticleViewHistory articleView = UserActivity.ArticleViewHistory.builder()
+				.viewedBy(1L + i)
+				.build();
+
+			userActivityRepository.addArticleView(userId, articleView);
+		}
+
+		//when
+		for (int i = 0; i < 12; ++i) {
+			userActivityRepository.removeArticleView(userId, 1L + i);
+		}
+
+		Optional<UserActivity> found = userActivityRepository.findById(userActivity.getId());
+
+		//then
+		assertThat(found).isPresent();
+		assertThat(found.get().getArticleViews()).isEmpty();
+	}
 }
