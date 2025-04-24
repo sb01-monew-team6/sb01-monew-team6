@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.handler;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
 import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
+import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
 import com.sprint.part3.sb01_monew_team6.service.NotificationService;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,9 +38,28 @@ class NotificationEventHandlerTest {
 		doNothing().when(notificationService).createFromEvent(event);
 
 		//when
-		notificationEventHandler.handle(event);
+		notificationEventHandler.handleNotificationCreateEvent(event);
 
 		//then
 		verify(notificationService, times(1)).createFromEvent(event);
+	}
+
+	@Test
+	@DisplayName("createNotificationByEventHandler 호출 시 userId 가 유효하지 않다면 예외를 던진다")
+	public void throwNotificationDomainExceptionWhenUserIdIsInvalidWhileCreateNotificationByEventHandler() throws
+		Exception {
+		//given
+		NotificationCreateEvent event = new NotificationCreateEvent(
+			null,
+			null,
+			ResourceType.COMMENT,
+			"유저",
+			null
+		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			notificationEventHandler.handleNotificationCreateEvent(event)
+		).isInstanceOf(NotificationDomainException.class);
 	}
 }
