@@ -11,6 +11,7 @@ import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDt
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
+import com.sprint.part3.sb01_monew_team6.mapper.ArticleViewHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentLikeHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.SubscriptionHistoryMapper;
@@ -29,6 +30,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 	private final SubscriptionHistoryMapper subscriptionHistoryMapper;
 	private final CommentLikeHistoryMapper commentLikeHistoryMapper;
 	private final CommentHistoryMapper commentHistoryMapper;
+	private final ArticleViewHistoryMapper articleViewHistoryMapper;
 
 	@Override
 	public void addSubscriptionFromEvent(Long userId, SubscriptionHistoryDto subscriptionHistory) {
@@ -56,6 +58,9 @@ public class UserActivityServiceImpl implements UserActivityService {
 
 	@Override
 	public void addArticleViewFromEvent(Long userId, ArticleViewHistoryDto articleViewHistory) {
+		userRepository.findById(userId)
+			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
 
+		userActivityRepository.addArticleView(userId, articleViewHistoryMapper.fromDto(articleViewHistory));
 	}
 }
