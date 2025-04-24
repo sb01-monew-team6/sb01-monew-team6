@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +22,7 @@ import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDt
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
+import com.sprint.part3.sb01_monew_team6.mapper.ArticleViewHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentLikeHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.SubscriptionHistoryMapper;
@@ -223,22 +225,28 @@ class UserActivityServiceImplTest {
 		Long userId = 1L;
 		UserActivity.ArticleViewHistory history = new UserActivity.ArticleViewHistory(
 			1L,
-			"title",
 			1L,
-			"nickName",
-			"content",
+			"source",
+			"url",
+			"title",
+			LocalDateTime.now(),
+			"summary",
+			3L,
 			3L
 		);
 		ArticleViewHistoryDto historyDto = new ArticleViewHistoryDto(
 			1L,
-			"title",
 			1L,
-			"nickName",
-			"content",
+			"source",
+			"url",
+			"title",
+			LocalDateTime.now(),
+			"summary",
+			3L,
 			3L
 		);
 
-		when(ArticleViewHistoryMapper.fromDto(any(ArticleViewHistoryDto.class))).thenReturn(
+		when(articleViewHistoryMapper.fromDto(any(ArticleViewHistoryDto.class))).thenReturn(
 			history);
 		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
 		doNothing().when(userActivityRepository).addArticleView(anyLong(), any(UserActivity.ArticleViewHistory.class));
