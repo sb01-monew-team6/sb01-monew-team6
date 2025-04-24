@@ -2,7 +2,6 @@ package com.sprint.part3.sb01_monew_team6.repository.user_activity;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,7 +14,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.sprint.part3.sb01_monew_team6.config.TestDataMongoConfig;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
-import com.sprint.part3.sb01_monew_team6.repository.UserActivityRepository;
 
 @DataMongoTest
 @ActiveProfiles("test")
@@ -91,8 +89,7 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getUserId()).isEqualTo(userId);
 		assertThat(found.get().getEmail()).isEqualTo("email@google.com");
 		assertThat(found.get().getNickName()).isEqualTo("구글러");
-		assertThat(found.get().getSubscriptions()).hasSize(10);
-		assertThat(found.get().getSubscriptions().get(0).getInterestName()).isEqualTo("AI2");
-		assertThat(found.get().getSubscriptions().get(0).getInterestName()).isEqualTo("AI11");
+		assertThat(found.get().getSubscriptions().get(0).getInterestName()).isEqualTo("AI0");
+		assertThat(found.get().getSubscriptions().get(11).getInterestName()).isEqualTo("AI11");
 	}
 }
