@@ -19,6 +19,7 @@ import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
 import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
+import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
 import com.sprint.part3.sb01_monew_team6.mapper.SubscriptionHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.repository.user_activity.UserActivityRepository;
@@ -82,7 +83,7 @@ class UserActivityServiceImplTest {
 
 		//when & then
 		assertThatThrownBy(() ->
-			userActivityRepository.addSubscriptionFromEvent(userId, historyDto)
+			userActivityService.addSubscriptionFromEvent(userId, historyDto)
 		).isInstanceOf(UserActivityDomainException.class);
 
 	}
