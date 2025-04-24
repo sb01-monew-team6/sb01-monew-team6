@@ -191,4 +191,25 @@ class UserActivityServiceImplTest {
 		verify(userActivityRepository, times(1)).addComment(anyLong(),
 			any(UserActivity.CommentHistory.class));
 	}
+
+	@Test
+	@DisplayName("addCommentFromEvent 호출 시 user 가 존재하지 않는다면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenUserNonExistWhileAddCommentFromEvent() throws Exception {
+		//given
+		Long userId = 1L;
+		CommentHistoryDto historyDto = new CommentHistoryDto(
+			1L,
+			"title",
+			1L,
+			"nickName",
+			"content",
+			3L
+		);
+		when(userRepository.findById(eq(userId))).thenReturn(Optional.empty());
+
+		//when & then
+		assertThatThrownBy(() ->
+			userActivityService.addCommentFromEvent(userId, historyDto)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
 }
