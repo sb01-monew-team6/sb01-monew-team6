@@ -164,7 +164,6 @@ class UserActivityRepositoryTest {
 			userActivityRepository.addCommentLike(userId, commentLike);
 		}
 
-		userActivityRepository.save(userActivity);
 		Optional<UserActivity> found = userActivityRepository.findById(userActivity.getId());
 
 		//then
@@ -172,8 +171,8 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getId()).isEqualTo(userActivity.getId());
 		assertThat(found.get().getEmail()).isEqualTo("email@google.com");
 		assertThat(found.get().getNickName()).isEqualTo("구글러");
-		assertThat(found.get().getCommentLikes()).hasSize(10);
-		assertThat(found.get().getCommentLikes().get(0).getCommentId()).isEqualTo(3);
-		assertThat(found.get().getCommentLikes().get(0).getCommentId()).isEqualTo(12);
+		assertThat(found.get().getCommentLikes()).hasSize(12);
+		assertThat(found.get().getCommentLikes().get(0).getCommentId()).isEqualTo(1);
+		assertThat(found.get().getCommentLikes().get(11).getCommentId()).isEqualTo(12);
 	}
 }

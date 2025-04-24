@@ -7,4 +7,6 @@ public interface UserActivityRepositoryCustom {
 	void addSubscription(Long userId, UserActivity.SubscriptionHistory subscription);
 
 	void removeSubscription(Long userId, Long interestId);
+
+	void addCommentLike(Long userId, UserActivity.CommentLikeHistory commentLike);
 }
