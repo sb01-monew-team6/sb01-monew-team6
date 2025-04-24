@@ -92,4 +92,40 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getSubscriptions().get(0).getInterestName()).isEqualTo("AI0");
 		assertThat(found.get().getSubscriptions().get(11).getInterestName()).isEqualTo("AI11");
 	}
+
+	@Test
+	@DisplayName("removeSubscription 정상 호출 시 정상적으로 몽고 db 에서 삭제된다")
+	public void removeSubscriptionSuccessfully() throws Exception {
+	    //given
+		Long userId = 1L;
+
+		UserActivity userActivity = UserActivity.builder()
+			.userId(userId)
+			.email("email@google.com")
+			.nickName("구글러")
+			.build();
+
+		userActivityRepository.save(userActivity);
+
+		for (int i = 0; i < 12; ++i) {
+			UserActivity.SubscriptionHistory subscription = UserActivity.SubscriptionHistory.builder()
+				.interestId(10L + i)
+				.interestName("AI" + i)
+				.interestKeywords(List.of("ChatGPT" + i, "머신러닝" + i))
+				.interestSubscriberCount(10L + i)
+				.build();
+
+			userActivityRepository.addSubscription(userId, subscription);
+		}
+
+		//when
+		for (int i = 0; i < 12; ++i) {
+			userActivityRepository.removeSubscription(userId, 10L + i);
+		}
+
+		Optional<UserActivity> found = userActivityRepository.findById(userActivity.getId());
+
+		//then
+		assertThat(found).isEmpty();
+	}
 }
