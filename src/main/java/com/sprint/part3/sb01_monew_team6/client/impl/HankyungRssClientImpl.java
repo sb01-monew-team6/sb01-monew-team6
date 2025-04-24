@@ -11,7 +11,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class HankyungRssClient implements RssNewsClient {
+public class HankyungRssClientImpl implements RssNewsClient {
 
   private static final String H_URL = "https://www.hankyun.com/feed";
 

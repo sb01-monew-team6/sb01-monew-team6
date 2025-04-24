@@ -1,8 +1,10 @@
 package com.sprint.part3.sb01_monew_team6.service;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 import com.sprint.part3.sb01_monew_team6.client.NaverNewsClient;
 import com.sprint.part3.sb01_monew_team6.client.RssNewsClient;
@@ -90,5 +92,27 @@ public class NewsCollectionServiceTest {
     // then
     then(newsArticleRepository).should().saveAll(argThat(iter ->
         ((java.util.Collection<?>) iter).size() == 1
-    ));  }
+    ));
+  }
+
+  @Test
+  @DisplayName("이미 DB에 있는 기사만 나왔을 땐, 레포지토리의 저장 메서드를 아예 호출하지 않음")
+  void allExisting_thenNoSave() {
+    // given
+    Interest it = new Interest();
+    it.setKeyword(List.of("x"));
+    given(interestRepository.findAll()).willReturn(List.of(it));
+    ExternalNewsItem e = new ExternalNewsItem("NAVER","x","x","x",ZonedDateTime.now(),"");
+    given(naverClient.fetchNews("x")).willReturn(List.of(e));
+    given(rssClient.fetchNews()).willReturn(List.of());
+    given(newsArticleRepository.existsBySourceUrl("x")).willReturn(true);
+
+    // when
+    service.collectAndSave();
+
+    // then
+    then(newsArticleRepository).should(never()).saveAll(any());
+  }
+
+  
 }

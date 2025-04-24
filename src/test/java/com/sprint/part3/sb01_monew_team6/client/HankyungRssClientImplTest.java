@@ -6,7 +6,7 @@ import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
-import com.sprint.part3.sb01_monew_team6.client.impl.HankyungRssClient;
+import com.sprint.part3.sb01_monew_team6.client.impl.HankyungRssClientImpl;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 
-public class HankyungRssClientTest {
+public class HankyungRssClientImplTest {
 
   @Test
   @DisplayName("RSS XML → When fetchNews → Then 매핑된 ExternalNewsItem 반환")
@@ -35,7 +35,7 @@ public class HankyungRssClientTest {
     );
 
     //when
-    HankyungRssClient client = new HankyungRssClient() {
+    HankyungRssClientImpl client = new HankyungRssClientImpl() {
       @Override
       protected SyndFeed readFeed(XmlReader reader) { return feed; }
     };

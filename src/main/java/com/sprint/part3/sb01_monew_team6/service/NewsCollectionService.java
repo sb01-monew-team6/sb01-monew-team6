@@ -8,7 +8,9 @@ import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class NewsCollectionService {
     List<Interest> interests = interestRepository.findAll();
     List<ExternalNewsItem> items = new ArrayList<>();
 
+
     for(Interest i: interests){
       for(String keyword: i.getKeyword()){
         items.addAll(naver.fetchNews(keyword));
@@ -35,15 +38,25 @@ public class NewsCollectionService {
       items.addAll(rss.fetchNews());
     }
 
+    // 3) 중복 URL 제거·필터링해서 저장 대기 리스트 생성
     List<NewsArticle> toSave = new ArrayList<>();
-    for(ExternalNewsItem e : items){
-      if(!newsArticleRepository.existsBySourceUrl(e.originalLink())
-          && interests.stream()
-          .anyMatch(interest -> interest.getKeyword().stream()
-              .anyMatch(keyword-> e.title().contains(keyword)))){
+    Set<String> seenUrls = new HashSet<>();  // 이미 처리한 URL 기록
+
+    for (ExternalNewsItem e : items) {
+      String url = e.originalLink();
+      // ① 최초 등장한 URL이고
+      // ② DB에도 없고
+      // ③ 제목에 관심사 키워드가 포함되어 있으면
+      if (seenUrls.add(url)
+          && !newsArticleRepository.existsBySourceUrl(url)
+          && interests.stream().anyMatch(
+          interest -> interest.getKeyword().stream()
+              .anyMatch(keyword -> e.title().contains(keyword))
+      )) {
         toSave.add(NewsArticle.from(e));
       }
     }
+
     if(!toSave.isEmpty()){
       newsArticleRepository.saveAll(toSave);
     }
