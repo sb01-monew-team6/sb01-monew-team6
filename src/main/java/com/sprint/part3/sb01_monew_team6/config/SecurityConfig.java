@@ -2,33 +2,66 @@ package com.sprint.part3.sb01_monew_team6.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity; //HttpSecurity를 사용하려면 필요
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus; // HttpStatus 임포트 추가
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // BCrypt 구현체 임포트
-import org.springframework.security.crypto.password.PasswordEncoder; // PasswordEncoder 인터페이스 임포트
-import org.springframework.security.web.SecurityFilterChain; // SecurityFilterChain 사용 예시
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy; // SessionCreationPolicy 임포트 추가
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint; // AuthenticationEntryPoint 임포트
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler; // AccessDeniedHandler 임포트
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-  // PasswordEncoder 빈 등록 메소드
-  @Bean // 이 메소드가 반환하는 객체를 스프링 빈으로 등록
+  @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
 
-  // 추가적인 Spring Security 설정 (예: HTTP 경로별 접근 제어 등)
   @Bean
+  @Order(1)
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
-        .csrf(csrf -> csrf.disable()) // CSRF 보호 비활성화 (API 서버는 보통 비활성화)
+        .csrf(AbstractHttpConfigurer::disable)
+        .httpBasic(AbstractHttpConfigurer::disable)
+        .formLogin(AbstractHttpConfigurer::disable)
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+        // --- 명시적 예외 처리 핸들러 설정 (수정) ---
+        .exceptionHandling(ex -> ex
+            // 인증 실패 시 401 반환
+            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+            // 인가 실패 시 직접 403 상태 코드 설정
+            .accessDeniedHandler((request, response, accessDeniedException) ->
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN) // <<<--- 여기를 수정!
+            )
+        )
+        // ----------------------------------------
+
         .authorizeHttpRequests(authz -> authz
-            .requestMatchers("/**").permitAll() // 모든 경로 일단 허용 (나중에 경로별 권한 설정 필요!)
+            .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
             .anyRequest().authenticated()
         );
 
-  return http.build();
+    return http.build();
   }
 
+  @Bean
+  public UserDetailsService userDetailsService() {
+    // 가짜 UserDetailsService 빈 유지
+    return username -> {
+      throw new UsernameNotFoundException("User not found: " + username + " (Dummy Service)");
+    };
+  }
 }

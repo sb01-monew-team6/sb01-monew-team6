@@ -18,7 +18,6 @@ import static org.assertj.core.api.Assertions.*;
 @Import(JpaConfig.class)
 class UserRepositoryTest {
 
-
   @Autowired
   private UserRepository userRepository;
 
