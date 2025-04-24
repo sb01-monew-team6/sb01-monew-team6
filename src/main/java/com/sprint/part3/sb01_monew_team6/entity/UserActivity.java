@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserActivity extends BaseDocument {
 
+	private Long userId;
 	private String email;
 	private String nickName;
 
