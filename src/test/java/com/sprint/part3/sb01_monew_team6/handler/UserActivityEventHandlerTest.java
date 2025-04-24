@@ -12,14 +12,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
-import com.sprint.part3.sb01_monew_team6.event.UserActivityCreateEvent;
+import com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
 import com.sprint.part3.sb01_monew_team6.service.UserActivityService;
+import com.sprint.part3.sb01_monew_team6.validation.UserActivityEventValidatorDispatcher;
 
 @ExtendWith(MockitoExtension.class)
 class UserActivityEventHandlerTest {
 
 	@Mock
 	private UserActivityService userActivityService;
+	@Mock
+	private UserActivityEventValidatorDispatcher validatorDispatcher;
 
 	@InjectMocks
 	private UserActivityEventHandler userActivityEventHandler;
@@ -28,8 +32,9 @@ class UserActivityEventHandlerTest {
 	@DisplayName("addUserActivityByEventHandler 가 유저 활동 내역 추가 로직을 호출한다")
 	public void addUserActivityByEventHandler() throws Exception {
 		//given
-		UserActivityCreateEvent event = new UserActivityCreateEvent(
+		UserActivityAddEvent event = new UserActivityAddEvent(
 			1L,
+			UserActivityType.SUBSCRIPTION,
 			new SubscriptionHistoryDto(
 				1L,
 				"name",
@@ -40,6 +45,7 @@ class UserActivityEventHandlerTest {
 			null,
 			null
 		);
+		doNothing().when(validatorDispatcher).validate(event);
 		doNothing().when(userActivityService).addSubscriptionFromEvent(
 			anyLong(), any(SubscriptionHistoryDto.class));
 
