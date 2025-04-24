@@ -1,14 +1,11 @@
 package com.sprint.part3.sb01_monew_team6.repository.user_activity;
 
-import java.util.List;
-
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
-import com.mongodb.BasicDBObject;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 
 import lombok.RequiredArgsConstructor;
@@ -21,14 +18,14 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 
 	@Override
 	public void addSubscription(Long userId, UserActivity.SubscriptionHistory subscription) {
-		Query query = new Query(Criteria.where("userId").is(userId));
+		Query query = queryByUserId(userId);
 		Update update = new Update().push("subscriptions", subscription);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
 	}
 
 	@Override
 	public void removeSubscription(Long userId, Long interestId) {
-		Query query = new Query(Criteria.where("userId").is(userId));
+		Query query = queryByUserId(userId);
 		Update update = new Update().pull("subscriptions",
 			Query.query(Criteria.where("interestId").is(interestId)).getQueryObject()
 		);
@@ -37,8 +34,21 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 
 	@Override
 	public void addCommentLike(Long userId, UserActivity.CommentLikeHistory commentLike) {
-		Query query = new Query(Criteria.where("userId").is(userId));
+		Query query = queryByUserId(userId);
 		Update update = new Update().push("commentLikes", commentLike);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
+	}
+
+	@Override
+	public void removeCommentLike(Long userId, Long commentId) {
+		Query query = queryByUserId(userId);
+		Update update = new Update().pull("commentLikes",
+			Query.query(Criteria.where("commentId").is(commentId)).getQueryObject()
+		);
+		mongoTemplate.updateFirst(query, update, UserActivity.class);
+	}
+
+	private static Query queryByUserId(Long userId) {
+		return new Query(Criteria.where("userId").is(userId));
 	}
 }

@@ -209,7 +209,7 @@ class UserActivityRepositoryTest {
 
 		//when
 		for (int i = 0; i < 12; ++i) {
-			userActivityRepository.removeCommentLike(userId, 10L + i);
+			userActivityRepository.removeCommentLike(userId, 1L + i);
 		}
 
 		Optional<UserActivity> found = userActivityRepository.findById(userActivity.getId());

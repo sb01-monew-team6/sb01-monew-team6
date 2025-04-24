@@ -9,4 +9,7 @@ public interface UserActivityRepositoryCustom {
 	void removeSubscription(Long userId, Long interestId);
 
 	void addCommentLike(Long userId, UserActivity.CommentLikeHistory commentLike);
+
+	void removeCommentLike(Long userId, Long commentId);
+
 }
