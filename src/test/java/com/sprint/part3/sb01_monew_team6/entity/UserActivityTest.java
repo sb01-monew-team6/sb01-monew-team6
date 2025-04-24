@@ -14,14 +14,11 @@ class UserActivityTest {
 	@DisplayName("빌더 패턴으로 유저 활동 내역이 정상적으로 생성된다")
 	public void createUserActivityByBuilder() throws Exception {
 		//given
-		Instant now = Instant.now();
 		UserActivity.SubscriptionHistory subscription = UserActivity.SubscriptionHistory.builder()
-			.id(1L)
 			.interestId(10L)
 			.interestName("AI")
 			.interestKeywords(List.of("ChatGPT", "머신러닝"))
 			.interestSubscriberCount(10L)
-			.createdAt(now)
 			.build();
 
 		//when
@@ -37,6 +34,5 @@ class UserActivityTest {
 		assertThat(userActivity.getSubscriptions()).hasSize(1);
 		assertThat(userActivity.getSubscriptions().get(0).getInterestName()).isEqualTo("AI");
 		assertThat(userActivity.getSubscriptions().get(0).getInterestKeywords()).containsExactly("ChatGPT", "머신러닝");
-		assertThat(userActivity.getSubscriptions().get(0).getCreatedAt()).isEqualTo(now);
 	}
 }

@@ -36,13 +36,11 @@ public class UserActivity extends BaseDocument {
 	@Builder
 	@NoArgsConstructor(access = PROTECTED)
 	@AllArgsConstructor
-	public static class SubscriptionHistory {
-		private Long id;
+	public static class SubscriptionHistory extends BaseDocument {
 		private Long interestId;
 		private String interestName;
 		private List<String> interestKeywords;
 		private Long interestSubscriberCount;
-		private Instant createdAt;
 	}
 
 	@Document
@@ -50,15 +48,13 @@ public class UserActivity extends BaseDocument {
 	@Builder
 	@NoArgsConstructor(access = PROTECTED)
 	@AllArgsConstructor
-	public static class CommentHistory {
-		private Long id;
+	public static class CommentHistory extends BaseDocument {
 		private Long articleId;
 		private String articleTitle;
 		private Long userId;
 		private String userNickname;
 		private String content;
 		private Long likeCount;
-		private Instant createdAt;
 	}
 
 	@Document
@@ -66,9 +62,7 @@ public class UserActivity extends BaseDocument {
 	@Builder
 	@NoArgsConstructor(access = PROTECTED)
 	@AllArgsConstructor
-	public static class CommentLikesHistory {
-		private Long id;
-		private Instant createdAt;
+	public static class CommentLikesHistory extends BaseDocument{
 		private Long commentId;
 		private Long articleId;
 		private String articleTitle;
@@ -84,10 +78,8 @@ public class UserActivity extends BaseDocument {
 	@Builder
 	@NoArgsConstructor(access = PROTECTED)
 	@AllArgsConstructor
-	public static class ArticleViewHistory {
-		private Long id;
+	public static class ArticleViewHistory extends BaseDocument{
 		private Long viewedBy;
-		private Instant createdAt;
 		private Long articleId;
 		private String source;
 		private String sourceUrl;
