@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,11 @@ class UserActivityRepositoryTest {
 
 	@Autowired
 	private UserActivityRepository userActivityRepository;
+
+	@AfterEach
+	void cleanUp() {
+		userActivityRepository.deleteAll();
+	}
 
 	@Test
 	@DisplayName("몽고 db 에 userActivity 를 저장하고 정상적으로 찾는다")
