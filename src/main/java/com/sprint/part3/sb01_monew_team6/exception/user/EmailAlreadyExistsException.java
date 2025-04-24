@@ -1,10 +1,16 @@
-package com.sprint.part3.sb01_monew_team6.exception; // exception 패키지 사용 예시
+package com.sprint.part3.sb01_monew_team6.exception.user; // 또는 exception.user 패키지
 
-// 이메일 중복 시 발생시킬 커스텀 예외 클래스
-public class EmailAlreadyExistsException extends RuntimeException {
+import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
+import com.sprint.part3.sb01_monew_team6.exception.user.UserException; // UserException 임포트
+import org.springframework.http.HttpStatus;
+import java.time.Instant;
 
-  // 어떤 이메일이 중복되었는지 메시지에 포함시키는 생성자
+// UserException 상속 받도록 변경
+public class EmailAlreadyExistsException extends UserException {
+
   public EmailAlreadyExistsException(String email) {
-    super("이미 가입된 이메일입니다: " + email); // 예외 메시지 설정
+    // 부모 UserException 생성자 호출: 적절한 ErrorCode, 현재 시각, HttpStatus 전달
+    super(ErrorCode.EMAIL_ALREADY_EXISTS, Instant.now(), HttpStatus.CONFLICT);
+
   }
 }
