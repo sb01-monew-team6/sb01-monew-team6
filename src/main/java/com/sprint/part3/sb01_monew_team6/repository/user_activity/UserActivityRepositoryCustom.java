@@ -12,4 +12,5 @@ public interface UserActivityRepositoryCustom {
 
 	void removeCommentLike(Long userId, Long commentId);
 
+	void addComment(Long userId, UserActivity.CommentHistory comment);
 }

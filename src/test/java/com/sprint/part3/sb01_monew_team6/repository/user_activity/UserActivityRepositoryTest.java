@@ -254,8 +254,8 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getId()).isEqualTo(userActivity.getId());
 		assertThat(found.get().getEmail()).isEqualTo("email@google.com");
 		assertThat(found.get().getNickName()).isEqualTo("구글러");
-		assertThat(found.get().getCommentLikes()).hasSize(12);
-		assertThat(found.get().getCommentLikes().get(0).getArticleId()).isEqualTo(1);
-		assertThat(found.get().getCommentLikes().get(11).getArticleId()).isEqualTo(12);
+		assertThat(found.get().getComments()).hasSize(12);
+		assertThat(found.get().getComments().get(0).getArticleId()).isEqualTo(1);
+		assertThat(found.get().getComments().get(11).getArticleId()).isEqualTo(12);
 	}
 }
