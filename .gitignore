@@ -40,5 +40,6 @@ out/
 !.gitignore
 
 .env
+.env.prod
 .jon
 lifecycle-policy.json
