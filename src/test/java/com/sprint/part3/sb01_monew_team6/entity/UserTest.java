@@ -54,13 +54,60 @@ class UserTest {
     // then: isDeleted 상태 변경 확인
      assertThat(user.isDeleted()).isTrue();
   }
+  @Test
+  @DisplayName("실패: 생성자 - 이메일이 null일 때 IllegalArgumentException 발생")
+  void createUser_withNullEmail_throwsIllegalArgumentException() {
+    // when & then
+    assertThatThrownBy(() -> {
+      User.builder()
+          .email(null) // <<<--- 잘못된 값 (null)
+          .nickname("tester")
+          .password("password")
+          .build();
+    })
+        .isInstanceOf(IllegalArgumentException.class) // 예외 타입 검증
+        .hasMessageContaining("Email, nickname, password"); // 예외 메시지 일부 검증 (한글 깨짐 주의)
+  }
 
+  @Test
+  @DisplayName("실패: 생성자 - 닉네임이 비어있을 때 IllegalArgumentException 발생")
+  void createUser_withBlankNickname_throwsIllegalArgumentException() {
+    // when & then
+    assertThatThrownBy(() -> {
+      User.builder()
+          .email("test@test.com")
+          .nickname(" ") // <<<--- 잘못된 값 (blank)
+          .password("password")
+          .build();
+    })
+        .isInstanceOf(IllegalArgumentException.class); // 타입만 검증하는 예시
+  }
 
+  @Test
+  @DisplayName("실패: updateNickname - 새 닉네임이 null일 때 IllegalArgumentException 발생")
+  void updateNickname_withNullNickname_throwsIllegalArgumentException() {
+    // given
+    User user = User.builder().email("test@test.com").nickname("tester").password("pwd").build();
 
+    // when & then
+    assertThatThrownBy(() -> {
+      user.updateNickname(null); // <<<--- 잘못된 값 (null)
+    })
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("새 닉네임"); // 예외 메시지 일부 검증 (한글 깨짐 주의)
+  }
 
+  @Test
+  @DisplayName("실패: updateNickname - 새 닉네임이 비어있을 때 IllegalArgumentException 발생")
+  void updateNickname_withBlankNickname_throwsIllegalArgumentException() {
+    // given
+    User user = User.builder().email("test@test.com").nickname("tester").password("pwd").build();
 
-
-
-
+    // when & then
+    assertThatThrownBy(() -> {
+      user.updateNickname("   "); // <<<--- 잘못된 값 (blank)
+    })
+        .isInstanceOf(IllegalArgumentException.class);
+  }
 
 }
