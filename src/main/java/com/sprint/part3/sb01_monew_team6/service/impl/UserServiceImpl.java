@@ -62,10 +62,13 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
-  public void updateNickname(Long userId, String newNickname) {
-    User user = findUserByIdOrThrow(userId); // 헬퍼 메소드 사용
+  public User updateNickname(Long userId, String newNickname) {
+    User user = findUserByIdOrThrow(userId);
     user.updateNickname(newNickname);
-    userRepository.save(user); // 명시적 save 유지 시
+
+    userRepository.save(user);
+
+    return user;
   }
 
   @Override
