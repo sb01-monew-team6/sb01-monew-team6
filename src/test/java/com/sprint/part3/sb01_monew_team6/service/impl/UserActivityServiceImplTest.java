@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.ArticleViewHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
@@ -35,6 +36,8 @@ class UserActivityServiceImplTest {
 	private CommentLikeHistoryMapper commentLikeHistoryMapper;
 	@Mock
 	private CommentHistoryMapper commentHistoryMapper;
+	@Mock
+	private ArticleViewHistoryMapper articleViewHistoryMapper;
 	@Mock
 	private UserActivityRepository userActivityRepository;
 	@Mock
@@ -211,5 +214,40 @@ class UserActivityServiceImplTest {
 		assertThatThrownBy(() ->
 			userActivityService.addCommentFromEvent(userId, historyDto)
 		).isInstanceOf(UserActivityDomainException.class);
+	}
+
+	@Test
+	@DisplayName("addArticleViewFromEvent 정상 호출 시 정상적으로 레포지토리가 호출된다")
+	public void addArticleViewFromEvent() throws Exception {
+		//given
+		Long userId = 1L;
+		UserActivity.ArticleViewHistory history = new UserActivity.ArticleViewHistory(
+			1L,
+			"title",
+			1L,
+			"nickName",
+			"content",
+			3L
+		);
+		ArticleViewHistoryDto historyDto = new ArticleViewHistoryDto(
+			1L,
+			"title",
+			1L,
+			"nickName",
+			"content",
+			3L
+		);
+
+		when(ArticleViewHistoryMapper.fromDto(any(ArticleViewHistoryDto.class))).thenReturn(
+			history);
+		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		doNothing().when(userActivityRepository).addArticleView(anyLong(), any(UserActivity.ArticleViewHistory.class));
+
+		//when
+		userActivityService.addArticleViewFromEvent(userId, historyDto);
+
+		//then
+		verify(userActivityRepository, times(1)).addArticleView(anyLong(),
+			any(UserActivity.ArticleViewHistory.class));
 	}
 }
