@@ -28,7 +28,7 @@ public class NewsCollectionControllerTest {
     //when
 
     //then
-    mvc.perform(get("/api/admin/collect-news"))
+    mvc.perform(get("/api/articles/collect/news"))
         .andExpect(status().isOk());
   }
 }
