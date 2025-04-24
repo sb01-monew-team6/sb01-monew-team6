@@ -137,17 +137,21 @@ class UserActivityServiceImplTest {
 	public void throwUserActivityDomainExceptionWhenUserNonExistWhileAddCommentLikeFromEvent() throws Exception {
 		//given
 		Long userId = 1L;
-		SubscriptionHistoryDto historyDto = new SubscriptionHistoryDto(
+		CommentLikeHistoryDto historyDto = new CommentLikeHistoryDto(
+			1L,
 			1L,
 			"interestName",
-			List.of("k1", "k2"),
-			3L
+			1L,
+			"nickName",
+			"content",
+			3L,
+			Instant.now()
 		);
 		when(userRepository.findById(eq(userId))).thenReturn(Optional.empty());
 
 		//when & then
 		assertThatThrownBy(() ->
-			userActivityService.addSubscriptionFromEvent(userId, historyDto)
+			userActivityService.addCommentLikeFromEvent(userId, historyDto)
 		).isInstanceOf(UserActivityDomainException.class);
 
 	}
