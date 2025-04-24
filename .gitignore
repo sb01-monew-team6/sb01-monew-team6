@@ -42,3 +42,4 @@ out/
 .env
 .jon
 lifecycle-policy.json
+.logs/
