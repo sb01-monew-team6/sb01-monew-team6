@@ -1,11 +1,14 @@
 package com.sprint.part3.sb01_monew_team6.repository.user_activity;
 
+import java.util.List;
+
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
+import com.mongodb.BasicDBObject;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,13 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 		Update update = new Update().pull("subscriptions",
 			Query.query(Criteria.where("interestId").is(interestId)).getQueryObject()
 		);
+		mongoTemplate.updateFirst(query, update, UserActivity.class);
+	}
+
+	@Override
+	public void addCommentLike(Long userId, UserActivity.CommentLikeHistory commentLike) {
+		Query query = new Query(Criteria.where("userId").is(userId));
+		Update update = new Update().push("commentLikes", commentLike);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
 	}
 }
