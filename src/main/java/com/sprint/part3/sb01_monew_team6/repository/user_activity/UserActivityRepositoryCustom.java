@@ -15,4 +15,7 @@ public interface UserActivityRepositoryCustom {
 	void addComment(Long userId, UserActivity.CommentHistory comment);
 
 	void removeComment(Long userId, Long articleId);
+
+	void addArticleView(Long userId, UserActivity.ArticleViewHistory articleView);
+
 }

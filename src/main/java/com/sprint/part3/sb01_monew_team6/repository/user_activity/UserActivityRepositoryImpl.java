@@ -64,6 +64,13 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
 	}
 
+	@Override
+	public void addArticleView(Long userId, UserActivity.ArticleViewHistory articleView) {
+		Query query = queryByUserId(userId);
+		Update update = new Update().push("articleViews", articleView);
+		mongoTemplate.updateFirst(query, update, UserActivity.class);
+	}
+
 	private static Query queryByUserId(Long userId) {
 		return new Query(Criteria.where("userId").is(userId));
 	}
