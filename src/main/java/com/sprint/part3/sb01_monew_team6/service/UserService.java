@@ -9,7 +9,7 @@ public interface UserService {
 
     User login(UserLoginRequest request);
 
-    void updateNickname(Long userId, String newNickname);
+    User updateNickname(Long userId, String newNickname);
 
     void deleteUser(Long userId);
 }
