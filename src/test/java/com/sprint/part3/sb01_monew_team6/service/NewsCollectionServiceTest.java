@@ -114,5 +114,18 @@ public class NewsCollectionServiceTest {
     then(newsArticleRepository).should(never()).saveAll(any());
   }
 
-  
+  @Test
+  @DisplayName("관심사 없으면 외부 호출·저장 모두 안 함")
+  void givenNoInterests_thenNothing() {
+    // Given
+    given(interestRepository.findAll()).willReturn(List.of());
+
+    // When
+    service.collectAndSave();
+
+    // Then
+    then(naverClient).should(never()).fetchNews(any());
+    then(rssClient).should(never()).fetchNews();
+    then(newsArticleRepository).should(never()).saveAll(any());
+  }
 }
