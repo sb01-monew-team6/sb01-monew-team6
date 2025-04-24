@@ -48,5 +48,12 @@ class UserActivityRepositoryTest {
 
 		//then
 		assertThat(found).isPresent();
+		assertThat(found.get().getId()).isEqualTo(userActivity.getId());
+		assertThat(found.get().getEmail()).isEqualTo("email@google.com");
+		assertThat(found.get().getNickName()).isEqualTo("구글러");
+		assertThat(found.get().getSubscriptions()).hasSize(1);
+		assertThat(found.get().getSubscriptions().get(0).getInterestName()).isEqualTo("AI");
+		assertThat(found.get().getSubscriptions().get(0).getInterestKeywords()).containsExactly("ChatGPT", "머신러닝");
+		assertThat(found.get().getSubscriptions().get(0).getId()).isEqualTo(subscription.getId());
 	}
 }
