@@ -18,4 +18,6 @@ public interface UserActivityRepositoryCustom {
 
 	void addArticleView(Long userId, UserActivity.ArticleViewHistory articleView);
 
+	void removeArticleView(Long userId, Long viewedBy);
+
 }
