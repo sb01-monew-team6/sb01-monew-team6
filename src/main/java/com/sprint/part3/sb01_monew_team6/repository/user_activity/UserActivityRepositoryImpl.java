@@ -16,9 +16,19 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 
 	private final MongoTemplate mongoTemplate;
 
+	@Override
 	public void addSubscription(Long userId, UserActivity.SubscriptionHistory subscription) {
 		Query query = new Query(Criteria.where("userId").is(userId));
 		Update update = new Update().push("subscriptions", subscription);
+		mongoTemplate.updateFirst(query, update, UserActivity.class);
+	}
+
+	@Override
+	public void removeSubscription(Long userId, Long interestId) {
+		Query query = new Query(Criteria.where("userId").is(userId));
+		Update update = new Update().pull("subscriptions",
+			Query.query(Criteria.where("interestId").is(interestId)).getQueryObject()
+		);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
 	}
 }

@@ -126,6 +126,7 @@ class UserActivityRepositoryTest {
 		Optional<UserActivity> found = userActivityRepository.findById(userActivity.getId());
 
 		//then
-		assertThat(found).isEmpty();
+		assertThat(found).isPresent();
+		assertThat(found.get().getSubscriptions()).isEmpty();
 	}
 }
