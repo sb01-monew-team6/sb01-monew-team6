@@ -150,6 +150,7 @@ class UserActivityRepositoryTest {
 
 		userActivityRepository.save(userActivity);
 
+		//when
 		for (int i = 0; i < 12; ++i) {
 			UserActivity.CommentLikeHistory commentLike = UserActivity.CommentLikeHistory.builder()
 				.commentId(1L + i)
@@ -174,5 +175,47 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getCommentLikes()).hasSize(12);
 		assertThat(found.get().getCommentLikes().get(0).getCommentId()).isEqualTo(1);
 		assertThat(found.get().getCommentLikes().get(11).getCommentId()).isEqualTo(12);
+	}
+
+
+	@Test
+	@DisplayName("removeCommentLike 정상 호출 시 정상적으로 몽고 db 에서 삭제된다")
+	public void removeCommentLikeSuccessfully() throws Exception {
+		//given
+		Long userId = 1L;
+
+		UserActivity userActivity = UserActivity.builder()
+			.userId(userId)
+			.email("email@google.com")
+			.nickName("구글러")
+			.build();
+
+		userActivityRepository.save(userActivity);
+
+		//when
+		for (int i = 0; i < 12; ++i) {
+			UserActivity.CommentLikeHistory commentLike = UserActivity.CommentLikeHistory.builder()
+				.commentId(1L + i)
+				.articleId(10L + i)
+				.articleTitle("title" + i)
+				.commentUserId(100L + i)
+				.commentUserNickname("nickname" + i)
+				.commentContent("hello" + i)
+				.commentLikeCount(1000L + i)
+				.build();
+
+			userActivityRepository.addCommentLike(userId, commentLike);
+		}
+
+		//when
+		for (int i = 0; i < 12; ++i) {
+			userActivityRepository.removeCommentLike(userId, 10L + i);
+		}
+
+		Optional<UserActivity> found = userActivityRepository.findById(userActivity.getId());
+
+		//then
+		assertThat(found).isPresent();
+		assertThat(found.get().getCommentLikes()).isEmpty();
 	}
 }
