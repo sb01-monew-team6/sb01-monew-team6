@@ -28,7 +28,7 @@ public class UserActivity extends BaseDocument {
 
 	private List<SubscriptionHistory> subscriptions;
 	private List<CommentHistory> comments;
-	private List<CommentLikesHistory> commentLikes;
+	private List<CommentLikeHistory> commentLikes;
 	private List<ArticleViewHistory> articleViews;
 
 	@Document
@@ -62,7 +62,7 @@ public class UserActivity extends BaseDocument {
 	@Builder
 	@NoArgsConstructor(access = PROTECTED)
 	@AllArgsConstructor
-	public static class CommentLikesHistory extends BaseDocument{
+	public static class CommentLikeHistory extends BaseDocument{
 		private Long commentId;
 		private Long articleId;
 		private String articleTitle;
