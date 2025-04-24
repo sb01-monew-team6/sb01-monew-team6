@@ -24,45 +24,65 @@ public class NewsCollectionService {
   private final InterestRepository interestRepository;
 
   @Transactional
-  public void collectAndSave(){
+  public void collectAndSave() {
     List<Interest> interests = interestRepository.findAll();
-    List<ExternalNewsItem> items = new ArrayList<>();
 
     // 관심사가 없으면 바로 종료
     if (interests.isEmpty()) {
       return;
     }
 
-    for(Interest i: interests){
-      for(String keyword: i.getKeyword()){
+    List<ExternalNewsItem> externalNewsItems = fetchExternalNews(interests);
+    List<NewsArticle> toSave = filterAndPrepareNewsArticles(externalNewsItems, interests);
+
+    if (!toSave.isEmpty()) {
+      newsArticleRepository.saveAll(toSave);
+    }
+  }
+
+  private List<ExternalNewsItem> fetchExternalNews(List<Interest> interests) {
+    List<ExternalNewsItem> items = new ArrayList<>();
+
+    // 네이버 뉴스 페칭
+    for (Interest interest : interests) {
+      for (String keyword : interest.getKeyword()) {
         items.addAll(naver.fetchNews(keyword));
       }
     }
-    for(RssNewsClient rss : rssClients){
-      items.addAll(rss.fetchNews());
+
+    // RSS 뉴스 페칭
+    for (RssNewsClient rssClient : rssClients) {
+      items.addAll(rssClient.fetchNews());
     }
 
-    // 3) 중복 URL 제거·필터링해서 저장 대기 리스트 생성
-    List<NewsArticle> toSave = new ArrayList<>();
-    Set<String> seenUrls = new HashSet<>();  // 이미 처리한 URL 기록
+    return items;
+  }
 
-    for (ExternalNewsItem e : items) {
-      String url = e.originalLink();
-      // ① 최초 등장한 URL이고
-      // ② DB에도 없고
-      // ③ 제목에 관심사 키워드가 포함되어 있으면
-      if (seenUrls.add(url)
-          && !newsArticleRepository.existsBySourceUrl(url)
-          && interests.stream().anyMatch(
-          interest -> interest.getKeyword().stream()
-              .anyMatch(keyword -> e.title().contains(keyword))
-      )) {
-        toSave.add(NewsArticle.from(e));
+  private List<NewsArticle> filterAndPrepareNewsArticles(List<ExternalNewsItem> items, List<Interest> interests) {
+    List<NewsArticle> toSave = new ArrayList<>();
+    Set<String> seenUrls = new HashSet<>(); // 이미 처리한 URL 기록
+
+    for (ExternalNewsItem item : items) {
+      String url = item.originalLink();
+      if (isUniqueAndRelevant(item, url, seenUrls, interests)) {
+        toSave.add(NewsArticle.from(item));
       }
     }
 
-    if(!toSave.isEmpty()){
-      newsArticleRepository.saveAll(toSave);
-    }
+    return toSave;
+  }
+
+  // 처음 등장 URL, DB x, 제목에 관심사 키워드
+  private boolean isUniqueAndRelevant(ExternalNewsItem item, String url, Set<String> seenUrls, List<Interest> interests) {
+    return seenUrls.add(url)
+        && !newsArticleRepository.existsBySourceUrl(url)
+        && containsKeyword(item, interests);
+  }
+
+  // 제목에 관심사 키워드가 포함되어 있는지 확인
+  private boolean containsKeyword(ExternalNewsItem item, List<Interest> interests) {
+    return interests.stream()
+        .anyMatch(interest -> interest.getKeyword().stream()
+            .anyMatch(keyword -> item.title().contains(keyword)));
   }
 }
