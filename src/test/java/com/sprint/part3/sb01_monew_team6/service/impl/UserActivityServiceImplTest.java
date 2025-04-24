@@ -22,6 +22,7 @@ import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
 import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
+import com.sprint.part3.sb01_monew_team6.mapper.CommentLikeHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.SubscriptionHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.repository.user_activity.UserActivityRepository;
@@ -129,5 +130,25 @@ class UserActivityServiceImplTest {
 		//then
 		verify(userActivityRepository, times(1)).addCommentLike(anyLong(),
 			any(UserActivity.CommentLikeHistory.class));
+	}
+
+	@Test
+	@DisplayName("addCommentLikeFromEvent 호출 시 user 가 존재하지 않는다면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenUserNonExistWhileAddCommentLikeFromEvent() throws Exception {
+		//given
+		Long userId = 1L;
+		SubscriptionHistoryDto historyDto = new SubscriptionHistoryDto(
+			1L,
+			"interestName",
+			List.of("k1", "k2"),
+			3L
+		);
+		when(userRepository.findById(eq(userId))).thenReturn(Optional.empty());
+
+		//when & then
+		assertThatThrownBy(() ->
+			userActivityService.addSubscriptionFromEvent(userId, historyDto)
+		).isInstanceOf(UserActivityDomainException.class);
+
 	}
 }
