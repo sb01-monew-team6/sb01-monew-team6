@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.repository.user_activity;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -297,5 +298,40 @@ class UserActivityRepositoryTest {
 		//then
 		assertThat(found).isPresent();
 		assertThat(found.get().getComments()).isEmpty();
+	}
+
+	@Test
+	@DisplayName("addArticleView 정상 호출 시 정상적으로 몽고 db 에 적재된다")
+	public void addArticleViewSuccessfully() throws Exception {
+		//given
+		Long userId = 1L;
+
+		UserActivity userActivity = UserActivity.builder()
+			.userId(userId)
+			.email("email@google.com")
+			.nickName("구글러")
+			.build();
+
+		userActivityRepository.save(userActivity);
+
+		//when
+		for (int i = 0; i < 12; ++i) {
+			UserActivity.ArticleViewHistory articleView = UserActivity.ArticleViewHistory.builder()
+				.viewedBy(1L + i)
+				.build();
+
+			userActivityRepository.addArticleView(userId, articleView);
+		}
+
+		Optional<UserActivity> found = userActivityRepository.findById(userActivity.getId());
+
+		//then
+		assertThat(found).isPresent();
+		assertThat(found.get().getId()).isEqualTo(userActivity.getId());
+		assertThat(found.get().getUserId()).isEqualTo(userId);
+		assertThat(found.get().getEmail()).isEqualTo("email@google.com");
+		assertThat(found.get().getNickName()).isEqualTo("구글러");
+		assertThat(found.get().getArticleViews().get(0).getViewedBy()).isEqualTo(1);
+		assertThat(found.get().getArticleViews().get(11).getViewedBy()).isEqualTo(12);
 	}
 }
