@@ -1,15 +1,21 @@
-package com.sprint.part3.sb01_monew_team6.exception;
+package com.sprint.part3.sb01_monew_team6.exception.user;
 
-// 사용자를 찾을 수 없을 때 발생시킬 커스텀 예외
-public class UserNotFoundException extends RuntimeException {
+import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
+import com.sprint.part3.sb01_monew_team6.exception.user.UserException; // UserException 임포트
+import org.springframework.http.HttpStatus;
+import java.time.Instant;
 
-  // 사용자 ID를 포함하는 생성자
+// UserException 상속 받도록 변경
+public class UserNotFoundException extends UserException {
   public UserNotFoundException(Long userId) {
-    super("사용자를 찾을 수 없습니다. ID: " + userId); // 예외 메시지
+    // 부모 UserException 생성자 호출
+    super(ErrorCode.USER_NOT_FOUND, Instant.now(), HttpStatus.NOT_FOUND);
+    // log.warn("User not found with ID: {}", userId); // 로깅 등에 활용 가능
   }
 
-  // 다른 메시지를 사용하는 생성자 (선택 사항)
   public UserNotFoundException(String message) {
-    super(message);
+    // 메시지를 직접 설정하기보다 ErrorCode를 사용하는 것이 일관성에 좋음
+    super(ErrorCode.USER_NOT_FOUND, Instant.now(), HttpStatus.NOT_FOUND);
+    // log.warn("User not found: {}", message); // 로깅 등에 활용 가능
   }
 }
