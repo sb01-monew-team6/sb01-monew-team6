@@ -28,6 +28,10 @@ public class NewsCollectionService {
     List<Interest> interests = interestRepository.findAll();
     List<ExternalNewsItem> items = new ArrayList<>();
 
+    // 관심사가 없으면 바로 종료
+    if (interests.isEmpty()) {
+      return;
+    }
 
     for(Interest i: interests){
       for(String keyword: i.getKeyword()){
