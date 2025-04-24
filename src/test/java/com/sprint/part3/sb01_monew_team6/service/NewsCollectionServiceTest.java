@@ -14,8 +14,10 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +34,12 @@ public class NewsCollectionServiceTest {
   private NewsCollectionService service;
 
   @BeforeEach
+  void init() {
+    MockitoAnnotations.openMocks(this);                   
+    service = new NewsCollectionService(naverClient, List.of(rssClient), newsArticleRepository, interestRepository);
+  }
+
+  @Test
   @DisplayName("키워드 포함 기사만 저장")
   void save_News_Only_With_Keyword() {
     //given
@@ -52,7 +60,11 @@ public class NewsCollectionServiceTest {
     //when
     service.collectAndSave();
 
-    //then
-    then(newsArticleRepository).should().saveAll(argThat(list->list.size()==1));
+    // then: Iterable 크기 검사
+    then(newsArticleRepository).should().saveAll(argThat(iter -> {
+      int cnt = 0;
+      for (var x : iter) cnt++;
+      return cnt == 1;
+    }));
   }
 }

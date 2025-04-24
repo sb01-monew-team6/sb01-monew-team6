@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.entity;
 
+import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.base.BaseEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -58,4 +59,14 @@ public class NewsArticle extends BaseEntity {
 
   @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Comment> comments = new ArrayList<>();
+
+  public static NewsArticle from(ExternalNewsItem e) {
+    NewsArticle a = new NewsArticle();
+    a.source = e.provider(); //출처
+    a.sourceUrl = e.originalLink();//원본 링크
+    a.articleTitle = e.title();//제목
+    a.articlePublishedDate = e.pubDate().toInstant(); //발행일
+    a.articleSummary = e.description(); //요약
+    return a;
+  }
 }
