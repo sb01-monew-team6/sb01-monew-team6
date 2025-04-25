@@ -79,6 +79,13 @@ public class UserActivityServiceImpl implements UserActivityService {
 		userActivityRepository.removeComment(userId, articleId);
 	}
 
+	@Override
+	public void removeArticleViewFromEvent(Long userId, Long viewedBy) {
+		validateUserId(userId);
+
+		userActivityRepository.removeArticleView(userId, viewedBy);
+	}
+
 	private void validateUserId(Long userId) {
 		userRepository.findById(userId)
 			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
