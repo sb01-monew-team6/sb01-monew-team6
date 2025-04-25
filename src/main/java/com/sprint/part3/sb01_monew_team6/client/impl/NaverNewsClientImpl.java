@@ -45,7 +45,7 @@ public class NaverNewsClientImpl implements NaverNewsClient {
             item.originalLink,
             item.link,
             item.title,
-            item.pubDate,
+            item.pubDate.toInstant(),
             item.description
         ))
         .toList();

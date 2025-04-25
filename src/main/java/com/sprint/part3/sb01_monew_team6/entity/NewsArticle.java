@@ -65,7 +65,7 @@ public class NewsArticle extends BaseEntity {
     a.source = e.provider(); //출처
     a.sourceUrl = e.originalLink();//원본 링크
     a.articleTitle = e.title();//제목
-    a.articlePublishedDate = e.pubDate().toInstant(); //발행일
+    a.articlePublishedDate = e.pubDate(); //발행일
     a.articleSummary = e.description(); //요약
     return a;
   }

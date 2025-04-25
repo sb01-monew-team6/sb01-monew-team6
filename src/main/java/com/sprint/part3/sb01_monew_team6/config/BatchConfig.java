@@ -13,6 +13,7 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -50,8 +51,8 @@ public class BatchConfig {
   //변환된 NewsArticle 목록을 서비스에 저장 위임
   @Bean
   public ItemWriter<NewsArticle> newsWriter() {
-    return chunk -> {
-      // Chunk 내부의 실제 리스트를 꺼내서 저장
+    return (Chunk<? extends NewsArticle> chunk) -> {
+      // Chunk 안에 담긴 List<NewsArticle>를 꺼내서 service에 넘깁니다.
       List<NewsArticle> articles = new ArrayList<>(chunk.getItems());
       service.saveAll(articles);
     };
