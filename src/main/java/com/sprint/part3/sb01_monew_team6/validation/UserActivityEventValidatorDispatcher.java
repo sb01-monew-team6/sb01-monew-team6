@@ -53,5 +53,14 @@ public class UserActivityEventValidatorDispatcher {
 			throw new UserActivityDomainException("유저 id 가 유효하지 않습니다.",
 				Map.of("userId", String.valueOf(event.userId())));
 		}
+
+		switch (event.type()) {
+			case SUBSCRIPTION:
+				if (Objects.isNull(event.interestId()) || event.interestId() <= 0) {
+					throw new UserActivityDomainException("관심사 id 가 유효하지 않습니다.",
+						Map.of("interestId", String.valueOf(event.interestId())));
+				}
+				break;
+		}
 	}
 }
