@@ -25,15 +25,9 @@ public class UserActivityEventValidatorDispatcher {
 	private final ArticleViewHistoryValidator articleViewValidator;
 
 	public void validate(UserActivityAddEvent event) {
-		if (Objects.isNull(event)) {
-			throw new UserActivityDomainException("이벤트가 null 일 수 없습니다.",
-				Map.of("event", String.valueOf(event)));
-		}
 
-		if (Objects.isNull(event.userId()) || event.userId() <= 0) {
-			throw new UserActivityDomainException("유저 id 가 유효하지 않습니다.",
-				Map.of("userId", String.valueOf(event.userId())));
-		}
+		validateEvent(event);
+		validateUserId(event.userId());
 
 		switch (event.type()) {
 			case SUBSCRIPTION -> subscriptionValidator.validate(event.subscription());
@@ -43,24 +37,36 @@ public class UserActivityEventValidatorDispatcher {
 		}
 	}
 
-	public void validate(UserActivityRemoveEvent event) {
+	private static void validateUserId(Long userId) {
+		if (Objects.isNull(userId) || userId <= 0) {
+			throw new UserActivityDomainException("유저 id 가 유효하지 않습니다.",
+				Map.of("userId", String.valueOf(userId)));
+		}
+	}
+
+	private static void validateEvent(Object event) {
 		if (Objects.isNull(event)) {
 			throw new UserActivityDomainException("이벤트가 null 일 수 없습니다.",
 				Map.of("event", String.valueOf(event)));
 		}
+	}
 
-		if (Objects.isNull(event.userId()) || event.userId() <= 0) {
-			throw new UserActivityDomainException("유저 id 가 유효하지 않습니다.",
-				Map.of("userId", String.valueOf(event.userId())));
-		}
+	public void validate(UserActivityRemoveEvent event) {
+
+		validateEvent(event);
+		validateUserId(event.userId());
 
 		switch (event.type()) {
 			case SUBSCRIPTION:
-				if (Objects.isNull(event.interestId()) || event.interestId() <= 0) {
-					throw new UserActivityDomainException("관심사 id 가 유효하지 않습니다.",
-						Map.of("interestId", String.valueOf(event.interestId())));
-				}
+				validateInterestId(event.interestId());
 				break;
+		}
+	}
+
+	private static void validateInterestId(Long interestId) {
+		if (Objects.isNull(interestId) || interestId <= 0) {
+			throw new UserActivityDomainException("관심사 id 가 유효하지 않습니다.",
+				Map.of("interestId", String.valueOf(interestId)));
 		}
 	}
 }
