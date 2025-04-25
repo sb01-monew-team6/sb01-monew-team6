@@ -18,4 +18,6 @@ public interface UserActivityService {
 	void removeSubscriptionFromEvent(Long userId, Long interestId);
 
 	void removeCommentLikeFromEvent(Long userId, Long commentId);
+
+	void removeCommentFromEvent(Long userId, Long articleId);
 }
