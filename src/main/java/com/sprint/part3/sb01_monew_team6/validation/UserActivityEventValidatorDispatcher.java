@@ -6,6 +6,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Component;
 
 import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityRemoveEvent;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
 import com.sprint.part3.sb01_monew_team6.validation.user_activity.ArticleViewHistoryValidator;
 import com.sprint.part3.sb01_monew_team6.validation.user_activity.CommentHistoryValidator;
@@ -40,5 +41,9 @@ public class UserActivityEventValidatorDispatcher {
 			case COMMENT -> commentValidator.validate(event.comment());
 			case ARTICLE_VIEW -> articleViewValidator.validate(event.articleView());
 		}
+	}
+
+	public void validate(UserActivityRemoveEvent event) {
+
 	}
 }
