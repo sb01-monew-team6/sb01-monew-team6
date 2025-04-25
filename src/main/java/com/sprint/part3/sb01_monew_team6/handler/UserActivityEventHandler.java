@@ -40,6 +40,9 @@ public class UserActivityEventHandler {
 
 		switch (event.type()) {
 			case SUBSCRIPTION -> userActivityService.removeSubscriptionFromEvent(event.userId(), event.interestId());
+			case COMMENT_LIKE -> userActivityService.removeCommentLikeFromEvent(event.userId(), event.commentId());
+			case COMMENT -> userActivityService.removeCommentFromEvent(event.userId(), event.articleId());
+			case ARTICLE_VIEW -> userActivityService.removeArticleViewFromEvent(event.userId(), event.viewedBy());
 		}
 	}
 
