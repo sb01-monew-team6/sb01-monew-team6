@@ -44,4 +44,24 @@ class CommentHistoryValidatorTest {
 			validator.validate(dto)
 		).isInstanceOf(UserActivityDomainException.class);
 	}
+
+	@Test
+	@DisplayName("validateCommentHistoryDto 호출 시 좋아요 수 가 유효하지 않으면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenLikeCountIsInvalidWhileValidateCommentHistoryDto() throws
+		Exception {
+		//given
+		CommentHistoryDto dto = new CommentHistoryDto(
+			1L,
+			"title",
+			1L,
+			"nickName",
+			"content",
+			0L
+		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			validator.validate(dto)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
 }
