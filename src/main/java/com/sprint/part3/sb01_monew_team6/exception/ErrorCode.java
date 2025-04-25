@@ -16,6 +16,9 @@ public enum ErrorCode {
 	//notification
 	NOTIFICATION_INVALID_EXCEPTION("유효하지 않은 요청입니다."),
 	NOTIFICATION_USER_NOT_FOUND_EXCEPTION("존재하지 않는 유저입니다."),
+
+	//user_activity
+	USER_ACTIVITY_INVALID_EXCEPTION("유효하지 않은 요청입니다."),
 	;
 
 	ErrorCode(String message) {

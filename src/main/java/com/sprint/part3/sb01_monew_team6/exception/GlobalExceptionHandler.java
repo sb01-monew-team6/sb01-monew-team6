@@ -4,6 +4,8 @@ import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
 import static org.springframework.http.HttpStatus.*;
 
 import java.time.Instant;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +18,17 @@ import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
 import com.sprint.part3.sb01_monew_team6.validation.group.NotificationValidationGroup;
+import com.sprint.part3.sb01_monew_team6.validation.group.UserActivityValidationGroup;
 
 import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+	private static final Map<Class<?>, ErrorCode> VALIDATION_GROUP_ERROR_CODES = Map.of(
+		NotificationValidationGroup.class, NOTIFICATION_INVALID_EXCEPTION,
+		UserActivityValidationGroup.class, USER_ACTIVITY_INVALID_EXCEPTION
+	);
 
 	//
 	@ExceptionHandler(exception = UserException.class)
@@ -92,16 +100,17 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ConstraintViolationException.class)
 	public ResponseEntity<ErrorResponse> handleNotificationException(ConstraintViolationException e) {
 
-		boolean isNotificationGroup = e.getConstraintViolations().stream()
-			.anyMatch(v ->
-				v.getConstraintDescriptor().getGroups().contains(NotificationValidationGroup.class)
-			);
+		Optional<ErrorCode> matchedErrorCode = e.getConstraintViolations().stream()
+			.flatMap(v -> v.getConstraintDescriptor().getGroups().stream())
+			.filter(VALIDATION_GROUP_ERROR_CODES::containsKey)
+			.findFirst()
+			.map(VALIDATION_GROUP_ERROR_CODES::get);
 
-		if (!isNotificationGroup) {
+		if (matchedErrorCode.isEmpty()) {
 			throw e;
 		}
 
-		ErrorCode code = NOTIFICATION_INVALID_EXCEPTION;
+		ErrorCode code = matchedErrorCode.get();
 		HttpStatus status = BAD_REQUEST;
 		return ResponseEntity
 			.status(status)

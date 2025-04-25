@@ -35,8 +35,8 @@ class UserActivityControllerTest {
 	public void respondErrorResponseWhenUserIdIsInvalidWhileFindUserActivityByUserId() throws Exception {
 	    //given & when
 		ResultActions perform = mockMvc.perform(
-			MockMvcRequestBuilders.get("/api/v1/user-activities/{userId}")
-				.header("Monew-Request-User-Id", 1L)
+			MockMvcRequestBuilders.get("/api/v1/user-activities/{userId}", 0L)
+				.header("Monew-Request-User-Id", 0L)
 		);
 
 		//then
