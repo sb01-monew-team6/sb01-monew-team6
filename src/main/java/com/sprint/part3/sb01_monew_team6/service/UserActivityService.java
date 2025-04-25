@@ -4,6 +4,7 @@ import com.sprint.part3.sb01_monew_team6.dto.user_activity.ArticleViewHistoryDto
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.UserActivityDto;
 
 public interface UserActivityService {
 
@@ -22,4 +23,6 @@ public interface UserActivityService {
 	void removeCommentFromEvent(Long userId, Long articleId);
 
 	void removeArticleViewFromEvent(Long userId, Long viewedBy);
+
+	UserActivityDto findUserActivityByUserId(Long userId);
 }

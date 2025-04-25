@@ -8,6 +8,7 @@ import com.sprint.part3.sb01_monew_team6.dto.user_activity.ArticleViewHistoryDto
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.UserActivityDto;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
 import com.sprint.part3.sb01_monew_team6.mapper.ArticleViewHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentHistoryMapper;
@@ -84,6 +85,11 @@ public class UserActivityServiceImpl implements UserActivityService {
 		validateUserId(userId);
 
 		userActivityRepository.removeArticleView(userId, viewedBy);
+	}
+
+	@Override
+	public UserActivityDto findUserActivityByUserId(Long userId) {
+		return null;
 	}
 
 	private void validateUserId(Long userId) {
