@@ -10,7 +10,9 @@ import java.net.URL;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
 
+@Service
 public class HankyungRssClientImpl implements RssNewsClient {
 
   private static final String H_URL = "https://www.hankyun.com/feed";
