@@ -8,7 +8,6 @@ import com.sprint.part3.sb01_monew_team6.client.RssNewsClient;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import java.io.IOException;
 import java.net.URL;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -28,7 +27,7 @@ public class HankyungRssClientImpl implements RssNewsClient {
               e.getLink(),
               e.getLink(),
               e.getTitle(),
-              e.getPublishedDate().toInstant().atZone(ZoneId.systemDefault()),
+              e.getPublishedDate().toInstant(),
               e.getDescription().getValue()
               ))
           .collect(Collectors.toList());

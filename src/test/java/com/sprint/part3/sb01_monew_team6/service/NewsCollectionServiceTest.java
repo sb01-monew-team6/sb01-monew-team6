@@ -12,7 +12,7 @@ import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -52,7 +52,7 @@ public class NewsCollectionServiceTest {
     given(interestRepository.findAll()).willReturn(List.of(i));
 
     ExternalNewsItem e1 = new ExternalNewsItem(
-        "Naver","url1","url1","축구 제목", ZonedDateTime.now(),""
+        "Naver","url1","url1","축구 제목", Instant.now(),""
     );
 
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1));
@@ -80,7 +80,7 @@ public class NewsCollectionServiceTest {
     given(interestRepository.findAll()).willReturn(List.of(i));
 
     ExternalNewsItem e1 = new ExternalNewsItem(
-        "Naver", "url1", "url1", "축구제목", ZonedDateTime.now(), "요약"
+        "Naver", "url1", "url1", "축구제목", Instant.now(), "요약"
     );
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1, e1));
     given(rssClient.fetchNews()).willReturn(List.of());
@@ -102,7 +102,7 @@ public class NewsCollectionServiceTest {
     Interest it = new Interest();
     it.setKeyword(List.of("x"));
     given(interestRepository.findAll()).willReturn(List.of(it));
-    ExternalNewsItem e = new ExternalNewsItem("NAVER","x","x","x",ZonedDateTime.now(),"");
+    ExternalNewsItem e = new ExternalNewsItem("NAVER","x","x","x",Instant.now(),"");
     given(naverClient.fetchNews("x")).willReturn(List.of(e));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("x")).willReturn(true);
