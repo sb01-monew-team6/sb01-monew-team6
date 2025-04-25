@@ -160,4 +160,24 @@ class UserActivityEventValidatorDispatcherTest {
 			dispatcher.validate(event)
 		).isInstanceOf(UserActivityDomainException.class);
 	}
+
+	@Test
+	@DisplayName("validateRemoveEvent 호출 시 type 이 기사 조회 인 경우 viewedBy 가 유효하지 않으면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenViewedByIsInvalidWhileValidateRemoveEvent() throws
+		Exception {
+		//given
+		UserActivityRemoveEvent event = new UserActivityRemoveEvent(
+			1L,
+			UserActivityType.ARTICLE_VIEW,
+			null,
+			null,
+			null,
+			0L
+		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			dispatcher.validate(event)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
 }
