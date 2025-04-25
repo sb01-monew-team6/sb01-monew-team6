@@ -1,5 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.repository.user_activity;
 
+import java.util.Optional;
+
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 
 public interface UserActivityRepositoryCustom {
@@ -20,4 +22,5 @@ public interface UserActivityRepositoryCustom {
 
 	void removeArticleView(Long userId, Long viewedBy);
 
+	Optional<UserActivity> findByUserId(Long userId);
 }
