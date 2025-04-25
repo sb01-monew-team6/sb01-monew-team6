@@ -15,7 +15,6 @@ import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	//
 	@ExceptionHandler(exception = UserException.class)
 	public ResponseEntity<ErrorResponse> handleUserException(UserException e) {
 
@@ -33,7 +32,6 @@ public class GlobalExceptionHandler {
 			);
 	}
 
-	//
 	@ExceptionHandler(exception = InterestException.class)
 	public ResponseEntity<ErrorResponse> handleInterestException(InterestException e) {
 
