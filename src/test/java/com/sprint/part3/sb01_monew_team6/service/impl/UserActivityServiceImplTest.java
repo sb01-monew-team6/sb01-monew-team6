@@ -258,4 +258,23 @@ class UserActivityServiceImplTest {
 		verify(userActivityRepository, times(1)).addArticleView(anyLong(),
 			any(UserActivity.ArticleViewHistory.class));
 	}
+
+	@Test
+	@DisplayName("removeSubscriptionFromEvent 정상 호출 시 정상적으로 레포지토리가 호출된다")
+	public void removeSubscriptionFromEvent() throws Exception {
+		//given
+		Long userId = 1L;
+		Long interestId = 1L;
+
+		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		doNothing().when(userActivityRepository)
+			.removeSubscription(eq(userId), eq(interestId));
+
+		//when
+		userActivityService.removeSubscriptionFromEvent(userId, interestId);
+
+		//then
+		verify(userActivityRepository, times(1)).removeSubscription(eq(userId),
+			eq(interestId));
+	}
 }
