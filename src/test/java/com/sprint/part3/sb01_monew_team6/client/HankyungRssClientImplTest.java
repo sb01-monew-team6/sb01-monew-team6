@@ -2,9 +2,7 @@ package com.sprint.part3.sb01_monew_team6.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
-import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
 import com.sprint.part3.sb01_monew_team6.client.impl.HankyungRssClientImpl;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
@@ -14,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
 
 public class HankyungRssClientImplTest {
 
@@ -28,20 +25,18 @@ public class HankyungRssClientImplTest {
         + "<description>D</description></item>"
         + "</channel></rss>";
 
-    SyndFeed feed = new SyndFeedInput().build(
-        new XmlReader(
-            new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))
-        )
-    );
-
     //when
     HankyungRssClientImpl client = new HankyungRssClientImpl() {
       @Override
-      protected SyndFeed readFeed(XmlReader reader) { return feed; }
+      protected XmlReader createReader() throws IOException {
+        return new XmlReader(
+            new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))
+        );
+      }
     };
     List<ExternalNewsItem> list = client.fetchNews();
 
-    //then
+    // then
     assertThat(list).hasSize(1)
         .extracting(ExternalNewsItem::title)
         .containsExactly("T");

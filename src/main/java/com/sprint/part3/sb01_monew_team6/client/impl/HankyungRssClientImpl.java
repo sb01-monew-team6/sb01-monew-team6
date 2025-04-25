@@ -6,6 +6,7 @@ import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
 import com.sprint.part3.sb01_monew_team6.client.RssNewsClient;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
+import java.io.IOException;
 import java.net.URL;
 import java.time.ZoneId;
 import java.util.List;
@@ -15,11 +16,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class HankyungRssClientImpl implements RssNewsClient {
 
-  private static final String H_URL = "https://www.hankyun.com/feed";
+  private static final String H_URL = "https://www.hankyung.com/feed";
 
   @Override
   public List<ExternalNewsItem> fetchNews() {
-    try(XmlReader reader = new XmlReader(new URL(H_URL))){
+    try (XmlReader reader = createReader()) {
       SyndFeed feed = readFeed(reader);
       return feed.getEntries().stream()
           .map(e->new ExternalNewsItem(
@@ -35,6 +36,12 @@ public class HankyungRssClientImpl implements RssNewsClient {
       throw new RuntimeException(e);
     }
   }
+
+  /** 실제 프로덕션에서는 URL 을 열어서 XmlReader 를 생성 */
+  protected XmlReader createReader() throws IOException {
+    return new XmlReader(new URL(H_URL));
+  }
+
   // 테스트용으로 분리한 메서드(DOCTYPE 허용하도록 setAllowDoctypes(true) 추가)
   protected SyndFeed readFeed(XmlReader reader) throws Exception, FeedException {
     SyndFeedInput input = new SyndFeedInput();
