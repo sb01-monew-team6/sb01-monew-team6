@@ -72,14 +72,14 @@ class UserActivityEventHandlerTest {
 		);
 		doNothing().when(validatorDispatcher).validate(event);
 		doNothing().when(userActivityService).removeSubscriptionFromEvent(
-			anyLong(), any(SubscriptionHistoryDto.class));
+			anyLong(), anyLong());
 
 		//when
 		userActivityEventHandler.handleUserActivityRemoveEvent(event);
 
 		//then
 		verify(userActivityService, times(1)).removeSubscriptionFromEvent(
-			anyLong(), any(SubscriptionHistoryDto.class));
+			anyLong(), anyLong());
 	}
 
 }

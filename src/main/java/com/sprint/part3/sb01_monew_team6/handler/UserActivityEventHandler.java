@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityRemoveEvent;
 import com.sprint.part3.sb01_monew_team6.service.UserActivityService;
 import com.sprint.part3.sb01_monew_team6.validation.UserActivityEventValidatorDispatcher;
 
@@ -28,6 +29,17 @@ public class UserActivityEventHandler {
 			case COMMENT_LIKE -> userActivityService.addCommentLikeFromEvent(event.userId(), event.commentLike());
 			case COMMENT -> userActivityService.addCommentFromEvent(event.userId(), event.comment());
 			case ARTICLE_VIEW -> userActivityService.addArticleViewFromEvent(event.userId(), event.articleView());
+		}
+	}
+
+	@Async
+	@TransactionalEventListener
+	public void handleUserActivityRemoveEvent(UserActivityRemoveEvent event) {
+
+		validatorDispatcher.validate(event);
+
+		switch (event.type()) {
+			case SUBSCRIPTION -> userActivityService.removeSubscriptionFromEvent(event.userId(), event.interestId());
 		}
 	}
 

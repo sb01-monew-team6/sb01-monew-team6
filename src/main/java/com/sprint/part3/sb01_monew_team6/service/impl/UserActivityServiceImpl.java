@@ -63,4 +63,12 @@ public class UserActivityServiceImpl implements UserActivityService {
 
 		userActivityRepository.addArticleView(userId, articleViewHistoryMapper.fromDto(articleViewHistory));
 	}
+
+	@Override
+	public void removeSubscriptionFromEvent(Long userId, Long interestId) {
+		userRepository.findById(userId)
+			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
+
+		userActivityRepository.removeSubscription(userId, interestId);
+	}
 }
