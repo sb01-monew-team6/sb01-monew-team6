@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api/users")
@@ -25,7 +28,7 @@ public class UserController {
    * @param requestDto 사용자 등록 요청 정보를 담은 DTO (@Valid로 유효성 검사 수행)
    * @return 생성된 사용자 정보를 담은 UserDto와 HTTP 상태 코드 201 (Created)
    */
-  @PostMapping // HTTP POST 요청을 /api/users 경로로 매핑합니다.
+  @PostMapping
   @ResponseStatus(HttpStatus.CREATED) // 요청 성공 시 HTTP 상태 코드를 201 Created로 설정합니다.
   public UserDto registerUser(@Valid @RequestBody UserRegisterRequest requestDto) {
     User registeredUser = userService.registerUser(requestDto);
@@ -74,6 +77,20 @@ public class UserController {
     // 2. ResponseEntity.noContent()를 사용하여 204 상태 코드 반환
     return ResponseEntity.noContent().build();
   }
+  /**
+   * 사용자 물리 삭제 요청을 처리합니다. (관리자만 가능)
+   * @param userId 삭제할 사용자의 ID
+   * @return 성공 시 HTTP 상태 코드 204 (No Content)
+   */
+  @DeleteMapping("/{userId}/hard") // DELETE /api/users/{userId}/hard 요청 처리
+  @PreAuthorize("hasRole('ADMIN')") // 'ADMIN' 역할을 가진 사용자만 접근 허용
+  public ResponseEntity<Void> hardDeleteUser(
+      @PathVariable Long userId // 경로 변수에서 userId 추출
+  ) {
+    // 1. 서비스 호출하여 사용자 물리 삭제 수행
+    userService.hardDeleteUser(userId);
 
-
+    // 2. ResponseEntity.noContent()를 사용하여 204 상태 코드 반환
+    return ResponseEntity.noContent().build();
+  }
 }

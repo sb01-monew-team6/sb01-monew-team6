@@ -1,4 +1,4 @@
-package com.sprint.part3.sb01_monew_team6.entity; // 수정된 패키지 경로
+package com.sprint.part3.sb01_monew_team6.entity;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ class UserTest {
     // when: User 객체 생성 시도
   User user = new User(email, nickname, hashedPassword);
 
-    // then: 생성된 객체의 상태 검증 (아직 User 클래스 및 Getter가 없으므로 컴파일 에러 발생)
+    // then: 생성된 객체의 상태 검증
      assertThat(user).isNotNull();
      assertThat(user.getEmail()).isEqualTo(email);
      assertThat(user.getNickname()).isEqualTo(nickname);

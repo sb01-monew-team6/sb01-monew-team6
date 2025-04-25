@@ -12,4 +12,6 @@ public interface UserService {
     User updateNickname(Long userId, String newNickname);
 
     void deleteUser(Long userId);
+
+    void hardDeleteUser(Long userId);
 }
