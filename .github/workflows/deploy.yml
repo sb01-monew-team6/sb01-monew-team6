@@ -104,6 +104,6 @@ jobs:
         with:
           task-definition: ${{ steps.render-task-def.outputs.task-definition }}  # ← 렌더링 결과 파일 사용
           cluster: ${{ (github.ref_name == 'main' && 'team6-monew-prod-cluster') || (github.ref_name == 'develop' && 'team6-monew-dev-cluster') }}
-          service: ${{ (github.ref_name == 'main' && 'team6-monew-prod-service') || (github.ref_name == 'develop' && 'team6-monew-dev-service') }}
+          service: ${{ (github.ref_name == 'main' && 'team6-monew-service-prod') || (github.ref_name == 'develop' && 'team6-monew-service-dev') }}
           wait-for-service-stability: true
 
