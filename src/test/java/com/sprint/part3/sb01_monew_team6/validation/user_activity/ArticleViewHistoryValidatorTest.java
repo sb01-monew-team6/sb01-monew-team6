@@ -25,4 +25,26 @@ class ArticleViewHistoryValidatorTest {
 			validator.validate(dto)
 		).isInstanceOf(UserActivityDomainException.class);
 	}
+
+	@Test
+	@DisplayName("validateViewHistoryDto 호출 시 기사 id 가 유효하지 않으면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenArticleIdIsInvalidWhileValidateViewHistoryDto() throws Exception {
+		//given
+		ArticleViewHistoryDto dto = new ArticleViewHistoryDto(
+			1L,
+			0L,
+			"src",
+			"url",
+			"title",
+			LocalDateTime.now(),
+			"summary",
+			1L,
+			1L
+		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			validator.validate(dto)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
 }
