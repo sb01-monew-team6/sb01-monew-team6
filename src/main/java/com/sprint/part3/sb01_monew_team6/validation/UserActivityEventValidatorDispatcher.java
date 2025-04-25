@@ -44,6 +44,9 @@ public class UserActivityEventValidatorDispatcher {
 	}
 
 	public void validate(UserActivityRemoveEvent event) {
-
+		if (Objects.isNull(event)) {
+			throw new UserActivityDomainException("이벤트가 null 일 수 없습니다.",
+				Map.of("event", String.valueOf(event)));
+		}
 	}
 }
