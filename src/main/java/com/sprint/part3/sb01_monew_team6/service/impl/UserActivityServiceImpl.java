@@ -67,6 +67,13 @@ public class UserActivityServiceImpl implements UserActivityService {
 		userActivityRepository.removeSubscription(userId, interestId);
 	}
 
+	@Override
+	public void removeCommentLikeFromEvent(Long userId, Long commentId) {
+		validateUserId(userId);
+
+		userActivityRepository.removeCommentLike(userId, commentId);
+	}
+
 	private void validateUserId(Long userId) {
 		userRepository.findById(userId)
 			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
