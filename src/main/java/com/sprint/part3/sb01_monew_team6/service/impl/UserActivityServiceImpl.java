@@ -88,7 +88,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 	}
 
 	@Override
-	public UserActivityDto findUserActivityByUserId(Long userId) {
+	public UserActivityDto findByUserId(Long userId) {
 		return null;
 	}
 

@@ -24,5 +24,5 @@ public interface UserActivityService {
 
 	void removeArticleViewFromEvent(Long userId, Long viewedBy);
 
-	UserActivityDto findUserActivityByUserId(Long userId);
+	UserActivityDto findByUserId(Long userId);
 }
