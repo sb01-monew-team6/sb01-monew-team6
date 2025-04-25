@@ -8,6 +8,6 @@ public record UserActivityRemoveEvent(
 	Long interestId,
 	Long commentId,
 	Long articleId,
-	Long viewedId
+	Long viewedBy
 ) {
 }
