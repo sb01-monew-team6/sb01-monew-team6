@@ -98,5 +98,5 @@ jobs:
         with:
           task-definition: ${{ steps.render-task-def.outputs.task-definition }}
           cluster: ${{ (github.ref_name == 'main' && 'team6-monew-prod-cluster') || (github.ref_name == 'develop' && 'team6-monew-dev-cluster') }}
-          service: ${{ (github.ref_name == 'main' && 'team6-monew-service-prod') || (github.ref_name == 'develop' && 'team6-monew-service-dev') }}
+          service: ${{ (github.ref_name == 'main' && 'team6-monew-prod-service') || (github.ref_name == 'develop' && 'team6-monew-dev-service') }}
           wait-for-service-stability: true
