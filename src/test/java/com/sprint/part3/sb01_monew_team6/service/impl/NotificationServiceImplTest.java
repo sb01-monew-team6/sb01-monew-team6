@@ -237,7 +237,7 @@ class NotificationServiceImplTest {
 		);
 		User user = new User();
 
-		when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+		when(userRepository.findByIdAndIsDeletedFalse(anyLong())).thenReturn(Optional.of(new User()));
 		when(notificationRepository.save(any(Notification.class))).thenReturn(any(Notification.class));
 
 		//when
@@ -259,7 +259,7 @@ class NotificationServiceImplTest {
 			"버즈",
 			null
 		);
-		when(userRepository.findById(eq(userId))).thenReturn(Optional.empty());
+		when(userRepository.findByIdAndIsDeletedFalse(eq(userId))).thenReturn(Optional.empty());
 
 		//when & then
 		assertThatThrownBy(() ->

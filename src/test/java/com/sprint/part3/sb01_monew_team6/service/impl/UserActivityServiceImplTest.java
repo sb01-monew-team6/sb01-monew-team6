@@ -20,7 +20,6 @@ import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.UserActivityDto;
-import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
 import com.sprint.part3.sb01_monew_team6.mapper.user_activity.ArticleViewHistoryMapper;
@@ -72,7 +71,7 @@ class UserActivityServiceImplTest {
 
 		when(subscriptionHistoryMapper.fromDto(any(SubscriptionHistoryDto.class))).thenReturn(
 			history);
-		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(true);
 		doNothing().when(userActivityRepository)
 			.addSubscription(anyLong(), any(UserActivity.SubscriptionHistory.class));
 
@@ -95,7 +94,7 @@ class UserActivityServiceImplTest {
 			List.of("k1", "k2"),
 			3L
 		);
-		when(userRepository.findById(eq(userId))).thenReturn(Optional.empty());
+		when(userRepository.existsByIdAndIsDeletedFalse(eq(userId))).thenReturn(false);
 
 		//when & then
 		assertThatThrownBy(() ->
@@ -132,7 +131,7 @@ class UserActivityServiceImplTest {
 
 		when(commentLikeHistoryMapper.fromDto(any(CommentLikeHistoryDto.class))).thenReturn(
 			history);
-		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(true);
 		doNothing().when(userActivityRepository).addCommentLike(anyLong(), any(UserActivity.CommentLikeHistory.class));
 
 		//when
@@ -158,7 +157,7 @@ class UserActivityServiceImplTest {
 			3L,
 			Instant.now()
 		);
-		when(userRepository.findById(eq(userId))).thenReturn(Optional.empty());
+		when(userRepository.existsByIdAndIsDeletedFalse(eq(userId))).thenReturn(false);
 
 		//when & then
 		assertThatThrownBy(() ->
@@ -190,7 +189,7 @@ class UserActivityServiceImplTest {
 
 		when(commentHistoryMapper.fromDto(any(CommentHistoryDto.class))).thenReturn(
 			history);
-		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(true);
 		doNothing().when(userActivityRepository).addComment(anyLong(), any(UserActivity.CommentHistory.class));
 
 		//when
@@ -214,7 +213,7 @@ class UserActivityServiceImplTest {
 			"content",
 			3L
 		);
-		when(userRepository.findById(eq(userId))).thenReturn(Optional.empty());
+		when(userRepository.existsByIdAndIsDeletedFalse(eq(userId))).thenReturn(false);
 
 		//when & then
 		assertThatThrownBy(() ->
@@ -252,7 +251,7 @@ class UserActivityServiceImplTest {
 
 		when(articleViewHistoryMapper.fromDto(any(ArticleViewHistoryDto.class))).thenReturn(
 			history);
-		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(true);
 		doNothing().when(userActivityRepository).addArticleView(anyLong(), any(UserActivity.ArticleViewHistory.class));
 
 		//when
@@ -270,7 +269,7 @@ class UserActivityServiceImplTest {
 		Long userId = 1L;
 		Long interestId = 1L;
 
-		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(true);
 		doNothing().when(userActivityRepository)
 			.removeSubscription(eq(userId), eq(interestId));
 
@@ -289,7 +288,7 @@ class UserActivityServiceImplTest {
 		Long userId = 1L;
 		Long interestId = 1L;
 
-		when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(false);
 
 		//when & then
 		assertThatThrownBy(() ->
@@ -304,7 +303,7 @@ class UserActivityServiceImplTest {
 		Long userId = 1L;
 		Long commentId = 1L;
 
-		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(true);
 		doNothing().when(userActivityRepository)
 			.removeCommentLike(eq(userId), eq(commentId));
 
@@ -323,7 +322,7 @@ class UserActivityServiceImplTest {
 		Long userId = 1L;
 		Long commentId = 1L;
 
-		when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(false);
 
 		//when & then
 		assertThatThrownBy(() ->
@@ -338,7 +337,7 @@ class UserActivityServiceImplTest {
 		Long userId = 1L;
 		Long articleId = 1L;
 
-		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(true);
 		doNothing().when(userActivityRepository)
 			.removeComment(eq(userId), eq(articleId));
 
@@ -357,7 +356,7 @@ class UserActivityServiceImplTest {
 		Long userId = 1L;
 		Long articleId = 1L;
 
-		when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(false);
 
 		//when & then
 		assertThatThrownBy(() ->
@@ -372,7 +371,7 @@ class UserActivityServiceImplTest {
 		Long userId = 1L;
 		Long viewedBy = 1L;
 
-		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(true);
 		doNothing().when(userActivityRepository)
 			.removeArticleView(eq(userId), eq(viewedBy));
 
@@ -391,7 +390,7 @@ class UserActivityServiceImplTest {
 		Long userId = 1L;
 		Long viewedBy = 1L;
 
-		when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(false);
 
 		//when & then
 		assertThatThrownBy(() ->
@@ -405,7 +404,7 @@ class UserActivityServiceImplTest {
 		//given
 		Long userId = 1L;
 
-		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(true);
 		when(userActivityRepository.findByUserId(eq(userId))).thenReturn(Optional.of(new UserActivity(
 			userId,
 			"email",

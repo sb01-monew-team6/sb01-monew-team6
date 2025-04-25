@@ -1,5 +1,9 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
+import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
+import static org.springframework.http.HttpStatus.*;
+
+import java.time.Instant;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -10,6 +14,7 @@ import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.UserActivityDto;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
+import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityException;
 import com.sprint.part3.sb01_monew_team6.mapper.user_activity.ArticleViewHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.user_activity.CommentHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.user_activity.CommentLikeHistoryMapper;
@@ -35,71 +40,78 @@ public class UserActivityServiceImpl implements UserActivityService {
 
 	@Override
 	public void addSubscriptionFromEvent(Long userId, SubscriptionHistoryDto subscriptionHistory) {
-		validateUserId(userId);
+		validateUserIdOrThrowDomainException(userId);
 
 		userActivityRepository.addSubscription(userId, subscriptionHistoryMapper.fromDto(subscriptionHistory));
 	}
 
 	@Override
 	public void addCommentLikeFromEvent(Long userId, CommentLikeHistoryDto commentLikeHistory) {
-		validateUserId(userId);
+		validateUserIdOrThrowDomainException(userId);
 
 		userActivityRepository.addCommentLike(userId, commentLikeHistoryMapper.fromDto(commentLikeHistory));
 	}
 
 	@Override
 	public void addCommentFromEvent(Long userId, CommentHistoryDto commentHistory) {
-		validateUserId(userId);
+		validateUserIdOrThrowDomainException(userId);
 
 		userActivityRepository.addComment(userId, commentHistoryMapper.fromDto(commentHistory));
 	}
 
 	@Override
 	public void addArticleViewFromEvent(Long userId, ArticleViewHistoryDto articleViewHistory) {
-		validateUserId(userId);
+		validateUserIdOrThrowDomainException(userId);
 
 		userActivityRepository.addArticleView(userId, articleViewHistoryMapper.fromDto(articleViewHistory));
 	}
 
 	@Override
 	public void removeSubscriptionFromEvent(Long userId, Long interestId) {
-		validateUserId(userId);
+		validateUserIdOrThrowDomainException(userId);
 
 		userActivityRepository.removeSubscription(userId, interestId);
 	}
 
 	@Override
 	public void removeCommentLikeFromEvent(Long userId, Long commentId) {
-		validateUserId(userId);
+		validateUserIdOrThrowDomainException(userId);
 
 		userActivityRepository.removeCommentLike(userId, commentId);
 	}
 
 	@Override
 	public void removeCommentFromEvent(Long userId, Long articleId) {
-		validateUserId(userId);
+		validateUserIdOrThrowDomainException(userId);
 
 		userActivityRepository.removeComment(userId, articleId);
 	}
 
 	@Override
 	public void removeArticleViewFromEvent(Long userId, Long viewedBy) {
-		validateUserId(userId);
+		validateUserIdOrThrowDomainException(userId);
 
 		userActivityRepository.removeArticleView(userId, viewedBy);
 	}
 
 	@Override
 	public UserActivityDto findByUserId(Long userId) {
-		validateUserId(userId);
+		validateUserIdOrThrowApiException(userId);
 
 		return userActivityRepository.findByUserId(userId)
 			.map(userActivityMapper::toDto)
 			.orElse(null);
 	}
 
-	private void validateUserId(Long userId) {
-		userRepository.findById(userId)
-			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
+	private void validateUserIdOrThrowDomainException(Long userId) {
+		if (!userRepository.existsByIdAndIsDeletedFalse(userId)) {
+			throw new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId));
+		}
+	}
+
+	private void validateUserIdOrThrowApiException(Long userId) {
+		if (!userRepository.existsByIdAndIsDeletedFalse(userId)) {
+			throw new UserActivityException(USER_ACTIVITY_NOT_FOUND_EXCEPTION, Instant.now(), BAD_REQUEST);
+		}
 	}
 }

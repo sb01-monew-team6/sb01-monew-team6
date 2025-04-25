@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -43,7 +42,7 @@ public class NotificationServiceImpl implements NotificationService {
 	public PageResponse<NotificationDto> findAllByUserId(Long userId, Instant cursor, Instant after,
 		Pageable pageable) {
 
-		validateUserId(userId);
+		validateUserIdOrThrowApiException(userId);
 
 		Slice<NotificationDto> slice = notificationRepository.findAllByUserId(
 				userId,
@@ -74,7 +73,7 @@ public class NotificationServiceImpl implements NotificationService {
 		return nextCursor;
 	}
 
-	private void validateUserId(Long userId) {
+	private void validateUserIdOrThrowApiException(Long userId) {
 		if (!userRepository.existsByIdAndIsDeletedFalse(userId)) {
 			throw new NotificationException(NOTIFICATION_USER_NOT_FOUND_EXCEPTION, Instant.now(), BAD_REQUEST);
 		}
@@ -90,7 +89,7 @@ public class NotificationServiceImpl implements NotificationService {
 	@Transactional
 	public void updateAllByUserId(Long userId) {
 
-		validateUserId(userId);
+		validateUserIdOrThrowApiException(userId);
 
 		notificationRepository.updateAllByUserId(userId);
 	}
@@ -99,7 +98,7 @@ public class NotificationServiceImpl implements NotificationService {
 	@Transactional
 	public void updateByUserId(Long userId, Long notificationId) {
 
-		validateUserId(userId);
+		validateUserIdOrThrowApiException(userId);
 		validateNotificationId(notificationId);
 
 		notificationRepository.updateByUserId(userId, notificationId);
@@ -116,7 +115,7 @@ public class NotificationServiceImpl implements NotificationService {
 	@Transactional
 	public void createFromEvent(NotificationCreateEvent event) {
 
-		User user = userRepository.findById(event.userId())
+		User user = userRepository.findByIdAndIsDeletedFalse(event.userId())
 			.orElseThrow(() -> new NotificationDomainException("유저를 찾을 수 없습니다.", Map.of("userId", event.userId())));
 
 		String content = generateContent(event, user);
