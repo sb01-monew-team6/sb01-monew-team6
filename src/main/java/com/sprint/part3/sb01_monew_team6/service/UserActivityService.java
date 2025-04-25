@@ -16,4 +16,6 @@ public interface UserActivityService {
 	void addArticleViewFromEvent(Long userId, ArticleViewHistoryDto articleViewHistory);
 
 	void removeSubscriptionFromEvent(Long userId, Long interestId);
+
+	void removeCommentLikeFromEvent(Long userId, Long commentId);
 }
