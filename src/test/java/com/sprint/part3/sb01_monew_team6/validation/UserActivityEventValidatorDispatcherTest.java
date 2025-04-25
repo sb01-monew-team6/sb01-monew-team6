@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType;
 import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityRemoveEvent;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
 import com.sprint.part3.sb01_monew_team6.validation.user_activity.ArticleViewHistoryValidator;
 import com.sprint.part3.sb01_monew_team6.validation.user_activity.CommentHistoryValidator;
@@ -30,8 +31,8 @@ class UserActivityEventValidatorDispatcherTest {
 	);
 
 	@Test
-	@DisplayName("validateEvent 호출 시 event 가 null 이면 UserActivityDomainException 발생")
-	public void throwUserActivityDomainExceptionWhenEventIsNullWhileValidateEvent() throws
+	@DisplayName("validateEvent 호출 시 addEvent 가 null 이면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenAddEventIsNullWhileValidateEvent() throws
 		Exception {
 		//given
 		UserActivityAddEvent event = null;
@@ -60,6 +61,19 @@ class UserActivityEventValidatorDispatcherTest {
 			null,
 			null
 		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			dispatcher.validate(event)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
+
+	@Test
+	@DisplayName("validateEvent 호출 시 removeEvent 가 null 이면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenRemoveEventIsNullWhileValidateEvent() throws
+		Exception {
+		//given
+		UserActivityRemoveEvent event = null;
 
 		//when & then
 		assertThatThrownBy(() ->
