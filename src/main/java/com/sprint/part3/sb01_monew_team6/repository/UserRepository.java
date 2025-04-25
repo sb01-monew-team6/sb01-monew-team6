@@ -1,7 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.repository;
 
-import com.sprint.part3.sb01_monew_team6.entity.User; // User 엔티티 임포트
-import org.springframework.data.jpa.repository.JpaRepository; // JpaRepository 임포트
+import com.sprint.part3.sb01_monew_team6.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 

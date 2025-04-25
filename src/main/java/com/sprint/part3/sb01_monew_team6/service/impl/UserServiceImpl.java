@@ -41,7 +41,7 @@ public class UserServiceImpl implements UserService {
     return userRepository.save(newUser);
   }
   @Override
-  @Transactional(readOnly = true) // 데이터 변경이 없으므로 읽기 전용 트랜잭션
+  @Transactional(readOnly = true)
   public User login(UserLoginRequest request) {
     // 1. 이메일로 사용자 조회 (findByEmail은 Optional<User> 반환)
     User user = userRepository.findByEmail(request.email())
@@ -74,14 +74,26 @@ public class UserServiceImpl implements UserService {
   @Override
   @Transactional
   public void deleteUser(Long userId) {
-    User user = findUserByIdOrThrow(userId); // 헬퍼 메소드 사용
+    User user = findUserByIdOrThrow(userId);
     user.delete();
-    userRepository.save(user); // 명시적 save 유지 시
+    userRepository.save(user);
   }
 
   private User findUserByIdOrThrow(Long userId) {
     return userRepository.findById(userId)
         .orElseThrow(() -> new UserNotFoundException(userId));
+  }
+
+
+  // --- vvv 사용자 물리 삭제 메소드 구현 추가 vvv ---
+  @Override
+  @Transactional
+  public void hardDeleteUser(Long userId) {
+
+    User userToDelete = findUserByIdOrThrow(userId);
+
+    // 2. 사용자가 존재하면 물리 삭제 실행
+    userRepository.deleteById(userToDelete.getId());
   }
 
 }

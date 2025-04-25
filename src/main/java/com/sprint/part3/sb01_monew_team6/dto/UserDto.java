@@ -9,7 +9,6 @@ public record UserDto(
     String nickname,
     Instant createdAt
 ) {
-  // User 엔티티를 UserDto로 변환하는 정적 팩토리 메소드
   public static UserDto fromEntity(User user) {
     if (user == null) {
       return null;

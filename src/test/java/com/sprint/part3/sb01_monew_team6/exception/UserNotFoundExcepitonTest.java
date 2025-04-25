@@ -1,4 +1,4 @@
-package com.sprint.part3.sb01_monew_team6.exception; // 예외 클래스와 동일한 패키지 권장
+package com.sprint.part3.sb01_monew_team6.exception;
 
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserNotFoundException;

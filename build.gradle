@@ -63,22 +63,21 @@ jacoco {
 	toolVersion = "0.8.10"
 }
 
+def qTypeExclusion = ['**/Q*.class']
+
 jacocoTestReport {
 	reports {
 		xml.required = true
 		html.required = true
 	}
-
-	// Q클래스(QueryDSL 자동 생성 클래스) 제외
 	afterEvaluate {
-		classDirectories.setFrom(
-				files(classDirectories.files.collect {
-					fileTree(dir: it, exclude: [
-							'*/Q.class' // QUser, QArticle 등 QueryDSL 클래스 전체 제외
-					])
-				})
-		)
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: qTypeExclusion)
+		}))
 	}
+	sourceDirectories.setFrom(files(sourceSets.main.allSource.srcDirs))
+	executionData.setFrom(fileTree(dir: project.buildDir, includes: ['jacoco/test.exec']))
+	dependsOn test
 }
 
 jacocoTestCoverageVerification {
@@ -87,8 +86,12 @@ jacocoTestCoverageVerification {
 			limit {
 				minimum = 0.80
 			}
+			classDirectories.setFrom(files(classDirectories.files.collect {
+				fileTree(dir: it, exclude: qTypeExclusion)
+			}))
 		}
 	}
+	dependsOn jacocoTestReport
 }
 
 check.dependsOn jacocoTestCoverageVerification

@@ -1,11 +1,11 @@
 package com.sprint.part3.sb01_monew_team6.service;
 
-import com.sprint.part3.sb01_monew_team6.dto.UserLoginRequest; // 로그인 DTO 임포트
+import com.sprint.part3.sb01_monew_team6.dto.UserLoginRequest;
 import com.sprint.part3.sb01_monew_team6.dto.UserRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.entity.User;
-import com.sprint.part3.sb01_monew_team6.exception.user.EmailAlreadyExistsException; // UserException 하위로 변경했어도 타입은 유지
-import com.sprint.part3.sb01_monew_team6.exception.user.LoginFailedException; // 로그인 예외 임포트
-import com.sprint.part3.sb01_monew_team6.exception.user.UserNotFoundException; // UserException 하위로 변경했어도 타입은 유지
+import com.sprint.part3.sb01_monew_team6.exception.user.EmailAlreadyExistsException;
+import com.sprint.part3.sb01_monew_team6.exception.user.LoginFailedException;
+import com.sprint.part3.sb01_monew_team6.exception.user.UserNotFoundException;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.UserServiceImpl;
 
@@ -19,8 +19,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*; // ErrorCode 상수 static import
+import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -83,7 +84,7 @@ class UserServiceTest {
     verify(passwordEncoder, never()).encode(anyString());
   }
 
-  // --- 로그인 테스트 (추가됨) ---
+  // --- 로그인 테스트 ---
   @Test
   @DisplayName("성공: 유효한 정보로 로그인 시 User 객체 반환")
   void login_whenCredentialsAreValid_shouldReturnUser() {
@@ -158,7 +159,7 @@ class UserServiceTest {
     String targetEmail = "deleted@example.com";
     UserLoginRequest request = new UserLoginRequest(targetEmail, rawPassword);
     User deletedUser = User.builder().email(targetEmail).nickname("deletedUser").password(encodedPassword).build();
-    deletedUser.delete(); // 논리 삭제 상태로 만듦
+    deletedUser.delete();
     assertThat(deletedUser.isDeleted()).isTrue();
 
     when(userRepository.findByEmail(targetEmail)).thenReturn(Optional.of(deletedUser));
@@ -167,11 +168,8 @@ class UserServiceTest {
     // when & then
     assertThatThrownBy(() -> userService.login(request))
         .isInstanceOf(LoginFailedException.class);
-    // 메시지 검증 추가 가능: .hasMessageContaining("삭제된 계정입니다.") 또는 LOGIN_FAILED 메시지
-    // .hasMessage(LOGIN_FAILED.getMessage()); // 서비스 구현에 따라 달라짐
 
     verify(userRepository).findByEmail(targetEmail);
-    // verify(passwordEncoder, never()).matches(anyString(), anyString()); // 비밀번호 비교 전에 걸러졌는지 확인 가능
   }
 
 
@@ -212,8 +210,7 @@ class UserServiceTest {
     // when & then: 예외 타입 및 ErrorCode의 기본 메시지 검증
     assertThatThrownBy(() -> userService.updateNickname(nonExistentUserId, newNickname))
         .isInstanceOf(UserNotFoundException.class)
-        // .hasMessageContaining("사용자를 찾을 수 없습니다. ID: " + nonExistentUserId); // <--- 이전 방식
-        .hasMessage(USER_NOT_FOUND.getMessage()); // <<<--- 수정된 방식
+        .hasMessage(USER_NOT_FOUND.getMessage());
 
     verify(userRepository, never()).save(any(User.class));
   }
@@ -249,10 +246,32 @@ class UserServiceTest {
     // when & then: 예외 타입 및 ErrorCode의 기본 메시지 검증
     assertThatThrownBy(() -> userService.deleteUser(nonExistentUserId))
         .isInstanceOf(UserNotFoundException.class)
-        // .hasMessageContaining("사용자를 찾을 수 없습니다. ID: " + nonExistentUserId); // <--- 이전 방식
         .hasMessage(USER_NOT_FOUND.getMessage()); // <<<--- 수정된 방식
 
     verify(userRepository, never()).save(any(User.class));
   }
 
+  @Test
+  @DisplayName("성공: 존재하는 사용자 물리 삭제 성공") // DisplayName도 Green 상태에 맞게 수정 권장
+  void hardDeleteUser_whenUserExists_shouldCallDeleteById() {
+    // given: 삭제할 사용자 ID 및 해당 사용자가 존재한다고 Mocking
+    Long userId = 1L;
+    User existingUser = User.builder() // findById가 반환할 (삭제될) 사용자 객체
+        .email("deleteMe@example.com")
+        .nickname("deleteMe")
+        .password("encodedPassword")
+        .build();
+
+    ReflectionTestUtils.setField(existingUser, "id", userId);
+
+    // findByIdOrThrow 헬퍼 메소드를 사용할 것이므로 findById Mocking
+    when(userRepository.findById(eq(userId))).thenReturn(Optional.of(existingUser));
+
+    // when: 물리 삭제 서비스 메소드 호출
+    userService.hardDeleteUser(userId);
+
+    // then: findById와 deleteById 호출 검증
+    verify(userRepository).findById(eq(userId)); // 사용자 조회 확인
+    verify(userRepository).deleteById(eq(userId)); // deleteById가 올바른 ID(1L)로 호출되었는지 확인
+  }
 }

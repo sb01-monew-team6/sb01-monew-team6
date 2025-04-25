@@ -26,7 +26,7 @@ public class User extends BaseUpdatableEntity {
   @Column(nullable = false)
   private String password;
 
-  @Column(name = "is_deleted", nullable = false) // 컬럼명 명시적 지정 (DDL과 일치)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted = false;
 
   @Builder
@@ -41,19 +41,13 @@ public class User extends BaseUpdatableEntity {
     this.deleted = false;
   }
 
-
   public void updateNickname(String newNickname) {
     if (newNickname == null || newNickname.isBlank()) {
       throw new IllegalArgumentException("새 닉네임은 비어 있을 수 없습니다.");
     }
     this.nickname = newNickname;
-
   }
-
   public void delete() {
     this.deleted = true;
-
   }
-
-
 }
