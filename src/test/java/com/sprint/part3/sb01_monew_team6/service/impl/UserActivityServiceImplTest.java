@@ -360,4 +360,23 @@ class UserActivityServiceImplTest {
 			userActivityService.removeCommentFromEvent(userId, articleId)
 		).isInstanceOf(UserActivityDomainException.class);
 	}
+
+	@Test
+	@DisplayName("removeArticleViewFromEvent 정상 호출 시 정상적으로 레포지토리가 호출된다")
+	public void removeArticleViewFromEvent() throws Exception {
+		//given
+		Long userId = 1L;
+		Long viewedBy = 1L;
+
+		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		doNothing().when(userActivityRepository)
+			.removeArticleView(eq(userId), eq(viewedBy));
+
+		//when
+		userActivityService.removeArticleViewFromEvent(userId, viewedBy);
+
+		//then
+		verify(userActivityRepository, times(1)).removeArticleView(eq(userId),
+			eq(viewedBy));
+	}
 }
