@@ -27,7 +27,7 @@ public class NewsCollectionService {
   public void collectAndSave() {
     List<Interest> interests = interestRepository.findAll();
 
-    // 관심사가 없으면 바로 종료
+    // 관심사가 없으면
     if (interests.isEmpty()) {
       return;
     }

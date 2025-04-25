@@ -12,6 +12,8 @@ public enum ErrorCode {
 
 	//news
 	NEWS_INVALID_EXCEPTION("유효하지 않은 요청입니다."), // TODO: 나중에 프로토타입의 예외 메시지로 수정할 것
+	NEWS_NAVERCLIENT_EXCEPTION("NAVER API 요청 오류입니다."),
+	NEWS_RSSCLIENT_EXCEPTION("RSS API 요청 오류입니다.")
 
 	;
 
