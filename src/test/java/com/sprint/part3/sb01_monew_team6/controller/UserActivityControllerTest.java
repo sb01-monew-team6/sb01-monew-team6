@@ -2,7 +2,6 @@ package com.sprint.part3.sb01_monew_team6.controller;
 
 import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -33,7 +32,7 @@ class UserActivityControllerTest {
 
 	@Test
 	@DisplayName("findUserActivityByUserId 호출 시 userId 가 유효하지 않으면 NotificationInvalidException 에러 반환")
-	public void respondErrorResponseWhenUserIdIsInvalidWhileFindUserActivityByUserId() throws Exception {
+	public void respondErrorResponseWhenUserIdIsInvalidWhileFindByUserId() throws Exception {
 	    //given & when
 		ResultActions perform = mockMvc.perform(
 			MockMvcRequestBuilders.get("/api/v1/user-activities/{userId}", 0L)
@@ -51,10 +50,10 @@ class UserActivityControllerTest {
 
 	@Test
 	@DisplayName("findUserActivityByUserId 정상 호출 시 정상적으로 service 호출")
-	public void respondPageResponseWhenFindUserActivityByUserIdSuccessfully() throws Exception {
+	public void respondPageResponseWhenFindByUserIdSuccessfully() throws Exception {
 	    //given
 		Long userId = 1L;
-		when(userActivityService.findUserActivityByUserId(eq(userId))).thenReturn(any());
+		when(userActivityService.findByUserId(eq(userId))).thenReturn(any());
 
 		//when
 		mockMvc.perform(
@@ -63,6 +62,6 @@ class UserActivityControllerTest {
 		);
 
 		//then
-		verify(userActivityService, times(1)).findUserActivityByUserId(userId);
+		verify(userActivityService, times(1)).findByUserId(userId);
 	}
 }

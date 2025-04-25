@@ -27,7 +27,7 @@ public class UserActivityController {
 	 * @param requestUserId 로그인용 id, 이후 서비스 로직에서 사용 안 함
 	 */
 	@GetMapping("/{userId}")
-	public ResponseEntity<UserActivityDto> findUserActivityByUserId(
+	public ResponseEntity<UserActivityDto> findByUserId(
 		@RequestHeader("Monew-Request-User-Id")
 		@Min(value = 1, groups = UserActivityValidationGroup.class) Long requestUserId,
 
@@ -35,7 +35,7 @@ public class UserActivityController {
 		@Min(value = 1, groups = UserActivityValidationGroup.class) Long userId
 	) {
 
-		UserActivityDto userActivity = userActivityService.findUserActivityByUserId(userId);
+		UserActivityDto userActivity = userActivityService.findByUserId(userId);
 
 		return ResponseEntity.ok()
 			.body(userActivity);
