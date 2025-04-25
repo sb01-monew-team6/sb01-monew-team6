@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property name="CONSOLE_PATTERN" value="%d{yy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId} | %X{httpMethod} | %X{requestURL}] - %msg%n"/>
+    <property name="CONSOLE_PATTERN" value="%d{yy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId} | %X{requestIp}] - %msg%n"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -25,7 +25,7 @@
     </root>
 
     <springProfile name="dev">
-        <logger name="com.sprint.mission.discodeit" level="debug" additivity="false">
+        <logger name="com.sprint.part3.sb01_monew_team6" level="debug" additivity="false">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>
         </logger>
