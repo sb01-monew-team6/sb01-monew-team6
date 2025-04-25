@@ -22,6 +22,7 @@ import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDt
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.UserActivityDto;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
+import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityException;
 import com.sprint.part3.sb01_monew_team6.mapper.user_activity.ArticleViewHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.user_activity.CommentHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.user_activity.CommentLikeHistoryMapper;
@@ -433,4 +434,17 @@ class UserActivityServiceImplTest {
 		verify(userActivityRepository, times(1)).findByUserId(eq(userId));
 	}
 
+	@Test
+	@DisplayName("findByUserId 호출 시 호출 시 user 가 존재하지 않는다면 UserActivityException 발생")
+	public void throwUserActivityDomainExceptionWhenUserNonExistWhileFindByUserId() throws Exception {
+		//given
+		Long userId = 1L;
+
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(false);
+
+		//when & then
+		assertThatThrownBy(() ->
+			userActivityService.findByUserId(userId)
+		).isInstanceOf(UserActivityException.class);
+	}
 }
