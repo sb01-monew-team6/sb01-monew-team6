@@ -19,6 +19,7 @@ import com.sprint.part3.sb01_monew_team6.dto.user_activity.ArticleViewHistoryDto
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.UserActivityDto;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
@@ -26,12 +27,15 @@ import com.sprint.part3.sb01_monew_team6.mapper.ArticleViewHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentLikeHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.SubscriptionHistoryMapper;
+import com.sprint.part3.sb01_monew_team6.mapper.UserActivityMapper;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.repository.user_activity.UserActivityRepository;
 
 @ExtendWith(MockitoExtension.class)
 class UserActivityServiceImplTest {
 
+	@Mock
+	private UserActivityMapper userActivityMapper;
 	@Mock
 	private SubscriptionHistoryMapper subscriptionHistoryMapper;
 	@Mock
@@ -402,8 +406,26 @@ class UserActivityServiceImplTest {
 		Long userId = 1L;
 
 		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
-		doNothing().when(userActivityRepository)
-			.findByUserId(eq(userId));
+		when(userActivityRepository.findByUserId(eq(userId))).thenReturn(Optional.of(new UserActivity(
+			userId,
+			"email",
+			"nickname",
+			Instant.now(),
+			null,
+			null,
+			null,
+			null
+		)));
+		when(userActivityMapper.toDto(any(UserActivity.class))).thenReturn(new UserActivityDto(
+			userId,
+			"email",
+			"nickname",
+			Instant.now(),
+			null,
+			null,
+			null,
+			null
+		));
 
 		//when
 		userActivityService.findByUserId(userId);

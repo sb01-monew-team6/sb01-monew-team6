@@ -14,6 +14,7 @@ import com.sprint.part3.sb01_monew_team6.mapper.ArticleViewHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.CommentLikeHistoryMapper;
 import com.sprint.part3.sb01_monew_team6.mapper.SubscriptionHistoryMapper;
+import com.sprint.part3.sb01_monew_team6.mapper.UserActivityMapper;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.repository.user_activity.UserActivityRepository;
 import com.sprint.part3.sb01_monew_team6.service.UserActivityService;
@@ -30,6 +31,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 	private final CommentLikeHistoryMapper commentLikeHistoryMapper;
 	private final CommentHistoryMapper commentHistoryMapper;
 	private final ArticleViewHistoryMapper articleViewHistoryMapper;
+	private final UserActivityMapper userActivityMapper;
 
 	@Override
 	public void addSubscriptionFromEvent(Long userId, SubscriptionHistoryDto subscriptionHistory) {
@@ -89,7 +91,11 @@ public class UserActivityServiceImpl implements UserActivityService {
 
 	@Override
 	public UserActivityDto findByUserId(Long userId) {
-		return null;
+		validateUserId(userId);
+
+		return userActivityRepository.findByUserId(userId)
+			.map(userActivityMapper::toDto)
+			.orElse(null);
 	}
 
 	private void validateUserId(Long userId) {
