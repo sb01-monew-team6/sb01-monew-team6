@@ -26,7 +26,7 @@ public class UserActivity extends BaseDocument {
 	@Indexed
 	private Long userId;
 	private String email;
-	private String nickName;
+	private String nickname;
 	private Instant userCreatedAt;
 
 	private List<SubscriptionHistory> subscriptions;
