@@ -44,4 +44,22 @@ class SubscriptionHistoryValidatorTest {
 			validator.validate(dto)
 		).isInstanceOf(UserActivityDomainException.class);
 	}
+
+	@Test
+	@DisplayName("validateSubscriptionHistoryDto 호출 시 interestName 이 유효하지 않으면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenInterestNameIsInvalidWhileValidateSubscriptionHistoryDto() throws
+		Exception {
+		//given
+		SubscriptionHistoryDto dto = new SubscriptionHistoryDto(
+			1L,
+			"   ",
+			List.of("k1"),
+			1L
+		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			validator.validate(dto)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
 }
