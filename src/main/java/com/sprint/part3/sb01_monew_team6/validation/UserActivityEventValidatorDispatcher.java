@@ -48,5 +48,10 @@ public class UserActivityEventValidatorDispatcher {
 			throw new UserActivityDomainException("이벤트가 null 일 수 없습니다.",
 				Map.of("event", String.valueOf(event)));
 		}
+
+		if (Objects.isNull(event.userId()) || event.userId() <= 0) {
+			throw new UserActivityDomainException("유저 id 가 유효하지 않습니다.",
+				Map.of("userId", String.valueOf(event.userId())));
+		}
 	}
 }
