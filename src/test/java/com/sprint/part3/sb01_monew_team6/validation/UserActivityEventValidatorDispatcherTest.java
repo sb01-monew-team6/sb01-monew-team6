@@ -44,8 +44,8 @@ class UserActivityEventValidatorDispatcherTest {
 	}
 
 	@Test
-	@DisplayName("validateEvent 호출 시 userId 가 유효하지 않으면 UserActivityDomainException 발생")
-	public void throwUserActivityDomainExceptionWhenUserIdIsInvalidWhileValidateEvent() throws
+	@DisplayName("validateAddEvent 호출 시 userId 가 유효하지 않으면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenUserIdIsInvalidWhileValidateAddEvent() throws
 		Exception {
 		//given
 		UserActivityAddEvent event = new UserActivityAddEvent(
@@ -74,6 +74,26 @@ class UserActivityEventValidatorDispatcherTest {
 		Exception {
 		//given
 		UserActivityRemoveEvent event = null;
+
+		//when & then
+		assertThatThrownBy(() ->
+			dispatcher.validate(event)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
+
+	@Test
+	@DisplayName("validateRemoveEvent 호출 시 userId 가 유효하지 않으면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenUserIdIsInvalidWhileValidateRemoveEvent() throws
+		Exception {
+		//given
+		UserActivityRemoveEvent event = new UserActivityRemoveEvent(
+			null,
+			UserActivityType.SUBSCRIPTION,
+			1L,
+			null,
+			null,
+			null
+		);
 
 		//when & then
 		assertThatThrownBy(() ->
