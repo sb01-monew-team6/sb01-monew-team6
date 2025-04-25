@@ -22,5 +22,5 @@ public abstract class BaseEntity {
 	Long id;
 
 	@CreatedDate
-	Instant createAt;
+	Instant createdAt;
 }
