@@ -394,4 +394,22 @@ class UserActivityServiceImplTest {
 			userActivityService.removeArticleViewFromEvent(userId, viewedBy)
 		).isInstanceOf(UserActivityDomainException.class);
 	}
+
+	@Test
+	@DisplayName("findByUserId 정상 호출 시 정상적으로 레포지토리가 호출된다")
+	public void findByUserIdSuccessfully() throws Exception {
+		//given
+		Long userId = 1L;
+
+		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		doNothing().when(userActivityRepository)
+			.findByUserId(eq(userId));
+
+		//when
+		userActivityService.findByUserId(userId);
+
+		//then
+		verify(userActivityRepository, times(1)).findByUserId(eq(userId));
+	}
+
 }
