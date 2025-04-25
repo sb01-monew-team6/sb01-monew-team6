@@ -20,8 +20,16 @@
       "essential": true,
       "environment": [
         {
+          "name": "DB_URL",
+          "value": "REPLACEME_DB_URL"
+        },
+        {
+          "name": "DB_USERNAME",
+          "value": "REPLACEME_DB_USERNAME"
+        },
+        {
           "name": "DB_PASSWORD",
-          "value": "dummy"
+          "value": "REPLACEME_DB_PASSWORD"
         }
       ],
       "logConfiguration": {
