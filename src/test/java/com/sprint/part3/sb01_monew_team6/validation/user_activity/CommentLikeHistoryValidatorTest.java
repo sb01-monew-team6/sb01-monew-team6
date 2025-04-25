@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
 
-class CommentHistoryValidatorTest {
+class CommentLikeHistoryValidatorTest {
 
 	private final CommentLikeHistoryValidator validator = new CommentLikeHistoryValidator();
 
