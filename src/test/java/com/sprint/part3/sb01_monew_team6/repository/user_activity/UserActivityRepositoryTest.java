@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.repository.user_activity;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +33,7 @@ class UserActivityRepositoryTest {
 	@Test
 	@DisplayName("몽고 db 에 userActivity 를 저장하고 정상적으로 찾는다")
 	public void saveAndFindSuccessfully() throws Exception {
-	    //given
+		//given
 		UserActivity.SubscriptionHistory subscription = UserActivity.SubscriptionHistory.builder()
 			.interestId(10L)
 			.interestName("AI")
@@ -46,7 +47,7 @@ class UserActivityRepositoryTest {
 			.subscriptions(List.of(subscription))
 			.build();
 
-	    //when
+		//when
 		userActivityRepository.save(userActivity);
 		Optional<UserActivity> found = userActivityRepository.findById(userActivity.getId());
 
@@ -64,7 +65,7 @@ class UserActivityRepositoryTest {
 	@Test
 	@DisplayName("addSubscription 정상 호출 시 정상적으로 몽고 db 에 적재된다")
 	public void addSubscriptionSuccessfully() throws Exception {
-	    //given
+		//given
 		Long userId = 1L;
 
 		UserActivity userActivity = UserActivity.builder()
@@ -75,7 +76,7 @@ class UserActivityRepositoryTest {
 
 		userActivityRepository.save(userActivity);
 
-	    //when
+		//when
 		for (int i = 0; i < 12; ++i) {
 			UserActivity.SubscriptionHistory subscription = UserActivity.SubscriptionHistory.builder()
 				.interestId(10L + i)
@@ -102,7 +103,7 @@ class UserActivityRepositoryTest {
 	@Test
 	@DisplayName("removeSubscription 정상 호출 시 정상적으로 몽고 db 에서 삭제된다")
 	public void removeSubscriptionSuccessfully() throws Exception {
-	    //given
+		//given
 		Long userId = 1L;
 
 		UserActivity userActivity = UserActivity.builder()
@@ -139,7 +140,7 @@ class UserActivityRepositoryTest {
 	@Test
 	@DisplayName("addCommentLike 정상 호출 시 정상적으로 몽고 db 에 적재된다")
 	public void addCommentLikeSuccessfully() throws Exception {
-	    //given
+		//given
 		Long userId = 1L;
 
 		UserActivity userActivity = UserActivity.builder()
@@ -421,19 +422,22 @@ class UserActivityRepositoryTest {
 		//then
 		assertThat(found).isPresent();
 		assertThat(found.get().getId()).isEqualTo(userActivity.getId());
+		assertThat(found.get().getCreatedAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(
+			userActivity.getCreatedAt().truncatedTo(ChronoUnit.MILLIS));
 		assertThat(found.get().getUserId()).isEqualTo(userId);
 		assertThat(found.get().getEmail()).isEqualTo("email@google.com");
 		assertThat(found.get().getNickname()).isEqualTo("구글러");
 		assertThat(found.get().getSubscriptions().get(0).getInterestName()).isEqualTo("AI0");
-		assertThat(found.get().getSubscriptions().get(11).getInterestName()).isEqualTo("AI11");
-		assertThat(found.get().getCommentLikes()).hasSize(12);
+		assertThat(found.get().getSubscriptions().get(9).getInterestName()).isEqualTo("AI9");
+		assertThat(found.get().getCommentLikes()).hasSize(10);
 		assertThat(found.get().getCommentLikes().get(0).getCommentId()).isEqualTo(1);
-		assertThat(found.get().getCommentLikes().get(11).getCommentId()).isEqualTo(12);
-		assertThat(found.get().getComments()).hasSize(12);
+		assertThat(found.get().getCommentLikes().get(9).getCommentId()).isEqualTo(10);
+		assertThat(found.get().getComments()).hasSize(10);
 		assertThat(found.get().getComments().get(0).getArticleId()).isEqualTo(1);
-		assertThat(found.get().getComments().get(11).getArticleId()).isEqualTo(12);
+		assertThat(found.get().getComments().get(9).getArticleId()).isEqualTo(10);
+		assertThat(found.get().getArticleViews()).hasSize(10);
 		assertThat(found.get().getArticleViews().get(0).getViewedBy()).isEqualTo(1);
-		assertThat(found.get().getArticleViews().get(11).getViewedBy()).isEqualTo(12);
+		assertThat(found.get().getArticleViews().get(9).getViewedBy()).isEqualTo(10);
 	}
 
 }
