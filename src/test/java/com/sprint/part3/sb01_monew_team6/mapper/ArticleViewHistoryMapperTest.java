@@ -1,7 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.mapper;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +10,7 @@ import org.mapstruct.factory.Mappers;
 
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.ArticleViewHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
+import com.sprint.part3.sb01_monew_team6.mapper.user_activity.ArticleViewHistoryMapper;
 
 class ArticleViewHistoryMapperTest {
 

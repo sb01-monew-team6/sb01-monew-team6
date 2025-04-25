@@ -23,11 +23,11 @@ import com.sprint.part3.sb01_monew_team6.dto.user_activity.UserActivityDto;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
-import com.sprint.part3.sb01_monew_team6.mapper.ArticleViewHistoryMapper;
-import com.sprint.part3.sb01_monew_team6.mapper.CommentHistoryMapper;
-import com.sprint.part3.sb01_monew_team6.mapper.CommentLikeHistoryMapper;
-import com.sprint.part3.sb01_monew_team6.mapper.SubscriptionHistoryMapper;
-import com.sprint.part3.sb01_monew_team6.mapper.UserActivityMapper;
+import com.sprint.part3.sb01_monew_team6.mapper.user_activity.ArticleViewHistoryMapper;
+import com.sprint.part3.sb01_monew_team6.mapper.user_activity.CommentHistoryMapper;
+import com.sprint.part3.sb01_monew_team6.mapper.user_activity.CommentLikeHistoryMapper;
+import com.sprint.part3.sb01_monew_team6.mapper.user_activity.SubscriptionHistoryMapper;
+import com.sprint.part3.sb01_monew_team6.mapper.user_activity.UserActivityMapper;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.repository.user_activity.UserActivityRepository;
 

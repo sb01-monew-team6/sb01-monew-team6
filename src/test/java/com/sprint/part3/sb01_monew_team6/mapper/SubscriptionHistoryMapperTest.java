@@ -10,6 +10,7 @@ import org.mapstruct.factory.Mappers;
 
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
+import com.sprint.part3.sb01_monew_team6.mapper.user_activity.SubscriptionHistoryMapper;
 
 class SubscriptionHistoryMapperTest {
 
