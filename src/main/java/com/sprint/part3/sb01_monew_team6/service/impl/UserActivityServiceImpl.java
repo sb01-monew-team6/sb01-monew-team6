@@ -34,41 +34,41 @@ public class UserActivityServiceImpl implements UserActivityService {
 
 	@Override
 	public void addSubscriptionFromEvent(Long userId, SubscriptionHistoryDto subscriptionHistory) {
-		userRepository.findById(userId)
-			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
+		validateUserId(userId);
 
 		userActivityRepository.addSubscription(userId, subscriptionHistoryMapper.fromDto(subscriptionHistory));
 	}
 
 	@Override
 	public void addCommentLikeFromEvent(Long userId, CommentLikeHistoryDto commentLikeHistory) {
-		userRepository.findById(userId)
-			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
+		validateUserId(userId);
 
 		userActivityRepository.addCommentLike(userId, commentLikeHistoryMapper.fromDto(commentLikeHistory));
 	}
 
 	@Override
 	public void addCommentFromEvent(Long userId, CommentHistoryDto commentHistory) {
-		userRepository.findById(userId)
-			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
+		validateUserId(userId);
 
 		userActivityRepository.addComment(userId, commentHistoryMapper.fromDto(commentHistory));
 	}
 
 	@Override
 	public void addArticleViewFromEvent(Long userId, ArticleViewHistoryDto articleViewHistory) {
-		userRepository.findById(userId)
-			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
+		validateUserId(userId);
 
 		userActivityRepository.addArticleView(userId, articleViewHistoryMapper.fromDto(articleViewHistory));
 	}
 
 	@Override
 	public void removeSubscriptionFromEvent(Long userId, Long interestId) {
-		userRepository.findById(userId)
-			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
+		validateUserId(userId);
 
 		userActivityRepository.removeSubscription(userId, interestId);
+	}
+
+	private void validateUserId(Long userId) {
+		userRepository.findById(userId)
+			.orElseThrow(() -> new UserActivityDomainException("유저를 찾을 수 없습니다.", Map.of("userId", userId)));
 	}
 }
