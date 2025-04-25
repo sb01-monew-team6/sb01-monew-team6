@@ -48,4 +48,26 @@ class CommentHistoryValidatorTest {
 			validator.validate(dto)
 		).isInstanceOf(UserActivityDomainException.class);
 	}
+
+	@Test
+	@DisplayName("validateCommentLikeHistoryDto 호출 시 댓글 id 가 유효하지 않으면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenCommentIdIsInvalidWhileValidateCommentLikeHistoryDto() throws
+		Exception {
+		//given
+		CommentLikeHistoryDto dto = new CommentLikeHistoryDto(
+			0L,
+			1L,
+			"title",
+			1L,
+			"nickName",
+			"content",
+			1L,
+			Instant.now()
+		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			validator.validate(dto)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
 }
