@@ -100,4 +100,24 @@ class UserActivityEventValidatorDispatcherTest {
 			dispatcher.validate(event)
 		).isInstanceOf(UserActivityDomainException.class);
 	}
+
+	@Test
+	@DisplayName("validateRemoveEvent 호출 시 type 이 구독인 경우 interestId 가 유효하지 않으면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenInterestIdIsInvalidWhileValidateRemoveEvent() throws
+		Exception {
+		//given
+		UserActivityRemoveEvent event = new UserActivityRemoveEvent(
+			1L,
+			UserActivityType.SUBSCRIPTION,
+			0L,
+			null,
+			null,
+			null
+		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			dispatcher.validate(event)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
 }
