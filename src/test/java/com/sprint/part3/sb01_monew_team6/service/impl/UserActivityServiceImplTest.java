@@ -277,4 +277,19 @@ class UserActivityServiceImplTest {
 		verify(userActivityRepository, times(1)).removeSubscription(eq(userId),
 			eq(interestId));
 	}
+
+	@Test
+	@DisplayName("removeSubscriptionFromEvent 호출 시 user 가 존재하지 않는다면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenUserNonExistWhileRemoveSubscriptionFromEvent() throws Exception {
+		//given
+		Long userId = 1L;
+		Long interestId = 1L;
+
+		when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+		//when & then
+		assertThatThrownBy(() ->
+			userActivityService.removeSubscriptionFromEvent(userId, interestId)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
 }
