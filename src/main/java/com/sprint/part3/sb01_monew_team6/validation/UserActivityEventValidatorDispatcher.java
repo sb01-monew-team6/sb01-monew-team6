@@ -60,6 +60,7 @@ public class UserActivityEventValidatorDispatcher {
 			case SUBSCRIPTION -> validateInterestId(event.interestId());
 			case COMMENT_LIKE -> validateCommentId(event.commentId());
 			case COMMENT -> validateArticleId(event.articleId());
+			case ARTICLE_VIEW -> validateViewedBy(event.viewedBy());
 		}
 	}
 
@@ -81,6 +82,13 @@ public class UserActivityEventValidatorDispatcher {
 		if (Objects.isNull(articleId) || articleId <= 0) {
 			throw new UserActivityDomainException("기사 id 가 유효하지 않습니다.",
 				Map.of("articleId", String.valueOf(articleId)));
+		}
+	}
+
+	private static void validateViewedBy(Long viewedBy) {
+		if (Objects.isNull(viewedBy) || viewedBy <= 0) {
+			throw new UserActivityDomainException("기사 조회 유저 id 가 유효하지 않습니다.",
+				Map.of("viewedBy", String.valueOf(viewedBy)));
 		}
 	}
 }
