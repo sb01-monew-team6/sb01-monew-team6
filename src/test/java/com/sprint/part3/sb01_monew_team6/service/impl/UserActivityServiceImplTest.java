@@ -302,13 +302,13 @@ class UserActivityServiceImplTest {
 
 		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
 		doNothing().when(userActivityRepository)
-			.removeSubscription(eq(userId), eq(commentId));
+			.removeCommentLike(eq(userId), eq(commentId));
 
 		//when
 		userActivityService.removeCommentLikeFromEvent(userId, commentId);
 
 		//then
-		verify(userActivityRepository, times(1)).removeSubscription(eq(userId),
+		verify(userActivityRepository, times(1)).removeCommentLike(eq(userId),
 			eq(commentId));
 	}
 
@@ -325,5 +325,24 @@ class UserActivityServiceImplTest {
 		assertThatThrownBy(() ->
 			userActivityService.removeCommentLikeFromEvent(userId, commentId)
 		).isInstanceOf(UserActivityDomainException.class);
+	}
+
+	@Test
+	@DisplayName("removeCommentFromEvent 정상 호출 시 정상적으로 레포지토리가 호출된다")
+	public void removeCommentFromEvent() throws Exception {
+		//given
+		Long userId = 1L;
+		Long articleId = 1L;
+
+		when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+		doNothing().when(userActivityRepository)
+			.removeComment(eq(userId), eq(articleId));
+
+		//when
+		userActivityService.removeCommentFromEvent(userId, articleId);
+
+		//then
+		verify(userActivityRepository, times(1)).removeComment(eq(userId),
+			eq(articleId));
 	}
 }
