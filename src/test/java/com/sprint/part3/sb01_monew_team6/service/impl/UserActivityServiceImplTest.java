@@ -311,4 +311,19 @@ class UserActivityServiceImplTest {
 		verify(userActivityRepository, times(1)).removeSubscription(eq(userId),
 			eq(commentId));
 	}
+
+	@Test
+	@DisplayName("removeCommentLikeFromEvent 호출 시 user 가 존재하지 않는다면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenUserNonExistWhileRemoveCommentLikeFromEvent() throws Exception {
+		//given
+		Long userId = 1L;
+		Long commentId = 1L;
+
+		when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+		//when & then
+		assertThatThrownBy(() ->
+			userActivityService.removeCommentLikeFromEvent(userId, commentId)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
 }
