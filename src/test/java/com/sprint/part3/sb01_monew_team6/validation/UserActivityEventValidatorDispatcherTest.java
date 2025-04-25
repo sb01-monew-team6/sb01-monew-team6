@@ -128,9 +128,9 @@ class UserActivityEventValidatorDispatcherTest {
 		//given
 		UserActivityRemoveEvent event = new UserActivityRemoveEvent(
 			1L,
-			UserActivityType.COMMENT,
+			UserActivityType.COMMENT_LIKE,
 			null,
-			1L,
+			0L,
 			null,
 			null
 		);
