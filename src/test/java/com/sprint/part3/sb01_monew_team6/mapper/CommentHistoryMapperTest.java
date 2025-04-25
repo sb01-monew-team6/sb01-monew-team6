@@ -1,9 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.mapper;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.time.Instant;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +8,7 @@ import org.mapstruct.factory.Mappers;
 
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
+import com.sprint.part3.sb01_monew_team6.mapper.user_activity.CommentHistoryMapper;
 
 class CommentHistoryMapperTest {
 	

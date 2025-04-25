@@ -1,4 +1,4 @@
-package com.sprint.part3.sb01_monew_team6.mapper;
+package com.sprint.part3.sb01_monew_team6.mapper.user_activity;
 
 import org.mapstruct.Mapper;
 
