@@ -3,23 +3,21 @@ package com.sprint.part3.sb01_monew_team6.config;
 import static org.mockito.BDDMockito.then;
 
 import com.sprint.part3.sb01_monew_team6.service.NewsCollectionService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 public class SchedulingConfigTest {
   @Mock
-  NewsCollectionService service;
+  private NewsCollectionService service;
 
+  @InjectMocks
   private SchedulingConfig config;
 
-  @BeforeEach
-  void setUp(){
-    MockitoAnnotations.openMocks(this);
-    config = new SchedulingConfig(service);
-  }
 
   @Test
   @DisplayName("collectNewsSchedule 호출시 collectAndSave 호출")

@@ -11,8 +11,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 @RequiredArgsConstructor
 public class SchedulingConfig {
   private final NewsCollectionService service;
+  private static final String CRON = "0 0 0 * * *";
 
-  @Scheduled(cron = "0 0 * * * *") //매시간 마다 진행
+  @Scheduled(cron = CRON)
   public void collectNewsSchedule(){
     service.collectAndSave();
   }
