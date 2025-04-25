@@ -379,4 +379,19 @@ class UserActivityServiceImplTest {
 		verify(userActivityRepository, times(1)).removeArticleView(eq(userId),
 			eq(viewedBy));
 	}
+
+	@Test
+	@DisplayName("removeArticleViewFromEvent 호출 시 user 가 존재하지 않는다면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenUserNonExistWhileRemoveArticleViewFromEvent() throws Exception {
+		//given
+		Long userId = 1L;
+		Long viewedBy = 1L;
+
+		when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+		//when & then
+		assertThatThrownBy(() ->
+			userActivityService.removeArticleViewFromEvent(userId, viewedBy)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
 }
