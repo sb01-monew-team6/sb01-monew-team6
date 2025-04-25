@@ -2,7 +2,6 @@ package com.sprint.part3.sb01_monew_team6.entity;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.time.Instant;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -24,13 +23,13 @@ class UserActivityTest {
 		//when
 		UserActivity userActivity = UserActivity.builder()
 			.email("email@google.com")
-			.nickName("구글러")
+			.nickname("구글러")
 			.subscriptions(List.of(subscription))
 			.build();
 
 		//then
 		assertThat(userActivity.getEmail()).isEqualTo("email@google.com");
-		assertThat(userActivity.getNickName()).isEqualTo("구글러");
+		assertThat(userActivity.getNickname()).isEqualTo("구글러");
 		assertThat(userActivity.getSubscriptions()).hasSize(1);
 		assertThat(userActivity.getSubscriptions().get(0).getInterestName()).isEqualTo("AI");
 		assertThat(userActivity.getSubscriptions().get(0).getInterestKeywords()).containsExactly("ChatGPT", "머신러닝");
