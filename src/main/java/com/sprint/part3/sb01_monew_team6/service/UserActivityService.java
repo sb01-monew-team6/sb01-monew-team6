@@ -20,4 +20,6 @@ public interface UserActivityService {
 	void removeCommentLikeFromEvent(Long userId, Long commentId);
 
 	void removeCommentFromEvent(Long userId, Long articleId);
+
+	void removeArticleViewFromEvent(Long userId, Long viewedBy);
 }
