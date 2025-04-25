@@ -1,12 +1,14 @@
 package com.sprint.part3.sb01_monew_team6.validation;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
+import com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType;
 import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
 import com.sprint.part3.sb01_monew_team6.validation.user_activity.ArticleViewHistoryValidator;
@@ -33,6 +35,31 @@ class UserActivityEventValidatorDispatcherTest {
 		Exception {
 		//given
 		UserActivityAddEvent event = null;
+
+		//when & then
+		assertThatThrownBy(() ->
+			dispatcher.validate(event)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
+
+	@Test
+	@DisplayName("validateEvent 호출 시 userId 가 유효하지 않으면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenUserIdIsInvalidWhileValidateEvent() throws
+		Exception {
+		//given
+		UserActivityAddEvent event = new UserActivityAddEvent(
+			null,
+			UserActivityType.SUBSCRIPTION,
+			new SubscriptionHistoryDto(
+				1L,
+				"name",
+				List.of("k"),
+				1L
+			),
+			null,
+			null,
+			null
+		);
 
 		//when & then
 		assertThatThrownBy(() ->
