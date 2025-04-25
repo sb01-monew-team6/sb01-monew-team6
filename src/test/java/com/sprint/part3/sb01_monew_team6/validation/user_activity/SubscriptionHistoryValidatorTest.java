@@ -2,6 +2,8 @@ package com.sprint.part3.sb01_monew_team6.validation.user_activity;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -18,6 +20,24 @@ class SubscriptionHistoryValidatorTest {
 		Exception {
 		//given
 		SubscriptionHistoryDto dto = null;
+
+		//when & then
+		assertThatThrownBy(() ->
+			validator.validate(dto)
+		).isInstanceOf(UserActivityDomainException.class);
+	}
+
+	@Test
+	@DisplayName("validateSubscriptionHistoryDto 호출 시 interestId 가 유효하지 않으면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenInterestIdIsInvalidWhileValidateSubscriptionHistoryDto() throws
+		Exception {
+		//given
+		SubscriptionHistoryDto dto = new SubscriptionHistoryDto(
+			null,
+			"name",
+			List.of("k1"),
+			1L
+		);
 
 		//when & then
 		assertThatThrownBy(() ->
