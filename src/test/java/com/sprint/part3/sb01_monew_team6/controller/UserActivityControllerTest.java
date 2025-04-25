@@ -3,6 +3,7 @@ package com.sprint.part3.sb01_monew_team6.controller;
 import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -46,5 +47,22 @@ class UserActivityControllerTest {
 			.andExpect(jsonPath("$.code").value(equalTo(notificationInvalidException.toString())))
 			.andExpect(jsonPath("$.message").value(equalTo(notificationInvalidException.getMessage())));
 
+	}
+
+	@Test
+	@DisplayName("findUserActivityByUserId 정상 호출 시 정상적으로 service 호출")
+	public void respondPageResponseWhenFindUserActivityByUserIdSuccessfully() throws Exception {
+	    //given
+		Long userId = 1L;
+		when(userActivityService.findUserActivityByUserId(eq(userId))).thenReturn(any());
+
+		//when
+		mockMvc.perform(
+			MockMvcRequestBuilders.get("/api/v1/user-activities/{userId}", userId)
+				.header("Monew-Request-User-Id", userId)
+		);
+
+		//then
+		verify(userActivityService, times(1)).findUserActivityByUserId(userId);
 	}
 }
