@@ -57,9 +57,8 @@ public class UserActivityEventValidatorDispatcher {
 		validateUserId(event.userId());
 
 		switch (event.type()) {
-			case SUBSCRIPTION:
-				validateInterestId(event.interestId());
-				break;
+			case SUBSCRIPTION -> validateInterestId(event.interestId());
+			case COMMENT_LIKE -> validateCommentId(event.commentId());
 		}
 	}
 
@@ -67,6 +66,13 @@ public class UserActivityEventValidatorDispatcher {
 		if (Objects.isNull(interestId) || interestId <= 0) {
 			throw new UserActivityDomainException("관심사 id 가 유효하지 않습니다.",
 				Map.of("interestId", String.valueOf(interestId)));
+		}
+	}
+
+	private static void validateCommentId(Long commentId) {
+		if (Objects.isNull(commentId) || commentId <= 0) {
+			throw new UserActivityDomainException("댓글 id 가 유효하지 않습니다.",
+				Map.of("commentId", String.valueOf(commentId)));
 		}
 	}
 }
