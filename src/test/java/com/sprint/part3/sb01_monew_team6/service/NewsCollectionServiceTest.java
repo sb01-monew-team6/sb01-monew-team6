@@ -184,9 +184,17 @@ public class NewsCollectionServiceTest {
     Interest i = new Interest();
     i.setKeyword(List.of("x"));
     given(interestRepository.findAll()).willReturn(List.of(i));
-    given(rssClient.fetchNews()).willThrow(new NewsException(ErrorCode.NEWS_RSSCLIENT_EXCEPTION,Instant.now(),HttpStatus.BAD_GATEWAY));
-    //when,then
-    assertThatThrownBy(()->service.collectAndSave())
+    // 네이버는 빈 리스트 반환 → RSS 로직으로 넘어가게
+    given(naverClient.fetchNews("x")).willReturn(List.of());
+    // RSS 에서만 예외
+    given(rssClient.fetchNews())
+        .willThrow(new NewsException(
+            ErrorCode.NEWS_RSSCLIENT_EXCEPTION,
+            Instant.now(),
+            HttpStatus.BAD_GATEWAY));
+
+    // when & then
+    assertThatThrownBy(() -> service.collectAndSave())
         .isInstanceOf(NewsException.class)
         .hasMessageContaining("RSS API 요청 오류입니다.");
   }
