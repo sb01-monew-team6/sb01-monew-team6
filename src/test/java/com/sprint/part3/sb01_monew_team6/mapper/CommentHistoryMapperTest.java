@@ -2,6 +2,8 @@ package com.sprint.part3.sb01_monew_team6.mapper;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Instant;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -24,7 +26,8 @@ class CommentHistoryMapperTest {
 			1L,
 			"nickname",
 			"content",
-			1L
+			1L,
+			Instant.now()
 		);
 
 		//when

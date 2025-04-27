@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.handler;
 
 import static org.mockito.Mockito.*;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +41,8 @@ class UserActivityEventHandlerTest {
 				1L,
 				"name",
 				List.of("k1", "k2"),
-				3L
+				3L,
+				Instant.now()
 			),
 			null,
 			null,

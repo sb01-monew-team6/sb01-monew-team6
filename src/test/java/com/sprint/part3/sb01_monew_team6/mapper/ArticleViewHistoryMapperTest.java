@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.mapper;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +30,8 @@ class ArticleViewHistoryMapperTest {
 			LocalDateTime.now(),
 			"summary",
 			1L,
-			1L
+			1L,
+			Instant.now()
 		);
 
 		//when

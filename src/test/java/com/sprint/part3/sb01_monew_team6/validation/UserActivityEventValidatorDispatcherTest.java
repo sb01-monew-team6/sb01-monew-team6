@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.validation;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -55,7 +56,8 @@ class UserActivityEventValidatorDispatcherTest {
 				1L,
 				"name",
 				List.of("k"),
-				1L
+				1L,
+				Instant.now()
 			),
 			null,
 			null,

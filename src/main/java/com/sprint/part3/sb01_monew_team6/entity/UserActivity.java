@@ -1,11 +1,13 @@
 package com.sprint.part3.sb01_monew_team6.entity;
 
 import static lombok.AccessLevel.*;
+import static org.springframework.data.mongodb.core.index.IndexDirection.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.mongodb.core.index.IndexDirection;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -16,14 +18,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Document
+@Document(collection = "user_activities")
 @Getter
 @Builder
 @NoArgsConstructor(access = PROTECTED)
 @AllArgsConstructor
 public class UserActivity extends BaseDocument {
 
-	@Indexed
+	@Indexed(unique = true)
 	private Long userId;
 	private String email;
 	private String nickname;
@@ -34,38 +36,37 @@ public class UserActivity extends BaseDocument {
 	private List<CommentLikeHistory> commentLikes;
 	private List<ArticleViewHistory> articleViews;
 
-	@Document
 	@Getter
 	@Builder
 	@NoArgsConstructor(access = PROTECTED)
 	@AllArgsConstructor
-	public static class SubscriptionHistory extends BaseDocument {
+	public static class SubscriptionHistory {
 		private Long interestId;
 		private String interestName;
 		private List<String> interestKeywords;
 		private Long interestSubscriberCount;
+		private Instant createdAt;
 	}
 
-	@Document
 	@Getter
 	@Builder
 	@NoArgsConstructor(access = PROTECTED)
 	@AllArgsConstructor
-	public static class CommentHistory extends BaseDocument {
+	public static class CommentHistory  {
 		private Long articleId;
 		private String articleTitle;
 		private Long userId;
 		private String userNickname;
 		private String content;
 		private Long likeCount;
+		private Instant createdAt;
 	}
 
-	@Document
 	@Getter
 	@Builder
 	@NoArgsConstructor(access = PROTECTED)
 	@AllArgsConstructor
-	public static class CommentLikeHistory extends BaseDocument{
+	public static class CommentLikeHistory {
 		private Long commentId;
 		private Long articleId;
 		private String articleTitle;
@@ -74,14 +75,14 @@ public class UserActivity extends BaseDocument {
 		private String commentContent;
 		private Long commentLikeCount;
 		private Instant commentCreatedAt;
+		private Instant createdAt;
 	}
 
-	@Document
 	@Getter
 	@Builder
 	@NoArgsConstructor(access = PROTECTED)
 	@AllArgsConstructor
-	public static class ArticleViewHistory extends BaseDocument{
+	public static class ArticleViewHistory {
 		private Long viewedBy;
 		private Long articleId;
 		private String source;
@@ -91,5 +92,6 @@ public class UserActivity extends BaseDocument {
 		private String articleSummary;
 		private Long articleCommentCount;
 		private Long articleViewCount;
+		private Instant createdAt;
 	}
 }

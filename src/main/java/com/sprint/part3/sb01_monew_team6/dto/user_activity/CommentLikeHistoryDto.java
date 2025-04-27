@@ -3,6 +3,7 @@ package com.sprint.part3.sb01_monew_team6.dto.user_activity;
 import java.time.Instant;
 
 public record CommentLikeHistoryDto(
+	Long id,
 	Long commentId,
 	Long articleId,
 	String articleTitle,
@@ -10,6 +11,7 @@ public record CommentLikeHistoryDto(
 	String commentUserNickname,
 	String commentContent,
 	Long commentLikeCount,
-	Instant commentCreatedAt
+	Instant commentCreatedAt,
+	Instant createdAt
 ) {
 }

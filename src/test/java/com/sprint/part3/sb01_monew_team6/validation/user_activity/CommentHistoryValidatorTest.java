@@ -2,6 +2,8 @@ package com.sprint.part3.sb01_monew_team6.validation.user_activity;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Instant;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +38,8 @@ class CommentHistoryValidatorTest {
 			1L,
 			"nickName",
 			"content",
-			1L
+			1L,
+			Instant.now()
 		);
 
 		//when & then
@@ -56,7 +59,8 @@ class CommentHistoryValidatorTest {
 			1L,
 			"nickName",
 			"content",
-			0L
+			0L,
+			Instant.now()
 		);
 
 		//when & then
