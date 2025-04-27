@@ -8,7 +8,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
 #  datasource:
 #    driver-class-name: org.postgresql.Driver
 #    url:
@@ -25,3 +28,8 @@ naver:
     url: https://openapi.naver.com/v1/search/news.json  # 네이버 뉴스 API
     client-id: ${naver.api.client-id}                      # 발급받은 Client ID
     client-secret: ${naver.api.client-secret}                   # 발급받은 Client Secret
+
+management:
+  health:
+    mongo:
+      enabled: false

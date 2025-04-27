@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 import com.sprint.part3.sb01_monew_team6.client.NaverNewsClient;
 import com.sprint.part3.sb01_monew_team6.client.RssNewsClient;
@@ -130,7 +131,7 @@ public class NewsCollectionServiceTest {
   }
 
   @Test
-  @DisplayName("이미 DB에 있는 기사만 나왔을 땐, NewsException 발생")
+  @DisplayName("이미 DB에 있는 기사만 나왔을 땐, 예외 없이 종료하고 저장 안 함")
   void allExisting_throwNoNewsException() {
     // given
     Interest it = new Interest();
@@ -141,22 +142,24 @@ public class NewsCollectionServiceTest {
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("x")).willReturn(true);
 
-    // when & then
-    assertThatThrownBy(() -> service.collectAndSave())
-        .isInstanceOf(NewsException.class)
-        .hasMessageContaining("저장할 새로운 뉴스가 없습니다.");
+    // when - 예외 없이 실행
+    service.collectAndSave();
+    // then - saveAll 절대 호출 안 됨
+    then(newsArticleRepository).should( times(0) ).saveAll(org.mockito.ArgumentMatchers.anyList());
   }
 
   @Test
-  @DisplayName("관심사 없으면 NewsException(NO_INTERESTS) 발생")
+  @DisplayName("관심사 없으면 예외 없이 종료하고 저장 안 함")
   void givenNoInterests_throwNewsException() {
     // Given
     given(interestRepository.findAll()).willReturn(List.of());
 
-    // when & then
-    assertThatThrownBy(() -> service.collectAndSave())
-        .isInstanceOf(NewsException.class)
-        .hasMessageContaining("저장할 관심사가 없습니다.");
+    // when - 예외 없이 실행
+    service.collectAndSave();
+    //then - 외부 호출도 하지 않음
+    then(naverClient).shouldHaveNoInteractions();
+    then(rssClient).shouldHaveNoInteractions();
+    then(newsArticleRepository).should( times(0) ).saveAll(org.mockito.ArgumentMatchers.anyList());
   }
 
   @Test
@@ -211,18 +214,16 @@ public class NewsCollectionServiceTest {
   }
 
   @Test
-  @DisplayName("관심사 없으면 NO_INTERESTS 예외 발생")
-  void fetchCandidates_noInterests_throws() {
+  @DisplayName("관심사 없으면 빈리스트 반환")
+  void retturnEmptyList_whenNoInterests() {
     // given
     given(interestRepository.findAll()).willReturn(List.of());
 
-    // when & then
-    assertThatThrownBy(() -> service.fetchCandidates())
-        .isInstanceOf(NewsException.class)
-        .satisfies(ex->{
-          NewsException ne = (NewsException) ex;
-          assertThat(ne.getCode()).isEqualTo(ErrorCode.NEWS_BATCH_NO_INTEREST_EXCEPTION);
-        });
+    // when
+    List<ExternalNewsItem> result = service.fetchCandidates();
+    // then
+    assertThat(result).isEmpty();
+    then(interestRepository).should(times(1)).findAll();
   }
 
   //saveAll()

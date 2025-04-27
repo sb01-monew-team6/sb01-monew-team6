@@ -9,6 +9,7 @@ import com.sprint.part3.sb01_monew_team6.client.impl.NaverNewsClientImpl;
 import com.sprint.part3.sb01_monew_team6.client.impl.NaverNewsClientImpl.NaverResponse;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,7 +69,7 @@ public class NaverNewsClientImplTest {
     item.originalLink = "o1";
     item.link          = "l1";
     item.title         = "t1";
-    item.pubDate       = ZonedDateTime.parse("2025-04-23T10:00:00Z");
+    item.pubDate      = DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now());
     item.description   = "d1";
     response.items = List.of(item);
 
