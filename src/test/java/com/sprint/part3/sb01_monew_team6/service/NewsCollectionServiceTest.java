@@ -1,16 +1,16 @@
 package com.sprint.part3.sb01_monew_team6.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
 
 import com.sprint.part3.sb01_monew_team6.client.NaverNewsClient;
 import com.sprint.part3.sb01_monew_team6.client.RssNewsClient;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
+import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
@@ -130,8 +130,8 @@ public class NewsCollectionServiceTest {
   }
 
   @Test
-  @DisplayName("이미 DB에 있는 기사만 나왔을 땐, 레포지토리의 저장 메서드를 아예 호출하지 않음")
-  void allExisting_thenNoSave() {
+  @DisplayName("이미 DB에 있는 기사만 나왔을 땐, NewsException 발생")
+  void allExisting_throwNoNewsException() {
     // given
     Interest it = new Interest();
     it.setKeyword(List.of("x"));
@@ -141,26 +141,22 @@ public class NewsCollectionServiceTest {
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("x")).willReturn(true);
 
-    // when
-    service.collectAndSave();
-
-    // then
-    then(newsArticleRepository).should(never()).saveAll(any());
+    // when & then
+    assertThatThrownBy(() -> service.collectAndSave())
+        .isInstanceOf(NewsException.class)
+        .hasMessageContaining("저장할 새로운 뉴스가 없습니다.");
   }
 
   @Test
-  @DisplayName("관심사 없으면 외부 호출·저장 모두 안 함")
-  void givenNoInterests_thenNothing() {
+  @DisplayName("관심사 없으면 NewsException(NO_INTERESTS) 발생")
+  void givenNoInterests_throwNewsException() {
     // Given
     given(interestRepository.findAll()).willReturn(List.of());
 
-    // When
-    service.collectAndSave();
-
-    // Then
-    then(naverClient).should(never()).fetchNews(any());
-    then(rssClient).should(never()).fetchNews();
-    then(newsArticleRepository).should(never()).saveAll(any());
+    // when & then
+    assertThatThrownBy(() -> service.collectAndSave())
+        .isInstanceOf(NewsException.class)
+        .hasMessageContaining("저장할 관심사가 없습니다.");
   }
 
   @Test
@@ -190,5 +186,86 @@ public class NewsCollectionServiceTest {
     assertThatThrownBy(()->service.collectAndSave())
         .isInstanceOf(NewsException.class)
         .hasMessageContaining("RSS API 요청 오류입니다.");
+  }
+
+  //fetchCandidates()
+  @Test
+  @DisplayName("관심사가 있을 떄 naver,rss 호출 결과 반환")
+  void whenInterests_returnsItems(){
+    //given
+    Interest i = new Interest();
+    i.setKeyword(List.of("key"));
+    given(interestRepository.findAll()).willReturn(List.of(i));
+
+    ExternalNewsItem e1 = new ExternalNewsItem("NAVER","u1","u1","key 제목", Instant.now(),"");
+    ExternalNewsItem e2 = new ExternalNewsItem("RSS","u2","u2","제목", Instant.now(),"");
+    given(naverClient.fetchNews("key")).willReturn(List.of(e1));
+    given(rssClient.fetchNews()).willReturn(List.of(e2));
+
+    // when
+    List<ExternalNewsItem> result = service.fetchCandidates();
+
+    // then
+    assertThat(result).hasSize(2)
+        .containsExactlyInAnyOrder(e1, e2);
+  }
+
+  @Test
+  @DisplayName("관심사 없으면 NO_INTERESTS 예외 발생")
+  void fetchCandidates_noInterests_throws() {
+    // given
+    given(interestRepository.findAll()).willReturn(List.of());
+
+    // when & then
+    assertThatThrownBy(() -> service.fetchCandidates())
+        .isInstanceOf(NewsException.class)
+        .satisfies(ex->{
+          NewsException ne = (NewsException) ex;
+          assertThat(ne.getCode()).isEqualTo(ErrorCode.NEWS_BATCH_NO_INTEREST_EXCEPTION);
+        });
+  }
+
+  //saveAll()
+  @Test
+  @DisplayName("새로운 기사만 저장,호출")
+  void newNews_save_call(){
+    //given
+    NewsArticle a1 = NewsArticle.from(
+        new ExternalNewsItem("Naver","url1","url1","title1",Instant.now(),"desc1"));
+    NewsArticle a2 = NewsArticle.from(
+        new ExternalNewsItem("Rss","url2","url2","title2",Instant.now(),"desc2")
+    );
+    // u1은 DB에 없고, u2는 이미 존재
+    given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
+    given(newsArticleRepository.existsBySourceUrl("url2")).willReturn(true);
+    //when
+    service.saveAll(List.of(a1, a2));
+    // then: a1만 담긴 리스트로 saveAll 호출
+    then(newsArticleRepository).should().saveAll(argThat(iter -> {
+      // Iterable 크기 검사
+      int cnt = 0;
+      for (var x : iter) cnt++;
+      return cnt == 1;
+    }));
+  }
+  @Test
+  @DisplayName("저장 대상이 없으면 예외 발생")
+  void noNews_throwsException(){
+    //given
+    NewsArticle a1 = NewsArticle.from(
+        new ExternalNewsItem("Naver","url1","url1","title1",Instant.now(),"desc1"));
+    NewsArticle a2 = NewsArticle.from(
+        new ExternalNewsItem("Rss","url2","url2","title2",Instant.now(),"desc2")
+    );
+    given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(true);
+    given(newsArticleRepository.existsBySourceUrl("url2")).willReturn(true);
+
+    // when & then
+    assertThatThrownBy(() -> service.saveAll(List.of(a1, a2)) )
+        .isInstanceOf(NewsException.class)
+        .satisfies(ex->{
+          NewsException ne = (NewsException) ex;
+          assertThat(ne.getCode()).isEqualTo(ErrorCode.NEWS_BATCH_NO_NEWS_EXCEPTION);
+        });
   }
 }
