@@ -57,7 +57,7 @@ public class NaverNewsClientImpl implements NaverNewsClient {
 
           return new ExternalNewsItem(
               "NAVER",
-              item.originalLink,
+              item.originallink,
               item.link,
               item.title,
               published,
@@ -71,7 +71,7 @@ public class NaverNewsClientImpl implements NaverNewsClient {
   public static class NaverResponse {
     public List<Item> items;
     public static class Item {
-      public String originalLink;
+      public String originallink;
       public String title;
       public String link;
       public String description;

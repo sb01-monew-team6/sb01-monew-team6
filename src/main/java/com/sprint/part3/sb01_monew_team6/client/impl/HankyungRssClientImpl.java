@@ -6,45 +6,68 @@ import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
 import com.sprint.part3.sb01_monew_team6.client.RssNewsClient;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
+import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
+import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
+@Slf4j
 public class HankyungRssClientImpl implements RssNewsClient {
 
-  private static final String H_URL = "https://www.hankyung.com/feed";
+  private static final String FEED_URL = "https://www.hankyung.com/feed/all-news";
 
   @Override
   public List<ExternalNewsItem> fetchNews() {
-    try (XmlReader reader = createReader()) {
-      SyndFeed feed = readFeed(reader);
+    try (InputStream in = createInputStream();
+        XmlReader reader = createReader(in)) {
+
+      SyndFeed feed = new SyndFeedInput().build(reader);
       return feed.getEntries().stream()
-          .map(e->new ExternalNewsItem(
-              "HANKYUNG",
+          .map(e -> new ExternalNewsItem(
+              "RSS",
               e.getLink(),
               e.getLink(),
               e.getTitle(),
-              e.getPublishedDate().toInstant(),
-              e.getDescription().getValue()
-              ))
+              Optional.ofNullable(e.getPublishedDate())
+                  .map(Date::toInstant)
+                  .orElse(Instant.now()),
+              e.getDescription() != null
+                  ? e.getDescription().getValue()
+                  : ""
+          ))
           .collect(Collectors.toList());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+
+    } catch (FeedException | IOException ex) {
+      log.error("RSS API 호출 실패", ex);
+      throw new NewsException(
+          ErrorCode.NEWS_RSSCLIENT_EXCEPTION,
+          Instant.now(),
+          HttpStatus.BAD_GATEWAY
+      );
     }
   }
 
-  /** 실제 프로덕션에서는 URL 을 열어서 XmlReader 를 생성 */
-  protected XmlReader createReader() throws IOException {
-    return new XmlReader(new URL(H_URL));
+  /**
+   * HTTP 대신 테스트용으로 교체할 수 있게 분리된 스트림 생성 메서드
+   */
+  protected InputStream createInputStream() throws IOException {
+    return new URL(FEED_URL).openStream();
   }
 
-  // 테스트용으로 분리한 메서드(DOCTYPE 허용하도록 setAllowDoctypes(true) 추가)
-  protected SyndFeed readFeed(XmlReader reader) throws Exception, FeedException {
-    SyndFeedInput input = new SyndFeedInput();
-    input.setAllowDoctypes(true);
-    return input.build(reader);
+  /**
+   * JDOM XmlReader 생성 분리 (필요하면 테스트에서 오버라이드)
+   */
+  protected XmlReader createReader(InputStream in) throws IOException {
+    return new XmlReader(in);
   }
 }
