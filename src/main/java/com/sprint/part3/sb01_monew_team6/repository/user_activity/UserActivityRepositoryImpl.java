@@ -2,19 +2,25 @@ package com.sprint.part3.sb01_monew_team6.repository.user_activity;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
+import java.util.Collections;
 import java.util.Optional;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.FacetOperation;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
+import org.springframework.data.mongodb.core.aggregation.LimitOperation;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
+import org.springframework.data.mongodb.core.aggregation.SortOperation;
+import org.springframework.data.mongodb.core.aggregation.UnwindOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
+import com.mongodb.BasicDBObject;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +34,7 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 	@Override
 	public void addSubscription(Long userId, UserActivity.SubscriptionHistory subscription) {
 		Query query = queryByUserId(userId);
+
 		Update update = new Update().push("subscriptions", subscription);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
 	}
@@ -44,7 +51,12 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 	@Override
 	public void addCommentLike(Long userId, UserActivity.CommentLikeHistory commentLike) {
 		Query query = queryByUserId(userId);
-		Update update = new Update().push("commentLikes", commentLike);
+
+		BasicDBObject push = new BasicDBObject();
+		push.put("$each", Collections.singletonList(commentLike));
+		push.put("$slice", -10);
+
+		Update update = new Update().push("commentLikes", push);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
 	}
 
@@ -60,7 +72,12 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 	@Override
 	public void addComment(Long userId, UserActivity.CommentHistory comment) {
 		Query query = queryByUserId(userId);
-		Update update = new Update().push("comments", comment);
+
+		BasicDBObject push = new BasicDBObject();
+		push.put("$each", Collections.singletonList(comment));
+		push.put("$slice", -10);
+
+		Update update = new Update().push("comments", push);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
 	}
 
@@ -76,7 +93,12 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 	@Override
 	public void addArticleView(Long userId, UserActivity.ArticleViewHistory articleView) {
 		Query query = queryByUserId(userId);
-		Update update = new Update().push("articleViews", articleView);
+
+		BasicDBObject push = new BasicDBObject();
+		push.put("$each", Collections.singletonList(articleView));
+		push.put("$slice", -10);
+
+		Update update = new Update().push("articleViews", push);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
 	}
 
@@ -95,48 +117,64 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 
 	@Override
 	public Optional<UserActivity> findByUserId(Long userId) {
-		Aggregation aggregation = Aggregation.newAggregation(
-			match(Criteria.where("userId").is(userId)),
 
-			project()
-				.and("comments").slice(10).as("comments")
-				.and("commentLikes").slice(10).as("commentLikes")
-				.and("articleViews").slice(10).as("articleViews")
-				.and("subscriptions").as("subscriptions")
-				.and("userId").as("userId")
-				.and("email").as("email")
-				.and("nickname").as("nickname")
-				.and("userCreatedAt").as("userCreatedAt")
-				.and("createdAt").as("createdAt"),
+		MatchOperation matchUser = Aggregation.match(Criteria.where("userId").is(userId));
 
-			unwind("articleViews"),
-			sort(Sort.by(Sort.Order.desc("articleViews.articlePublishedDate"))),
+		UnwindOperation unwindComments = unwind("comments");
+		SortOperation sortComments = sort(Sort.by(Sort.Order.desc("comments.createdAt")));
+		// LimitOperation limitComments = limit(10);
+		GroupOperation groupComments = group("_id")
+			.push("comments").as("comments");
 
-			group("_id")
-				.first("userId").as("userId")
-				.first("email").as("email")
-				.first("nickname").as("nickname")
-				.first("userCreatedAt").as("userCreatedAt")
-				.first("createdAt").as("createdAt")
-				.first("comments").as("comments")
-				.first("subscriptions").as("subscriptions")
-				.first("commentLikes").as("commentLikes")
-				.push("articleViews").as("articleViews"),
+		UnwindOperation unwindLikes = unwind("commentLikes");
+		SortOperation sortLikes = sort(Sort.by(Sort.Order.desc("commentLikes.createdAt")));
+		// LimitOperation limitLikes = limit(10);
+		GroupOperation groupLikes = group("_id")
+			.push("commentLikes").as("commentLikes");
 
-			project()
-				.and("userId").as("userId")
-				.and("email").as("email")
-				.and("nickname").as("nickname")
-				.and("userCreatedAt").as("userCreatedAt")
-				.and("createdAt").as("createdAt")
-				.and("comments").as("comments")
-				.and("commentLikes").as("commentLikes")
-				.and("articleViews").as("articleViews")
-				.and("subscriptions").as("subscriptions")
+		UnwindOperation unwindViews = unwind("articleViews");
+		SortOperation sortViews = sort(Sort.by(Sort.Order.desc("articleViews.createdAt")));
+		// LimitOperation limitViews = limit(10);
+		GroupOperation groupViews = group("_id")
+			.push("articleViews").as("articleViews");
+
+		GroupOperation groupProfile = group("_id")
+			.first("$$ROOT").as("profile");
+
+		FacetOperation facet =
+			facet(unwindComments, sortComments, groupComments)
+				.as("commentsFacet")
+				.and(unwindLikes, sortLikes, groupLikes)
+				.as("likesFacet")
+				.and(unwindViews, sortViews, groupViews)
+				.as("viewsFacet")
+				.and(groupProfile)
+				.as("profileFacet");
+
+		UnwindOperation unwindBase = unwind("profileFacet");
+
+		ProjectionOperation project = Aggregation.project()
+			.and("profileFacet.profile.userId").as("userId")
+			.and("profileFacet.profile.email").as("email")
+			.and("profileFacet.profile.nickname").as("nickname")
+			.and("profileFacet.profile.userCreatedAt").as("userCreatedAt")
+			.and("profileFacet.profile.subscriptions").as("subscriptions")
+			.and("commentsFacet.comments").arrayElementAt(0).as("comments")
+			.and("likesFacet.commentLikes").arrayElementAt(0).as("commentLikes")
+			.and("viewsFacet.articleViews").arrayElementAt(0).as("articleViews");
+
+		Aggregation aggregation = newAggregation(
+			matchUser,
+			facet,
+			unwindBase,
+			project
 		);
 
-		AggregationResults<UserActivity> result = mongoTemplate.aggregate(aggregation, UserActivity.class, UserActivity.class);
-		UserActivity userActivity = result.getUniqueMappedResult();
+		UserActivity userActivity = mongoTemplate
+			.aggregate(aggregation, "user_activities", UserActivity.class)
+			.getUniqueMappedResult();
+
 		return Optional.ofNullable(userActivity);
 	}
+
 }

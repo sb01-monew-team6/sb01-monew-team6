@@ -35,11 +35,13 @@ class CommentLikeHistoryValidatorTest {
 		CommentLikeHistoryDto dto = new CommentLikeHistoryDto(
 			1L,
 			1L,
+			1L,
 			"title",
 			0L,
 			"nickName",
 			"content",
 			1L,
+			Instant.now(),
 			Instant.now()
 		);
 
@@ -56,12 +58,14 @@ class CommentLikeHistoryValidatorTest {
 		//given
 		CommentLikeHistoryDto dto = new CommentLikeHistoryDto(
 			0L,
+			0L,
 			1L,
 			"title",
 			1L,
 			"nickName",
 			"content",
 			1L,
+			Instant.now(),
 			Instant.now()
 		);
 

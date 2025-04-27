@@ -30,7 +30,8 @@ class UserActivityMapperTest {
 				1L,
 				"interestName",
 				List.of("k"),
-				3L
+				3L,
+				Instant.now()
 			)),
 			null,
 			null,

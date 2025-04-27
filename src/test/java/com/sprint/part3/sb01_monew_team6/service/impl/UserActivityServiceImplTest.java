@@ -61,13 +61,15 @@ class UserActivityServiceImplTest {
 			1L,
 			"interestName",
 			List.of("k1", "k2"),
-			3L
+			3L,
+			Instant.now()
 		);
 		SubscriptionHistoryDto historyDto = new SubscriptionHistoryDto(
 			1L,
 			"interestName",
 			List.of("k1", "k2"),
-			3L
+			3L,
+			Instant.now()
 		);
 
 		when(subscriptionHistoryMapper.fromDto(any(SubscriptionHistoryDto.class))).thenReturn(
@@ -93,7 +95,8 @@ class UserActivityServiceImplTest {
 			1L,
 			"interestName",
 			List.of("k1", "k2"),
-			3L
+			3L,
+			Instant.now()
 		);
 		when(userRepository.existsByIdAndIsDeletedFalse(eq(userId))).thenReturn(false);
 
@@ -117,9 +120,11 @@ class UserActivityServiceImplTest {
 			"nickName",
 			"content",
 			3L,
+			Instant.now(),
 			Instant.now()
 		);
 		CommentLikeHistoryDto historyDto = new CommentLikeHistoryDto(
+			1L,
 			1L,
 			1L,
 			"interestName",
@@ -127,6 +132,7 @@ class UserActivityServiceImplTest {
 			"nickName",
 			"content",
 			3L,
+			Instant.now(),
 			Instant.now()
 		);
 
@@ -151,11 +157,13 @@ class UserActivityServiceImplTest {
 		CommentLikeHistoryDto historyDto = new CommentLikeHistoryDto(
 			1L,
 			1L,
+			1L,
 			"interestName",
 			1L,
 			"nickName",
 			"content",
 			3L,
+			Instant.now(),
 			Instant.now()
 		);
 		when(userRepository.existsByIdAndIsDeletedFalse(eq(userId))).thenReturn(false);
@@ -177,7 +185,8 @@ class UserActivityServiceImplTest {
 			1L,
 			"nickName",
 			"content",
-			3L
+			3L,
+			Instant.now()
 		);
 		CommentHistoryDto historyDto = new CommentHistoryDto(
 			1L,
@@ -185,7 +194,8 @@ class UserActivityServiceImplTest {
 			1L,
 			"nickName",
 			"content",
-			3L
+			3L,
+			Instant.now()
 		);
 
 		when(commentHistoryMapper.fromDto(any(CommentHistoryDto.class))).thenReturn(
@@ -212,7 +222,8 @@ class UserActivityServiceImplTest {
 			1L,
 			"nickName",
 			"content",
-			3L
+			3L,
+			Instant.now()
 		);
 		when(userRepository.existsByIdAndIsDeletedFalse(eq(userId))).thenReturn(false);
 
@@ -236,7 +247,8 @@ class UserActivityServiceImplTest {
 			LocalDateTime.now(),
 			"summary",
 			3L,
-			3L
+			3L,
+			Instant.now()
 		);
 		ArticleViewHistoryDto historyDto = new ArticleViewHistoryDto(
 			1L,
@@ -247,7 +259,8 @@ class UserActivityServiceImplTest {
 			LocalDateTime.now(),
 			"summary",
 			3L,
-			3L
+			3L,
+			Instant.now()
 		);
 
 		when(articleViewHistoryMapper.fromDto(any(ArticleViewHistoryDto.class))).thenReturn(

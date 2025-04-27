@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.dto.user_activity;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 public record ArticleViewHistoryDto(
@@ -11,6 +12,7 @@ public record ArticleViewHistoryDto(
 	LocalDateTime articlePublishedDate,
 	String articleSummary,
 	Long articleCommentCount,
-	Long articleViewCount
+	Long articleViewCount,
+	Instant createdAt
 ) {
 }

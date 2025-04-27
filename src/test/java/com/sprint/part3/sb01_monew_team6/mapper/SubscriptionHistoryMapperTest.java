@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.mapper;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +25,8 @@ class SubscriptionHistoryMapperTest {
 			1L,
 			"name",
 			List.of("k"),
-			1L
+			1L,
+			Instant.now()
 		);
 
 		//when

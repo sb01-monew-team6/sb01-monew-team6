@@ -12,4 +12,5 @@ public interface UserActivityMapper {
 	@Mapping(target = "id", source = "userId")
 	@Mapping(target = "createdAt", source = "userCreatedAt")
 	UserActivityDto toDto(UserActivity userActivity);
+
 }
