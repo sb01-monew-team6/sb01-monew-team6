@@ -2,8 +2,11 @@ package com.sprint.part3.sb01_monew_team6.client.impl;
 
 import com.sprint.part3.sb01_monew_team6.client.NaverNewsClient;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
-import java.time.ZonedDateTime;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -33,21 +36,34 @@ public class NaverNewsClientImpl implements NaverNewsClient {
         .bodyToMono(NaverResponse.class)
         .block();
 
+    DateTimeFormatter formatter = DateTimeFormatter
+        .ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+
     //빈 응답 처리
     if(response == null || response.items == null){
       return List.of();
     }
 
     //DTO -> Entity
+    DateTimeFormatter rfc822 = DateTimeFormatter
+        .ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+
     return response.items.stream()
-        .map(item -> new ExternalNewsItem(
-            "Naver",
-            item.originalLink,
-            item.link,
-            item.title,
-            item.pubDate.toInstant(),
-            item.description
-        ))
+        .map(item -> {
+          // "Sun, 27 Apr 2025 22:30:00 +0900" → Instant
+          Instant published = OffsetDateTime
+              .parse(item.pubDate, rfc822)
+              .toInstant();
+
+          return new ExternalNewsItem(
+              "NAVER",
+              item.originalLink,
+              item.link,
+              item.title,
+              published,
+              item.description
+          );
+        })
         .toList();
   }
 
@@ -59,7 +75,7 @@ public class NaverNewsClientImpl implements NaverNewsClient {
       public String title;
       public String link;
       public String description;
-      public ZonedDateTime pubDate;
+      public String pubDate;
     }
   }
 }

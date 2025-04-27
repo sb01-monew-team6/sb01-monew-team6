@@ -36,11 +36,10 @@ public class NewsCollectionService {
     List<Interest> interests = interestRepository.findAll();
     log.debug("조회된 관심사 개수: {}", interests.size());
 
-    // 관심사가 없으면 예외 발생
+    // 관심사 x
     if (interests.isEmpty()) {
-      log.warn("관심사 목록이 비어있어 작업을 중단합니다");
-      throw new NewsException(ErrorCode.NEWS_NO_INTEREST_EXCEPTION, Instant.now(),
-          HttpStatus.BAD_REQUEST);
+      log.info("등록된 관심사가 없어 뉴스 수집을 건너뜁니다");
+      return;   // 예외 대신 조용히 리턴
     }
     // 외부 뉴스 수집
     List<ExternalNewsItem> externalNewsItems = fetchExternalNews(interests);
@@ -53,11 +52,7 @@ public class NewsCollectionService {
     //저장
     if (toSave.isEmpty()) {
       log.info("저장할 뉴스가 없어 작업을 종료합니다");
-      throw new NewsException(
-          ErrorCode.NEWS_NO_NEW_NEWS_EXCEPTION,
-          Instant.now(),
-          HttpStatus.NOT_FOUND
-      );
+      return;   // 예외 대신 조용히 리턴
     }
 
     newsArticleRepository.saveAll(toSave);
@@ -74,8 +69,8 @@ public class NewsCollectionService {
 
     //관심사 x
     if(interests.isEmpty()){
-      log.warn("Batch 관심사 목록이 비어 있습니다.");
-      throw new NewsException(ErrorCode.NEWS_BATCH_NO_INTEREST_EXCEPTION,Instant.now(),HttpStatus.BAD_REQUEST);
+      log.info("Batch용 등록된 관심사가 없어 빈 리스트 반환");
+      return List.of();   // 예외 대신 빈 리스트
     }
     //관심사 o
     List<ExternalNewsItem> items = fetchExternalNews(interests);
