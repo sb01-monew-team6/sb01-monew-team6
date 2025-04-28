@@ -1,50 +1,53 @@
 package com.sprint.part3.sb01_monew_team6.entity;
 
 import com.sprint.part3.sb01_monew_team6.entity.base.BaseUpdatableEntity;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Entity
-@Table(name = "users")
-@NoArgsConstructor
-@AllArgsConstructor
+
 @Getter
-@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table(name = "users", indexes = {
+    @Index(name = "idx_users_email", columnList = "email", unique = true)
+})
+
 public class User extends BaseUpdatableEntity {
 
-  @Column(nullable = false, unique = true)
+  @Column(nullable = false, unique = true, length = 255)
   private String email;
 
-  @Column(nullable = false)
+  @Column(nullable = false, length = 255)
   private String nickname;
 
   @Column(nullable = false)
   private String password;
 
-  @Column(nullable = false)
-  private boolean isDeleted = false;
+  @Column(name = "is_deleted", nullable = false)
+  private boolean deleted = false;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Subscription> subscriptions = new ArrayList<>();
+  @Builder
+  public User(String email, String nickname, String password) {
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<ArticleView> articleViews = new ArrayList<>();
+    if (email == null || email.isBlank() || nickname == null || nickname.isBlank() || password == null || password.isBlank()) {
+      throw new IllegalArgumentException("Email, nickname, password는 비어 있을 수 없습니다.");
+    }
+    this.email = email;
+    this.nickname = nickname;
+    this.password = password;
+    this.deleted = false;
+  }
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Comment> comments = new ArrayList<>();
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<CommentLike> commentLikes = new ArrayList<>();
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Notification> notifications = new ArrayList<>();
+  public void updateNickname(String newNickname) {
+    if (newNickname == null || newNickname.isBlank()) {
+      throw new IllegalArgumentException("새 닉네임은 비어 있을 수 없습니다.");
+    }
+    this.nickname = newNickname;
+  }
+  public void delete() {
+    this.deleted = true;
+  }
 }
