@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
 import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
@@ -114,4 +116,41 @@ public class ArticleViewServiceTest {
         .isInstanceOf(NewsException.class)
         .hasMessageContaining("유저가 존재하지 않습니다.");
   }
+
+  @Test
+  @DisplayName("기사 중복 조회 시 저장 없이 기존 집계만 반환")
+  void articleView_duplicate(){
+    //given
+    Long articleId = 1L;
+    Long userId = 2L;
+
+    NewsArticle article = new NewsArticle();
+    article.setSource("Naver");
+    article.setSourceUrl("https://test.api.com");
+    article.setArticleTitle("test");
+    article.setArticlePublishedDate(Instant.parse("2025-04-27T12:00:00Z"));
+    article.setArticleSummary("test");
+    article.setDeleted(false);
+    ReflectionTestUtils.setField(article, "id", articleId);
+    given(newsArticleRepository.findById(articleId)).willReturn(Optional.of(article));
+
+    User user = new User();
+    user.setNickname("user");
+    user.setEmail("email");
+    user.setPassword("pwd");
+    ReflectionTestUtils.setField(user, "id", userId);
+    given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+    //when
+    given(articleViewRepository.existsByArticleIdAndUserId(articleId, userId)).willReturn(true);
+    given(commentRepository.countByArticleId(articleId)).willReturn(0L);
+    given(articleViewRepository.countByArticleId(articleId)).willReturn(3L);
+
+    ArticleViewDto dto = service.viewArticle(articleId, userId);
+
+    //then
+    assertThat(dto.articleViewCount()).isEqualTo(3L);
+    then(articleViewRepository).should(never()).save(any(ArticleView.class));
+  }
+
 }
