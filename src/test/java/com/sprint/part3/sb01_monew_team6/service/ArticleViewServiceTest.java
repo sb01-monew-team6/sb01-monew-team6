@@ -13,6 +13,7 @@ import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
+import com.sprint.part3.sb01_monew_team6.mapper.news.ArticleViewMapper;
 import com.sprint.part3.sb01_monew_team6.repository.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
@@ -37,6 +38,8 @@ public class ArticleViewServiceTest {
   private CommentRepository commentRepository;
   @Mock
   private ArticleViewRepository articleViewRepository;
+  @Mock
+  private ArticleViewMapper articleViewMapper;
 
   @InjectMocks
   private ArticleViewService service;
@@ -58,19 +61,38 @@ public class ArticleViewServiceTest {
     ReflectionTestUtils.setField(article, "id", articleId);
 
 
-    User user = new User();
-    user.setNickname("user");
-    user.setEmail("email");
-    user.setPassword("pwd");
+    User user = User.builder()
+        .email("repo@example.com")
+        .nickname("repoUser")
+        .password("hashedPasswordRepo")
+        .build();
     ReflectionTestUtils.setField(user, "id", userId);
 
     ArticleView view = new ArticleView(article, user, Instant.parse("2025-04-27T12:00:00Z"));
+    ReflectionTestUtils.setField(view, "id", 10L);
 
     given(newsArticleRepository.findById(articleId)).willReturn(Optional.of(article));
     given(userRepository.findById(userId)).willReturn(Optional.of(user));
     given(articleViewRepository.save(any(ArticleView.class))).willReturn(view);
     given(commentRepository.countByArticleId(articleId)).willReturn(5L);
     given(articleViewRepository.countByArticleId(articleId)).willReturn(1L);
+
+    // Mapper가 호출될 때 기대 DTO를 반환하도록 정의
+    ArticleViewDto expectedDto = ArticleViewDto.builder()
+        .id(view.getId())
+        .viewedBy(userId)
+        .createdAt(view.getArticleViewDate())
+        .articleId(articleId)
+        .source(article.getSource())
+        .sourceUrl(article.getSourceUrl())
+        .articleTitle(article.getArticleTitle())
+        .articlePublishedDate(article.getArticlePublishedDate().toString())
+        .articleSummary(article.getArticleSummary())
+        .articleCommentCount(5L)
+        .articleViewCount(1L)
+        .build();
+    given(articleViewMapper.toDto(view, 5L, 1L))
+        .willReturn(expectedDto);
 
     // when
     ArticleViewDto dto = service.viewArticle(articleId, userId);
@@ -134,22 +156,48 @@ public class ArticleViewServiceTest {
     ReflectionTestUtils.setField(article, "id", articleId);
     given(newsArticleRepository.findById(articleId)).willReturn(Optional.of(article));
 
-    User user = new User();
-    user.setNickname("user");
-    user.setEmail("email");
-    user.setPassword("pwd");
+    User user = User.builder()
+        .email("repo@example.com")
+        .nickname("repoUser")
+        .password("hashedPasswordRepo")
+        .build();
     ReflectionTestUtils.setField(user, "id", userId);
     given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
-    //when
-    given(articleViewRepository.existsByArticleIdAndUserId(articleId, userId)).willReturn(true);
+    // 이미 조회했음을 확인하도록 stub
+    given(articleViewRepository.existsByArticleIdAndUserId(articleId, userId))
+        .willReturn(true);
+
+    // 기존에 저장된 ArticleView 인스턴스 준비
+    ArticleView existingView = new ArticleView(article, user, Instant.now());
+    ReflectionTestUtils.setField(existingView, "id", 100L);
+    given(articleViewRepository.findByArticleIdAndUserId(articleId, userId))
+        .willReturn(Optional.of(existingView));
+
     given(commentRepository.countByArticleId(articleId)).willReturn(0L);
     given(articleViewRepository.countByArticleId(articleId)).willReturn(3L);
 
+    ArticleViewDto expectedDto = ArticleViewDto.builder()
+        .id(null)  // 서비스가 중복 조회일 땐 id 없이 처리한다면 null
+        .viewedBy(userId)
+        .createdAt(null)
+        .articleId(articleId)
+        .source(article.getSource())
+        .sourceUrl(article.getSourceUrl())
+        .articleTitle(article.getArticleTitle())
+        .articlePublishedDate(article.getArticlePublishedDate().toString())
+        .articleSummary(article.getArticleSummary())
+        .articleCommentCount(0L)
+        .articleViewCount(3L)
+        .build();
+    given(articleViewMapper.toDto(existingView, 0L, 3L))
+        .willReturn(expectedDto);
+
+    //when
     ArticleViewDto dto = service.viewArticle(articleId, userId);
 
     //then
-    assertThat(dto.articleViewCount()).isEqualTo(3L);
+    assertThat(dto).isEqualTo(expectedDto);
     then(articleViewRepository).should(never()).save(any(ArticleView.class));
   }
 
