@@ -17,8 +17,9 @@ public enum ErrorCode {
 	NEWS_NO_INTEREST_EXCEPTION("저장할 관심사가 없습니다."),
 	NEWS_NO_NEW_NEWS_EXCEPTION("저장할 새로운 뉴스가 없습니다."),
 	NEWS_BATCH_NO_INTEREST_EXCEPTION("Batch - 수집할 관심사가 없습니다."),
-	NEWS_BATCH_NO_NEWS_EXCEPTION("Batch - 저장 대상 뉴스가 없습니다.")
-
+	NEWS_BATCH_NO_NEWS_EXCEPTION("Batch - 저장 대상 뉴스가 없습니다."),
+	NEWS_ARTICLE_NOT_FOUND_EXCEPTION("기사가 존재하지 않습니다."),
+	NEWS_NOT_USER_FOUND_EXCEPTION("유저가 존재하지 않습니다.")
 	;
 
 	ErrorCode(String message) {
