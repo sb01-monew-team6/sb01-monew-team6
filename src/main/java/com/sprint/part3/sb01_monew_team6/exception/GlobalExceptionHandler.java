@@ -62,8 +62,8 @@ public class GlobalExceptionHandler {
 					code.getMessage(),
 					InterestException.class.getSimpleName(),
 					e.getStatus().value()
-				)
-			);
+			)
+		);
 	}
 
 	@ExceptionHandler(exception = NewsException.class)
