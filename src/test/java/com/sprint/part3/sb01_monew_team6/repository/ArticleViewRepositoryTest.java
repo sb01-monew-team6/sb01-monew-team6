@@ -23,6 +23,15 @@ public class ArticleViewRepositoryTest {
   private TestEntityManager em;
 
   @Test
+  @DisplayName("조회 기록이 없으면 0을 반환")
+  void noViews_returnZero() {
+    //when
+    long count = articleViewRepository.countByArticleId(1L);
+    //then
+    assertThat(count).isZero();
+  }
+
+  @Test
   @DisplayName("특정 기사의 조회수를 올바르게 반환")
   void countByArticleId_returnCorrectCount() {
     //given
