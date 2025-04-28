@@ -11,8 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
+@ActiveProfiles("test")
 public class ArticleViewRepositoryTest {
   @Autowired
   private ArticleViewRepository articleViewRepository;
@@ -24,12 +26,22 @@ public class ArticleViewRepositoryTest {
   @DisplayName("특정 기사의 조회수를 올바르게 반환")
   void countByArticleId_returnCorrectCount() {
     //given
-    NewsArticle article = new NewsArticle();
-    em.persist(article);
 
     User user = new User();
+    user.setEmail("tester@example.com");
+    user.setNickname("tester");
+    user.setPassword("password123");
     em.persist(user);
 
+    NewsArticle article = new NewsArticle();
+    article.setSource("NAVER");
+    article.setSourceUrl("https://example.com/some-article");
+    article.setArticleTitle("테스트 제목");
+    article.setArticlePublishedDate(Instant.parse("2025-04-27T00:00:00Z"));
+    article.setArticleSummary("테스트 요약입니다.");
+    em.persist(article);
+
+    // 두 번 뷰를 기록
     em.persist(new ArticleView(article, user, Instant.now()));
     em.persist(new ArticleView(article, user, Instant.now()));
 
