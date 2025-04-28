@@ -89,6 +89,28 @@ public class ArticleViewServiceTest {
     //then
     assertThatThrownBy(()->service.viewArticle(1L, 2L))
         .isInstanceOf(NewsException.class)
-        .hasMessageContaining("articleId가 존재하지 않습니다.");
+        .hasMessageContaining("기사가 존재하지 않습니다.");
+  }
+  @Test
+  @DisplayName("userId가 없을 경우 에러 발생")
+  void userIdNotExist_thenThrowException(){
+    //given
+    Long articleId = 1L;
+
+    NewsArticle article = new NewsArticle();
+    article.setSource("Naver");
+    article.setSourceUrl("https://test.api.com");
+    article.setArticleTitle("test");
+    article.setArticlePublishedDate(Instant.parse("2025-04-27T12:00:00Z"));
+    article.setArticleSummary("test");
+    article.setDeleted(false);
+    ReflectionTestUtils.setField(article, "id", articleId);
+
+    //then
+    given(userRepository.findById(any(Long.class))).willReturn(Optional.empty());
+    //then
+    assertThatThrownBy(()->service.viewArticle(1L, 2L))
+        .isInstanceOf(NewsException.class)
+        .hasMessageContaining("유저가 존재하지 않습니다.");
   }
 }
