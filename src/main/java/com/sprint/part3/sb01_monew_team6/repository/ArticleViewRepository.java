@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ArticleViewRepository extends JpaRepository<ArticleView,Long> {
 
+  //articleId 로 ArticleView 수를 조회
+  long countByArticleId(Long articleId);
 }
