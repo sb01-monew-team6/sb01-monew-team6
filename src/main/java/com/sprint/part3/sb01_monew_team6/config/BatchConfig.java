@@ -52,7 +52,7 @@ public class BatchConfig {
   @Bean
   public ItemWriter<NewsArticle> newsWriter() {
     return (Chunk<? extends NewsArticle> chunk) -> {
-      // Chunk 안에 담긴 List<NewsArticle>를 꺼내서 service에 넘깁니다.
+      // Chunk 안에 담긴 List<NewsArticle>를 꺼내서 service에 넘김
       List<NewsArticle> articles = new ArrayList<>(chunk.getItems());
       service.saveAll(articles);
     };
@@ -71,6 +71,5 @@ public class BatchConfig {
         .processor(processor)
         .writer(writer)
         .build();
-
   }
 }
