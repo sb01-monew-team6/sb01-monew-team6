@@ -176,8 +176,8 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getEmail()).isEqualTo("email@google.com");
 		assertThat(found.get().getNickname()).isEqualTo("구글러");
 		assertThat(found.get().getCommentLikes()).hasSize(10);
-		assertThat(found.get().getCommentLikes().get(0).getCommentId()).isEqualTo(3);
-		assertThat(found.get().getCommentLikes().get(9).getCommentId()).isEqualTo(12);
+		assertThat(found.get().getCommentLikes().get(0).getCommentId()).isEqualTo(12);
+		assertThat(found.get().getCommentLikes().get(9).getCommentId()).isEqualTo(3);
 	}
 
 	@Test
@@ -258,8 +258,8 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getEmail()).isEqualTo("email@google.com");
 		assertThat(found.get().getNickname()).isEqualTo("구글러");
 		assertThat(found.get().getComments()).hasSize(10);
-		assertThat(found.get().getComments().get(0).getArticleId()).isEqualTo(3);
-		assertThat(found.get().getComments().get(9).getArticleId()).isEqualTo(12);
+		assertThat(found.get().getComments().get(0).getArticleId()).isEqualTo(12);
+		assertThat(found.get().getComments().get(9).getArticleId()).isEqualTo(3);
 	}
 
 	@Test
@@ -335,8 +335,8 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getEmail()).isEqualTo("email@google.com");
 		assertThat(found.get().getNickname()).isEqualTo("구글러");
 		assertThat(found.get().getArticleViews()).hasSize(10);
-		assertThat(found.get().getArticleViews().get(0).getViewedBy()).isEqualTo(3);
-		assertThat(found.get().getArticleViews().get(9).getViewedBy()).isEqualTo(12);
+		assertThat(found.get().getArticleViews().get(0).getViewedBy()).isEqualTo(12);
+		assertThat(found.get().getArticleViews().get(9).getViewedBy()).isEqualTo(3);
 	}
 
 	@Test
@@ -373,74 +373,79 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getArticleViews()).isEmpty();
 	}
 
-	// @Test
-	// @DisplayName("findByUserId 정상 호출 시 정상적으로 값이 조회된다")
-	// public void findByUserIdSuccessfully() throws Exception {
-	// 	//given
-	// 	Long userId = 1L;
-	//
-	// 	UserActivity userActivity = UserActivity.builder()
-	// 		.userId(userId)
-	// 		.email("email@google.com")
-	// 		.nickname("구글러")
-	// 		.build();
-	//
-	// 	userActivityRepository.save(userActivity);
-	//
-	// 	for (int i = 0; i < 12; ++i) {
-	// 		UserActivity.CommentHistory comment = UserActivity.CommentHistory.builder()
-	// 			.articleId(1L + i)
-	// 			.userId(10L + i)
-	// 			.articleTitle("title" + i)
-	// 			.userNickname("nickname" + i)
-	// 			.content("content" + i)
-	// 			.likeCount(100L + i)
-	// 			.build();
-	// 		UserActivity.ArticleViewHistory articleView = UserActivity.ArticleViewHistory.builder()
-	// 			.viewedBy(1L + i)
-	// 			.build();
-	// 		UserActivity.CommentLikeHistory commentLike = UserActivity.CommentLikeHistory.builder()
-	// 			.commentId(1L + i)
-	// 			.articleId(10L + i)
-	// 			.articleTitle("title" + i)
-	// 			.commentUserId(100L + i)
-	// 			.commentUserNickname("nickname" + i)
-	// 			.commentContent("hello" + i)
-	// 			.commentLikeCount(1000L + i)
-	// 			.build();
-	// 		UserActivity.SubscriptionHistory subscription = UserActivity.SubscriptionHistory.builder()
-	// 			.interestId(10L + i)
-	// 			.interestName("AI" + i)
-	// 			.interestKeywords(List.of("ChatGPT" + i, "머신러닝" + i))
-	// 			.interestSubscriberCount(10L + i)
-	// 			.build();
-	//
-	// 		userActivityRepository.addSubscription(userId, subscription);
-	// 		userActivityRepository.addCommentLike(userId, commentLike);
-	// 		userActivityRepository.addArticleView(userId, articleView);
-	// 		userActivityRepository.addComment(userId, comment);
-	// 	}
-	//
-	// 	//when
-	// 	Optional<UserActivity> found = userActivityRepository.findByUserId(userId);
-	//
-	// 	//then
-	// 	assertThat(found).isPresent();
-	// 	assertThat(found.get().getId()).isEqualTo(userActivity.getId());
-	// 	assertThat(found.get().getUserId()).isEqualTo(userId);
-	// 	assertThat(found.get().getEmail()).isEqualTo("email@google.com");
-	// 	assertThat(found.get().getNickname()).isEqualTo("구글러");
-	// 	assertThat(found.get().getSubscriptions().get(0).getInterestName()).isEqualTo("AI0");
-	// 	assertThat(found.get().getSubscriptions().get(9).getInterestName()).isEqualTo("AI9");
-	// 	assertThat(found.get().getCommentLikes()).hasSize(10);
-	// 	assertThat(found.get().getCommentLikes().get(0).getCommentId()).isEqualTo(1);
-	// 	assertThat(found.get().getCommentLikes().get(9).getCommentId()).isEqualTo(10);
-	// 	assertThat(found.get().getComments()).hasSize(10);
-	// 	assertThat(found.get().getComments().get(0).getArticleId()).isEqualTo(1);
-	// 	assertThat(found.get().getComments().get(9).getArticleId()).isEqualTo(10);
-	// 	assertThat(found.get().getArticleViews()).hasSize(10);
-	// 	assertThat(found.get().getArticleViews().get(0).getViewedBy()).isEqualTo(1);
-	// 	assertThat(found.get().getArticleViews().get(9).getViewedBy()).isEqualTo(10);
-	// }
+	@Test
+	@DisplayName("findByUserId 정상 호출 시 정상적으로 값이 조회된다")
+	public void findByUserIdSuccessfully() throws Exception {
+		//given
+		Long userId = 1L;
+
+		UserActivity userActivity = UserActivity.builder()
+			.userId(userId)
+			.email("email@google.com")
+			.nickname("구글러")
+			.build();
+
+		userActivityRepository.save(userActivity);
+
+		for (int i = 0; i < 12; ++i) {
+			Instant now = Instant.now();
+			UserActivity.CommentHistory comment = UserActivity.CommentHistory.builder()
+				.articleId(1L + i)
+				.userId(10L + i)
+				.articleTitle("title" + i)
+				.userNickname("nickname" + i)
+				.content("content" + i)
+				.likeCount(100L + i)
+				.createdAt(now)
+				.build();
+			UserActivity.ArticleViewHistory articleView = UserActivity.ArticleViewHistory.builder()
+				.viewedBy(1L + i)
+				.createdAt(now)
+				.build();
+			UserActivity.CommentLikeHistory commentLike = UserActivity.CommentLikeHistory.builder()
+				.commentId(1L + i)
+				.articleId(10L + i)
+				.articleTitle("title" + i)
+				.commentUserId(100L + i)
+				.commentUserNickname("nickname" + i)
+				.commentContent("hello" + i)
+				.commentLikeCount(1000L + i)
+				.createdAt(now)
+				.build();
+			UserActivity.SubscriptionHistory subscription = UserActivity.SubscriptionHistory.builder()
+				.interestId(10L + i)
+				.interestName("AI" + i)
+				.interestKeywords(List.of("ChatGPT" + i, "머신러닝" + i))
+				.interestSubscriberCount(10L + i)
+				.createdAt(now)
+				.build();
+
+			userActivityRepository.addSubscription(userId, subscription);
+			userActivityRepository.addCommentLike(userId, commentLike);
+			userActivityRepository.addArticleView(userId, articleView);
+			userActivityRepository.addComment(userId, comment);
+		}
+
+		//when
+		Optional<UserActivity> found = userActivityRepository.findByUserId(userId);
+
+		//then
+		assertThat(found).isPresent();
+		assertThat(found.get().getUserId()).isEqualTo(userId);
+		assertThat(found.get().getEmail()).isEqualTo("email@google.com");
+		assertThat(found.get().getNickname()).isEqualTo("구글러");
+		assertThat(found.get().getSubscriptions()).hasSize(12);
+		assertThat(found.get().getSubscriptions().get(0).getInterestId()).isEqualTo(10);
+		assertThat(found.get().getSubscriptions().get(11).getInterestId()).isEqualTo(21);
+		assertThat(found.get().getCommentLikes()).hasSize(10);
+		assertThat(found.get().getCommentLikes().get(0).getCommentId()).isEqualTo(12);
+		assertThat(found.get().getCommentLikes().get(9).getCommentId()).isEqualTo(3);
+		assertThat(found.get().getComments()).hasSize(10);
+		assertThat(found.get().getComments().get(0).getArticleId()).isEqualTo(12);
+		assertThat(found.get().getComments().get(9).getArticleId()).isEqualTo(3);
+		assertThat(found.get().getArticleViews()).hasSize(10);
+		assertThat(found.get().getArticleViews().get(0).getViewedBy()).isEqualTo(12);
+		assertThat(found.get().getArticleViews().get(9).getViewedBy()).isEqualTo(3);
+	}
 
 }

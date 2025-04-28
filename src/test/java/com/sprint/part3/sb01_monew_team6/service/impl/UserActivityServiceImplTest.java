@@ -126,7 +126,6 @@ class UserActivityServiceImplTest {
 		CommentLikeHistoryDto historyDto = new CommentLikeHistoryDto(
 			1L,
 			1L,
-			1L,
 			"interestName",
 			1L,
 			"nickName",
@@ -155,7 +154,6 @@ class UserActivityServiceImplTest {
 		//given
 		Long userId = 1L;
 		CommentLikeHistoryDto historyDto = new CommentLikeHistoryDto(
-			1L,
 			1L,
 			1L,
 			"interestName",

@@ -27,9 +27,9 @@ import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = NONE)
 @ActiveProfiles("test")
 @Import(TestDataJpaConfig.class)
+@AutoConfigureTestDatabase(replace = NONE)
 class NotificationRepositoryTest {
 
 	@Autowired
@@ -44,7 +44,7 @@ class NotificationRepositoryTest {
 	@DisplayName("findAllByUserId 정상 호출 시 정상 slice 반환 ")
 	public void findAllByUserIdSuccessfully() throws Exception {
 		//given
-		User user = new User("email@email.com", "nickname", "123456", false);
+		User user = new User("email@email.com", "nickname", "123456");
 		userRepository.save(user);
 
 		Notification notification = Notification.createNotification(
@@ -77,7 +77,7 @@ class NotificationRepositoryTest {
 	@DisplayName("countByUserIdAndConfirmedFalse 정상 호출 시 정상 count 반환 ")
 	public void countByUserIdAndConfirmedFalseSuccessfully() throws Exception {
 		//given
-		User user = new User("email@email.com", "nickname", "123456", false);
+		User user = new User("email@email.com", "nickname", "123456");
 		userRepository.save(user);
 
 		Notification notification = Notification.createNotification(
@@ -105,7 +105,7 @@ class NotificationRepositoryTest {
 	@DisplayName("countByUserIdAndConfirmedFalse 호출 시 알림이 없다면 0 반환 ")
 	public void getZeroWhenFilteredNotificationNonExistWhileCountByUserIdAndConfirmedFalse() throws Exception {
 		//given
-		User user = new User("email@email.com", "nickname", "123456", false);
+		User user = new User("email@email.com", "nickname", "123456");
 		userRepository.save(user);
 
 		Notification notification = Notification.createNotification(
@@ -133,7 +133,7 @@ class NotificationRepositoryTest {
 	@DisplayName("updateAllByUserId 정상 호출 시 정상 값 반환")
 	public void updateAllByUserIdSuccessfully() throws Exception {
 	    //given
-		User user = new User("email@email.com", "nickname", "123456", false);
+		User user = new User("email@email.com", "nickname", "123456");
 		userRepository.save(user);
 
 		Notification notification = Notification.createNotification(
@@ -162,7 +162,7 @@ class NotificationRepositoryTest {
 	@DisplayName("updateByUserId 정상 호출 시 정상 값 반환")
 	public void updateByUserIdSuccessfully() throws Exception {
 	    //given
-		User user = new User("email@email.com", "nickname", "123456", false);
+		User user = new User("email@email.com", "nickname", "123456");
 		userRepository.save(user);
 
 		Notification notification = Notification.createNotification(
@@ -193,7 +193,7 @@ class NotificationRepositoryTest {
 	@DisplayName("deleteAll 정상 호출 시 정상 값 반환")
 	public void deleteAllSuccessfully() throws Exception {
 	    //given
-		User user = new User("email@email.com", "nickname", "123456", false);
+		User user = new User("email@email.com", "nickname", "123456");
 		userRepository.save(user);
 
 		Notification notification = Notification.createNotification(

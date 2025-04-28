@@ -23,7 +23,6 @@ class CommentLikeHistoryMapperTest {
 		CommentLikeHistoryDto dto = new CommentLikeHistoryDto(
 			1L,
 			1L,
-			1L,
 			"title",
 			1L,
 			"nickname",

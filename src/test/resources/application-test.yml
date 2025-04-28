@@ -10,21 +10,14 @@ spring:
     username: sa
     password:
 
-  jpa:
-    defer-datasource-initialization: true
-    hibernate:
-      ddl-auto: create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-        format_sql: true
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 8.0.5
 
-  sql:
-    init:
-      mode: never
-
-#logging:
-  #level:
+    #logging:
+    #level:
     #org.springframework.security: DEBUG
     #org.hibernate.SQL: debug
     #org.hibernate.orm.jdbc.bind: trace

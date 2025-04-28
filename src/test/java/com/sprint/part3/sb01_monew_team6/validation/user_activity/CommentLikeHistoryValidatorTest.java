@@ -35,7 +35,6 @@ class CommentLikeHistoryValidatorTest {
 		CommentLikeHistoryDto dto = new CommentLikeHistoryDto(
 			1L,
 			1L,
-			1L,
 			"title",
 			0L,
 			"nickName",
@@ -57,7 +56,6 @@ class CommentLikeHistoryValidatorTest {
 		Exception {
 		//given
 		CommentLikeHistoryDto dto = new CommentLikeHistoryDto(
-			0L,
 			0L,
 			1L,
 			"title",
