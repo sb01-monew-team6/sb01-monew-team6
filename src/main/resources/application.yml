@@ -4,7 +4,7 @@ spring:
 
   application:
     name: sb01-monew-team6
-    version: 0.0.1
+    version: 0.1.0
 
   servlet:
     multipart:
@@ -15,3 +15,7 @@ spring:
     hibernate:
       ddl-auto: none
     open-in-view: false
+
+notification:
+  batch:
+    size: 10000

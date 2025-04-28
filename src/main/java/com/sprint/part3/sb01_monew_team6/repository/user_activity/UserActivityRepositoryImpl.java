@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.FacetOperation;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
-import org.springframework.data.mongodb.core.aggregation.LimitOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
@@ -54,7 +53,8 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 
 		BasicDBObject push = new BasicDBObject();
 		push.put("$each", Collections.singletonList(commentLike));
-		push.put("$slice", -10);
+		push.put("$sort", new BasicDBObject("createdAt", -1));
+		push.put("$slice", 10);
 
 		Update update = new Update().push("commentLikes", push);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
@@ -75,7 +75,8 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 
 		BasicDBObject push = new BasicDBObject();
 		push.put("$each", Collections.singletonList(comment));
-		push.put("$slice", -10);
+		push.put("$sort", new BasicDBObject("createdAt", -1));
+		push.put("$slice", 10);
 
 		Update update = new Update().push("comments", push);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
@@ -96,7 +97,8 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 
 		BasicDBObject push = new BasicDBObject();
 		push.put("$each", Collections.singletonList(articleView));
-		push.put("$slice", -10);
+		push.put("$sort", new BasicDBObject("createdAt", -1));
+		push.put("$slice", 10);
 
 		Update update = new Update().push("articleViews", push);
 		mongoTemplate.updateFirst(query, update, UserActivity.class);
@@ -118,42 +120,55 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 	@Override
 	public Optional<UserActivity> findByUserId(Long userId) {
 
-		MatchOperation matchUser = Aggregation.match(Criteria.where("userId").is(userId));
+		Aggregation aggregation = newAggregation(
+			buildMatchStage(userId),
+			buildFacetStage(),
+			unwind("profileFacet"),
+			buildProjectStage()
+		);
 
+		UserActivity userActivity = mongoTemplate
+			.aggregate(aggregation, "user_activities", UserActivity.class)
+			.getUniqueMappedResult();
+
+		return Optional.ofNullable(userActivity);
+	}
+
+	private MatchOperation buildMatchStage(Long userId) {
+		return match(Criteria.where("userId").is(userId));
+	}
+
+	private FacetOperation buildFacetStage() {
 		UnwindOperation unwindComments = unwind("comments");
 		SortOperation sortComments = sort(Sort.by(Sort.Order.desc("comments.createdAt")));
-		// LimitOperation limitComments = limit(10);
 		GroupOperation groupComments = group("_id")
 			.push("comments").as("comments");
 
 		UnwindOperation unwindLikes = unwind("commentLikes");
 		SortOperation sortLikes = sort(Sort.by(Sort.Order.desc("commentLikes.createdAt")));
-		// LimitOperation limitLikes = limit(10);
 		GroupOperation groupLikes = group("_id")
 			.push("commentLikes").as("commentLikes");
 
 		UnwindOperation unwindViews = unwind("articleViews");
 		SortOperation sortViews = sort(Sort.by(Sort.Order.desc("articleViews.createdAt")));
-		// LimitOperation limitViews = limit(10);
 		GroupOperation groupViews = group("_id")
 			.push("articleViews").as("articleViews");
 
 		GroupOperation groupProfile = group("_id")
 			.first("$$ROOT").as("profile");
 
-		FacetOperation facet =
-			facet(unwindComments, sortComments, groupComments)
-				.as("commentsFacet")
-				.and(unwindLikes, sortLikes, groupLikes)
-				.as("likesFacet")
-				.and(unwindViews, sortViews, groupViews)
-				.as("viewsFacet")
-				.and(groupProfile)
-				.as("profileFacet");
+		return facet(unwindComments, sortComments, groupComments)
+			.as("commentsFacet")
+			.and(unwindLikes, sortLikes, groupLikes)
+			.as("likesFacet")
+			.and(unwindViews, sortViews, groupViews)
+			.as("viewsFacet")
+			.and(groupProfile)
+			.as("profileFacet");
+	}
 
-		UnwindOperation unwindBase = unwind("profileFacet");
-
-		ProjectionOperation project = Aggregation.project()
+	private ProjectionOperation buildProjectStage() {
+		return project()
 			.and("profileFacet.profile.userId").as("userId")
 			.and("profileFacet.profile.email").as("email")
 			.and("profileFacet.profile.nickname").as("nickname")
@@ -162,19 +177,6 @@ public class UserActivityRepositoryImpl implements UserActivityRepositoryCustom 
 			.and("commentsFacet.comments").arrayElementAt(0).as("comments")
 			.and("likesFacet.commentLikes").arrayElementAt(0).as("commentLikes")
 			.and("viewsFacet.articleViews").arrayElementAt(0).as("articleViews");
-
-		Aggregation aggregation = newAggregation(
-			matchUser,
-			facet,
-			unwindBase,
-			project
-		);
-
-		UserActivity userActivity = mongoTemplate
-			.aggregate(aggregation, "user_activities", UserActivity.class)
-			.getUniqueMappedResult();
-
-		return Optional.ofNullable(userActivity);
 	}
 
 }

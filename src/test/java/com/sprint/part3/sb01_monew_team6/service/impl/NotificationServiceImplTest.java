@@ -56,7 +56,7 @@ class NotificationServiceImplTest {
 		Pageable pageable = PageRequest.of(0, 50, DESC, "createdAt");
 
 		Notification notification = Notification.createNotification(
-			new User(),
+			new User("email@email.com", "nickname", "1234"),
 			"hello",
 			ResourceType.COMMENT,
 			1L,
@@ -235,9 +235,9 @@ class NotificationServiceImplTest {
 			"버즈",
 			null
 		);
-		User user = new User();
+		User user = new User("email@email.com", "nickname", "1234");
 
-		when(userRepository.findByIdAndIsDeletedFalse(anyLong())).thenReturn(Optional.of(new User()));
+		when(userRepository.findByIdAndIsDeletedFalse(anyLong())).thenReturn(Optional.of(user));
 		when(notificationRepository.save(any(Notification.class))).thenReturn(any(Notification.class));
 
 		//when

@@ -19,7 +19,7 @@ class NotificationMapperTest {
 	@DisplayName("toDto 정상 호출 시 엔티티가 dto 로 정상 변환")
 	public void returnDtoWhenToDtoSuccessfullyCalled() throws Exception {
 	    //given
-		User user = new User();
+		User user = new User("email@email.com", "nickname", "1234");
 		Notification notification = Notification.createNotification(
 			user,
 			"hello",

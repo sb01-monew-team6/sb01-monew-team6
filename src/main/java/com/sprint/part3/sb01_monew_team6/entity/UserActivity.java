@@ -52,7 +52,7 @@ public class UserActivity extends BaseDocument {
 	@Builder
 	@NoArgsConstructor(access = PROTECTED)
 	@AllArgsConstructor
-	public static class CommentHistory  {
+	public static class CommentHistory {
 		private Long articleId;
 		private String articleTitle;
 		private Long userId;
