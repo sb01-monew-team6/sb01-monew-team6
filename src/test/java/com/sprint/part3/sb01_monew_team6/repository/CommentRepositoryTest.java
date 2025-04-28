@@ -2,31 +2,31 @@ package com.sprint.part3.sb01_monew_team6.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
+import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import jakarta.persistence.EntityManager;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
 @ActiveProfiles("test")
-public class ArticleViewRepositoryTest {
-  @Autowired
-  private ArticleViewRepository articleViewRepository;
+public class CommentRepositoryTest {
 
   @Autowired
-  private TestEntityManager em;
+  private EntityManager em;
+
+  @Autowired
+  private CommentRepository commentRepository;
 
   @Test
-  @DisplayName("특정 기사의 조회수를 올바르게 반환")
+  @DisplayName("기사에 달린 댓글 수를 반환")
   void countByArticleId_returnCorrectCount() {
-    //given
-
     User user = new User();
     user.setEmail("tester@example.com");
     user.setNickname("tester");
@@ -41,16 +41,16 @@ public class ArticleViewRepositoryTest {
     article.setArticleSummary("테스트 요약입니다.");
     em.persist(article);
 
-    // 두 번 뷰를 기록
-    em.persist(new ArticleView(article, user, Instant.now()));
-    em.persist(new ArticleView(article, user, Instant.now()));
+    em.persist(new Comment(article, user, "c1",false,List.of()));
+    em.persist(new Comment(article, user, "c2",false,List.of()));
+    em.persist(new Comment(article, user, "c3",false,List.of()));
 
     em.flush();
 
-    //when
-    long count = articleViewRepository.countByArticleId(article.getId());
+    // when
+    long cnt = commentRepository.countByArticleId(article.getId());
 
-    //then
-    assertThat(count).isEqualTo(2);
+    // then
+    assertThat(cnt).isEqualTo(3);
   }
 }
