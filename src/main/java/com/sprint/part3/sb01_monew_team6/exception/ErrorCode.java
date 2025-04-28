@@ -16,7 +16,14 @@ public enum ErrorCode {
 
 	//news
 	NEWS_INVALID_EXCEPTION("유효하지 않은 요청입니다."), // TODO: 나중에 프로토타입의 예외 메시지로 수정할 것
-
+	NEWS_NAVERCLIENT_EXCEPTION("NAVER API 요청 오류입니다."),
+	NEWS_RSSCLIENT_EXCEPTION("RSS API 요청 오류입니다."),
+	NEWS_NO_INTEREST_EXCEPTION("저장할 관심사가 없습니다."),
+	NEWS_NO_NEW_NEWS_EXCEPTION("저장할 새로운 뉴스가 없습니다."),
+	NEWS_BATCH_NO_INTEREST_EXCEPTION("Batch - 수집할 관심사가 없습니다."),
+	NEWS_BATCH_NO_NEWS_EXCEPTION("Batch - 저장 대상 뉴스가 없습니다."),
+	NEWS_ARTICLE_NOT_FOUND_EXCEPTION("기사가 존재하지 않습니다."),
+	NEWS_NOT_USER_FOUND_EXCEPTION("유저가 존재하지 않습니다."),
 	//notification
 	NOTIFICATION_INVALID_EXCEPTION("유효하지 않은 요청입니다."),
 	NOTIFICATION_USER_NOT_FOUND_EXCEPTION("존재하지 않는 유저입니다."),
