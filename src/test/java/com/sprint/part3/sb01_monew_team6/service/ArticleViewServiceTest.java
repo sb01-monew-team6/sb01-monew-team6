@@ -105,7 +105,8 @@ public class ArticleViewServiceTest {
     article.setArticleSummary("test");
     article.setDeleted(false);
     ReflectionTestUtils.setField(article, "id", articleId);
-
+    given(newsArticleRepository.findById(1L))
+        .willReturn(Optional.of(article));
     //then
     given(userRepository.findById(any(Long.class))).willReturn(Optional.empty());
     //then
