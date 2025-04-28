@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -9,6 +10,7 @@ import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
 import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.repository.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
@@ -79,5 +81,14 @@ public class ArticleViewServiceTest {
         () -> assertThat(dto.articleViewCount()).isEqualTo(1L)
     );
   }
-
+  @Test
+  @DisplayName("articleId가 없을 경우 에러 발생")
+  void articleIdNotExist_thenThrowException(){
+    //then
+    given(newsArticleRepository.findById(any(Long.class))).willReturn(Optional.empty());
+    //then
+    assertThatThrownBy(()->service.viewArticle(1L, 2L))
+        .isInstanceOf(NewsException.class)
+        .hasMessageContaining("articleId가 존재하지 않습니다.");
+  }
 }
