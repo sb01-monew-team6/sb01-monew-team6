@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.client.impl;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sprint.part3.sb01_monew_team6.client.NaverNewsClient;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import java.time.Instant;
@@ -71,9 +72,11 @@ public class NaverNewsClientImpl implements NaverNewsClient {
   public static class NaverResponse {
     public List<Item> items;
     public static class Item {
+      @JsonProperty("originallink")
       public String originallink;
-      public String title;
+      @JsonProperty("link")
       public String link;
+      public String title;
       public String description;
       public String pubDate;
     }
