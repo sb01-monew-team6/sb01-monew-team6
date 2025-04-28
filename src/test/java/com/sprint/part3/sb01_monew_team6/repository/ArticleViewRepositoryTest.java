@@ -26,7 +26,6 @@ public class ArticleViewRepositoryTest {
   @DisplayName("특정 기사의 조회수를 올바르게 반환")
   void countByArticleId_returnCorrectCount() {
     //given
-
     User user = new User();
     user.setEmail("tester@example.com");
     user.setNickname("tester");

@@ -28,7 +28,8 @@ public class ArticleViewService {
     NewsArticle article = newsArticleRepository.findById(articleId)
         .orElseThrow(() -> new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND));
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NewsException(ErrorCode.NEWS_NOT_USER_FOUND_EXCEPTION,Instant.now(),HttpStatus.NOT_FOUND)); //추후 UserException으로 변경
+        .orElseThrow(() -> new NewsException(ErrorCode.NEWS_NOT_USER_FOUND_EXCEPTION,Instant.now(),HttpStatus.NOT_FOUND));
+    // TODO: 나중에 예외 수정
 
     //조회 기록 저장
     ArticleView view = new ArticleView(article,user,Instant.now());
@@ -54,5 +55,4 @@ public class ArticleViewService {
     );
     return articleViewDto;
   }
-
 }
