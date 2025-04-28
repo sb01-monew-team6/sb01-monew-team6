@@ -27,10 +27,11 @@ public class CommentRepositoryTest {
   @Test
   @DisplayName("기사에 달린 댓글 수를 반환")
   void countByArticleId_returnCorrectCount() {
-    User user = new User();
-    user.setEmail("tester@example.com");
-    user.setNickname("tester");
-    user.setPassword("password123");
+    User user = User.builder()
+        .email("repo@example.com")
+        .nickname("repoUser")
+        .password("hashedPasswordRepo")
+        .build();
     em.persist(user);
 
     NewsArticle article = new NewsArticle();

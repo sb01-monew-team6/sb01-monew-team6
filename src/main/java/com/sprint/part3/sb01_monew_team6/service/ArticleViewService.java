@@ -12,7 +12,6 @@ import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import java.time.Instant;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -34,16 +33,14 @@ public class ArticleViewService {
         .orElseThrow(() -> new NewsException(ErrorCode.NEWS_NOT_USER_FOUND_EXCEPTION,Instant.now(),HttpStatus.NOT_FOUND));
     // TODO: 나중에 예외 수정
 
-    //조회 기록 저장
-    Optional<ArticleView> existingView = articleViewRepository.findByArticleIdAndUserId(articleId, userId);
-
-    if(existingView.isEmpty()) {//새로 저장
-      ArticleView newView = new ArticleView(article, user, Instant.now());
-      articleViewRepository.save(newView);
-    }else{//중복
-      ArticleView existing = existingView.get();
-      existing.setArticleViewDate(Instant.now());
-      articleViewRepository.save(existing);
+    //조회 기록 처리
+    ArticleView view;
+    if (articleViewRepository.existsByArticleIdAndUserId(articleId, userId)) {
+      // 중복인 경우: 기존 기록만 조회
+      view = articleViewRepository.findByArticleIdAndUserId(articleId, userId).orElseThrow();
+    } else {
+      // 처음 보는 경우에만 저장
+      view = articleViewRepository.save(new ArticleView(article, user, Instant.now()));
     }
 
     //count 집계
@@ -51,6 +48,6 @@ public class ArticleViewService {
     long viewCount = articleViewRepository.countByArticleId(articleId);
 
     //dto 변환
-    return articleViewMapper.toDto(existingView);
+    return articleViewMapper.toDto(view, commentCount, viewCount);
   }
 }
