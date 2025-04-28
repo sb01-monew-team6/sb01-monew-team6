@@ -4,7 +4,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -13,10 +12,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
@@ -41,9 +37,10 @@ public class SecurityConfig {
 
         // --- 명시적 예외 처리 핸들러 설정 ---
         .exceptionHandling(ex -> ex
-            // 인증 실패 시 (로그인 필요 등) 401 반환
-            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-            // 인가 실패 시 (권한 부족 등) 403 반환
+            // 인증 실패 시 → 401 뿜지 말고 "/sb/monew/login"으로 리다이렉트
+            .authenticationEntryPoint((request, response, authException) ->
+                response.sendRedirect("/sb/monew/login")
+            )
             .accessDeniedHandler((request, response, accessDeniedException) ->
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN)
             )
@@ -51,11 +48,23 @@ public class SecurityConfig {
 
         // --- 경로별 인가 설정 ---
         .authorizeHttpRequests(authz -> authz
-            .requestMatchers("/api/v1/test/**").permitAll() // 테스트용 경로는 인증 없이 모두 허용
-            .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // 회원가입
-            .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll() // 로그인
+            .requestMatchers(
+                "/",
+                "/index.html",
+                "/favicon.ico",
+                "/css/**",
+                "/js/**",
+                "/images/**",
+                "/assets/**",
+                "/static/**",
+                "/sb/monew/login",
+                "/api/v1/test/**"
+            ).permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
             .anyRequest().authenticated()
         );
+
     return http.build();
   }
 
