@@ -31,6 +31,8 @@ public class HankyungRssClientImpl implements RssNewsClient {
     try (InputStream in = createInputStream();
         XmlReader reader = createReader(in)) {
 
+      //SyndFeed 는 저자, 기여자, 저작권, 모듈, 게시 날짜, 이미지, 외국 마크업 및 언어를 포함하여 더 많은 필드를 추가할 수 있는 기회를 제공
+      //ROME 라이브러리의 SyndFeedInput을 사용해 XML을 SyndFeed 객체로 변환
       SyndFeed feed = new SyndFeedInput().build(reader);
       return feed.getEntries().stream()
           .map(e -> new ExternalNewsItem(
