@@ -9,4 +9,6 @@ public interface ArticleViewRepository extends JpaRepository<ArticleView,Long> {
 
   //articleId 로 ArticleView 수를 조회
   long countByArticleId(Long articleId);
+  // 이미 조회했는지 확인
+  boolean existsByArticleIdAndUserId(Long articleId, Long userId);
 }
