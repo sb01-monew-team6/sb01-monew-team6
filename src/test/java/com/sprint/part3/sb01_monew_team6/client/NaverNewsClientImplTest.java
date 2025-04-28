@@ -66,7 +66,7 @@ public class NaverNewsClientImplTest {
     //응답 객체
     NaverResponse response = new NaverResponse();
     NaverResponse.Item item = new NaverResponse.Item();
-    item.originalLink = "o1";
+    item.originallink = "o1";
     item.link          = "l1";
     item.title         = "t1";
     item.pubDate      = DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now());
