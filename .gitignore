@@ -42,3 +42,4 @@ VS Code
 .env
 .jon
 lifecycle-policy.json
+.logs/
