@@ -58,7 +58,8 @@ public class SecurityConfig {
                 "/assets/**",
                 "/static/**",
                 "/sb/monew/login",
-                "/api/v1/test/**"
+                "/api/v1/test/**",
+                "/actuator/health"
             ).permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
