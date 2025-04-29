@@ -27,7 +27,7 @@ public class User extends BaseUpdatableEntity {
   private String password;
 
   @Column(name = "is_deleted", nullable = false)
-  private boolean deleted = false;
+  private boolean isDeleted = false;
 
   @Builder
   public User(String email, String nickname, String password) {
@@ -38,7 +38,7 @@ public class User extends BaseUpdatableEntity {
     this.email = email;
     this.nickname = nickname;
     this.password = password;
-    this.deleted = false;
+    this.isDeleted = false;
   }
 
   public void updateNickname(String newNickname) {
@@ -48,6 +48,6 @@ public class User extends BaseUpdatableEntity {
     this.nickname = newNickname;
   }
   public void delete() {
-    this.deleted = true;
+    this.isDeleted = true;
   }
 }
