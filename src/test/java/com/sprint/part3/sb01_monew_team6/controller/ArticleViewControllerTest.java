@@ -59,7 +59,7 @@ public class ArticleViewControllerTest {
 
     //when
     mockMvc.perform(post("/api/articles/{articleId}/article-views",1L)
-            .header("Monew-Request-User-ID", 2L)
+            .param("Monew-Request-User-ID", String.valueOf(2L))
         .accept(MediaType.APPLICATION_JSON)
     )
         .andExpect(status().isOk())
@@ -91,7 +91,7 @@ public class ArticleViewControllerTest {
 
     //when : 중복 조회 요청
     mockMvc.perform(post("/api/articles/{articleId}/article-views", 1L)
-            .header("Monew-Request-User-ID", 2L)
+            .param("Monew-Request-User-ID", String.valueOf(2L))
             .accept(MediaType.APPLICATION_JSON)
     )
         .andExpect(status().isOk())
@@ -108,7 +108,7 @@ public class ArticleViewControllerTest {
 
     // when & then: 404와 에러 메시지 반환
     mockMvc.perform(post("/api/articles/{articleId}/article-views", 1L)
-            .header("Monew-Request-User-ID", 2L)
+            .param("Monew-Request-User-ID", String.valueOf(2L))
             .accept(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isNotFound())
