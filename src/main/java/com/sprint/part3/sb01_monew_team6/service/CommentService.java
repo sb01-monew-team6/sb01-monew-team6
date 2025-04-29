@@ -18,4 +18,6 @@ public interface CommentService {
             Integer limit,
             Long requestUserId
     );
+
+    List<CommentDto> getComments(Long articleId);
 }

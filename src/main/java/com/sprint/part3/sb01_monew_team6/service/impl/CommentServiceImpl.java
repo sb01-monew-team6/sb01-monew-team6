@@ -76,4 +76,9 @@ public class CommentServiceImpl implements CommentService {
         // 일단 임시로 아무거나 리턴 (테스트 통과용)
         return null;
     }
+
+    @Override
+    public List<CommentDto> getComments(Long articleId) {
+        return null;
+    }
 }
