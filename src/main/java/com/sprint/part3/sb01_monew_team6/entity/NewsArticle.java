@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,6 +27,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class NewsArticle extends BaseEntity {
 
   @Column(nullable = false)
@@ -44,6 +46,7 @@ public class NewsArticle extends BaseEntity {
   private String articleSummary;
 
   @Column(nullable = false)
+  @Builder.Default
   private boolean isDeleted = false;
 
   @ManyToMany

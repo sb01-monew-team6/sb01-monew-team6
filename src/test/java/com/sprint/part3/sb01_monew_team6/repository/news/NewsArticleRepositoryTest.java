@@ -1,8 +1,9 @@
- package com.sprint.part3.sb01_monew_team6.repository;
+ package com.sprint.part3.sb01_monew_team6.repository.news;
 
  import static org.assertj.core.api.Assertions.assertThat;
 
  import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
+ import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
  import java.time.Instant;
  import org.junit.jupiter.api.DisplayName;
  import org.junit.jupiter.api.Test;
