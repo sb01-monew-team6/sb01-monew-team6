@@ -27,17 +27,20 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     // 샘플 관심사 3건 생성
-    Interest sports = new Interest();
-    sports.setName("스포츠");
-    sports.setKeyword(List.of("축구", "야구", "농구"));
+    Interest sports = Interest.builder()
+        .name("스포츠")
+        .keywords(List.of("축구", "야구", "농구"))
+        .build();
 
-    Interest politics = new Interest();
-    politics.setName("정치");
-    politics.setKeyword(List.of("대통령", "국회", "선거"));
+    Interest politics = Interest.builder()
+        .name("정치")
+        .keywords(List.of("대통령", "국회", "선거"))
+        .build();
 
-    Interest economy = new Interest();
-    economy.setName("경제");
-    economy.setKeyword(List.of("주식", "환율", "금리"));
+    Interest economy = Interest.builder()
+        .name("경제")
+        .keywords(List.of("주식", "환율", "금리"))
+        .build();
 
     interestRepository.saveAll(List.of(sports, politics, economy));
 
