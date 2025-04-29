@@ -17,9 +17,7 @@ public class ArticleViewController {
   private final ArticleViewService articleViewService;
 
   @PostMapping
-  public ArticleViewDto viewArticle(
-      @PathVariable Long articleId, @RequestParam Long userId
-  ){
+  public ArticleViewDto viewArticle(@PathVariable Long articleId, @RequestParam Long userId){
     return articleViewService.viewArticle(articleId, userId);
   }
 }
