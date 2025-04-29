@@ -15,6 +15,7 @@ import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,7 @@ public class ArticleViewService {
   private final UserRepository userRepository;
   private final ArticleViewMapper articleViewMapper;
 
+  @Transactional
   public ArticleViewDto viewArticle(Long articleId, Long userId){
     //기사 및 유저가 있는지 확인
     NewsArticle article = newsArticleRepository.findById(articleId)
