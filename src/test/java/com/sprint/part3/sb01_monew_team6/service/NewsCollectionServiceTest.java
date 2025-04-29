@@ -15,7 +15,7 @@ import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
-import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
+import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
