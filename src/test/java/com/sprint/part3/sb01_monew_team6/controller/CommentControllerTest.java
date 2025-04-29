@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @WebMvcTest(CommentController.class)
 @Import(SecurityConfig.class)
@@ -82,5 +82,16 @@ class CommentControllerTest {
                 .andExpect(jsonPath("$.id").value(responseDto.id()))
                 .andExpect(jsonPath("$.content").value(responseDto.content()));
     }
+
+    @DisplayName("댓글 목록 조회 실패 - 필수 파라미터 누락 시 400 반환")
+    @Test
+    @WithMockUser
+    void getComments_withMissingRequiredParams_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/api/comments")
+                        .with(csrf())
+                        .header("Monew-Request-User-ID", 1L)) // orderBy, direction, limit 없음
+                .andExpect(status().isBadRequest());
+    }
+
 
 }
