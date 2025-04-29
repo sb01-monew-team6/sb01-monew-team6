@@ -79,6 +79,16 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentDto> getComments(Long articleId) {
-        return null;
+        //  게시글 존재 여부 확인
+        newsArticleRepository.findById(articleId)
+                .orElseThrow(() -> new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND));
+
+        //  댓글 목록 조회
+        List<Comment> comments = commentRepository.findAllByArticleId(articleId);
+
+        //  Comment -> CommentDto 반환
+        return comments.stream()
+                .map(CommentDto::fromEntity)
+                .toList();
     }
 }
