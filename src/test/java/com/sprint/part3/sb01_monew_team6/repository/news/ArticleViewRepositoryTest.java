@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE;
 
 import com.sprint.part3.sb01_monew_team6.config.TestDataJpaConfig;
 import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,7 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 @DataJpaTest
 @ActiveProfiles("test")
 @Import(TestDataJpaConfig.class)
-@AutoConfigureTestDatabase(replace = Replace.NONE)
+@AutoConfigureTestDatabase(replace = NONE)
 public class ArticleViewRepositoryTest {
   @Autowired
   private ArticleViewRepository articleViewRepository;
