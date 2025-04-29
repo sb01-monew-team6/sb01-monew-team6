@@ -107,6 +107,20 @@ class CommentControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @DisplayName("댓글 목록 조회 실패 - 잘못된 direction 값일 경우 400 반환")
+    @Test
+    @WithMockUser
+    void getComments_withInvalidDirection_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/api/comments")
+                        .param("orderBy", "createdAt")
+                        .param("direction", "UPWARD") // 잘못된 direction
+                        .param("limit", "10")
+                        .header("Monew-Request-User-ID", "1")
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+
 
     @DisplayName("댓글 목록 조회 성공 - 필수 파라미터를 모두 제공할 경우 200 OK 반환")
     @Test
