@@ -23,7 +23,19 @@ public class CommentController {
     }
 
     @GetMapping
-    public ResponseEntity<Void> getComments() {
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> getComments(
+            @RequestParam(required = false) Long articleId,
+            @RequestParam(required = false) String orderBy,
+            @RequestParam(required = false) String direction,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) String after,
+            @RequestParam(required = false) Integer limit,
+            @RequestHeader(value = "Monew-Request-User-ID", required = false) Long requestUserId
+    ) {
+        if(orderBy == null || direction == null || limit == null ||requestUserId == null) {
+            return ResponseEntity.badRequest().build(); //  400 Bad Request
+        }
+
+        return ResponseEntity.ok().build(); // 나중에 실제 구현
     }
 }
