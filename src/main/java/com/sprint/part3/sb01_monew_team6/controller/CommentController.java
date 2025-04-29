@@ -39,6 +39,11 @@ public class CommentController {
             return ResponseEntity.badRequest().build(); //  400 Bad Request
         }
 
+        //  orderBy 값 검증 추가
+        if(!orderBy.equals("createdAt") && !orderBy.equals("likeCount")) {
+            return ResponseEntity.badRequest().build();
+        }
+
         List<CommentDto> commentList = commentService.findAll(
                 articleId, orderBy, direction, cursor, after, limit, requestUserId
         );
