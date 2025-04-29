@@ -40,7 +40,7 @@ public class CommentController {
         }
 
         //  orderBy 값 검증 추가
-        if(!orderBy.equals("createdAt") && !orderBy.equals("likeCount")) {
+        if (!orderBy.equals("createdAt") && !orderBy.equals("likeCount")) {
             return ResponseEntity.badRequest().build();
         }
 
