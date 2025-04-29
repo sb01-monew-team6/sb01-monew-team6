@@ -58,10 +58,7 @@ public class ArticleViewServiceTest {
     ReflectionTestUtils.setField(article, "id", articleId);
 
 
-    User user = new User();
-    user.setNickname("user");
-    user.setEmail("email");
-    user.setPassword("pwd");
+    User user = new User("user", "email", "pwd");
     ReflectionTestUtils.setField(user, "id", userId);
 
     ArticleView view = new ArticleView(article, user, Instant.parse("2025-04-27T12:00:00Z"));
@@ -134,10 +131,7 @@ public class ArticleViewServiceTest {
     ReflectionTestUtils.setField(article, "id", articleId);
     given(newsArticleRepository.findById(articleId)).willReturn(Optional.of(article));
 
-    User user = new User();
-    user.setNickname("user");
-    user.setEmail("email");
-    user.setPassword("pwd");
+    User user = new User("user", "email", "pwd");
     ReflectionTestUtils.setField(user, "id", userId);
     given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
