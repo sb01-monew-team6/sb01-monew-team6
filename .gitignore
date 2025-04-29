@@ -43,4 +43,7 @@ VS Code
 .jon
 lifecycle-policy.json
 .logs/
-.application-secret.yml
+
+# --- 민감 정보(Secret) ---
+src/main/resources/secret.yml
+secret.yml
