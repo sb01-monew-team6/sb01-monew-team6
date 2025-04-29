@@ -19,7 +19,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 @RequiredArgsConstructor
 @Slf4j
 public class SchedulingConfig {
-  private static final String CRON = "0 0 0 * * *";
+  private static final String CRON = "0 0 * * * *"; //매시간
   private final JobLauncher jobLauncher;
   private final Job newsJob;
 
