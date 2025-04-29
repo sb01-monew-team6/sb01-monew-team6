@@ -35,10 +35,7 @@ public class ArticleViewRepositoryTest {
   @DisplayName("특정 기사의 조회수를 올바르게 반환")
   void countByArticleId_returnCorrectCount() {
     //given
-    User user = new User();
-    user.setEmail("tester@example.com");
-    user.setNickname("tester");
-    user.setPassword("password123");
+    User user = new User("tester@example.com", "tester", "password123");
     em.persist(user);
 
     NewsArticle article = new NewsArticle();
