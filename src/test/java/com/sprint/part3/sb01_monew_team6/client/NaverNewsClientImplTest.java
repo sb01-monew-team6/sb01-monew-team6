@@ -101,4 +101,82 @@ public class NaverNewsClientImplTest {
     // 빈 리스트인지 검증
     assertThat(result).isEmpty();
   }
+
+  // response 객체를 정상적으로 래핑해서 반환하지만
+  // response 내부의 items 필드가 null일 때 fetchNews(...) 호출 결과로 빈 List<ExternalNewsItem>이 나와야 한다
+  @Test
+  @DisplayName("Mono.just(response) 이지만 response.items가 null 이면 빈 리스트 반환")
+  void responseItemsNull_whenFetchNews_thenEmptyList() {
+    // given
+    NaverResponse resp = new NaverResponse();
+    resp.items = null;
+    given(responseSpec.bodyToMono(NaverResponse.class))
+        .willReturn(Mono.just(resp));
+
+    // when
+    List<ExternalNewsItem> result = client.fetchNews("kw");
+
+    // then
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  @DisplayName("item.description이 null 이면 ExternalNewsItem.description은 빈 문자열")
+  void descriptionNull_whenFetchNews_thenEmptyDescription() {
+    // given
+    DateTimeFormatter fmt = DateTimeFormatter.ofPattern(
+        "EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+    NaverResponse resp = new NaverResponse();
+    NaverResponse.Item item = new NaverResponse.Item();
+    item.originallink = "o";
+    item.link        = "l";
+    item.title       = "t";
+    item.pubDate     = fmt.format(ZonedDateTime.now());
+    item.description = null;  // <- 핵심
+    resp.items = List.of(item);
+
+    given(responseSpec.bodyToMono(NaverResponse.class))
+        .willReturn(Mono.just(resp));
+
+    // when
+    List<ExternalNewsItem> result = client.fetchNews("kw");
+
+    // then
+    assertThat(result)
+        .hasSize(1)
+        .first()
+        .extracting(ExternalNewsItem::description)
+        .isEqualTo("");
+  }
+
+  @Test
+  @DisplayName("여러 개의 items이 오면 모두 매핑")
+  void multipleItems_whenFetchNews_thenAllMapped() {
+    // given
+    DateTimeFormatter fmt = DateTimeFormatter.ofPattern(
+        "EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+    NaverResponse resp = new NaverResponse();
+    NaverResponse.Item i1 = new NaverResponse.Item();
+    i1.originallink = "o1"; i1.link = "l1"; i1.title = "t1";
+    i1.pubDate = fmt.format(ZonedDateTime.now());
+    i1.description = "d1";
+    NaverResponse.Item i2 = new NaverResponse.Item();
+    i2.originallink = "o2"; i2.link = "l2"; i2.title = "t2";
+    i2.pubDate = fmt.format(ZonedDateTime.now());
+    i2.description = "d2";
+    resp.items = List.of(i1, i2);
+
+    given(responseSpec.bodyToMono(NaverResponse.class))
+        .willReturn(Mono.just(resp));
+
+    // when
+    List<ExternalNewsItem> result = client.fetchNews("kw");
+
+    // then
+    assertThat(result)
+        .hasSize(2)
+        .extracting(ExternalNewsItem::title)
+        .containsExactly("t1", "t2");
+  }
+
 }
