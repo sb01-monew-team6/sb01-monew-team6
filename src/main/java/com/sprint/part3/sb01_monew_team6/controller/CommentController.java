@@ -9,6 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/comments")
 @RequiredArgsConstructor
@@ -23,7 +26,7 @@ public class CommentController {
     }
 
     @GetMapping
-    public ResponseEntity<Void> getComments(
+    public ResponseEntity<?> getComments(
             @RequestParam(required = false) Long articleId,
             @RequestParam(required = false) String orderBy,
             @RequestParam(required = false) String direction,
@@ -36,6 +39,12 @@ public class CommentController {
             return ResponseEntity.badRequest().build(); //  400 Bad Request
         }
 
-        return ResponseEntity.ok().build(); // 나중에 실제 구현
+        List<CommentDto> commentList = commentService.findAll(
+                articleId, orderBy, direction, cursor, after, limit, requestUserId
+        );
+
+        // 응답 형태를 content라는 키에 담아서 반환
+        return ResponseEntity.ok()
+                .body(Map.of("content", commentList));
     }
 }
