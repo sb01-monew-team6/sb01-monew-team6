@@ -108,7 +108,7 @@ public class NewsCollectionService {
 
     // 네이버 뉴스
     for (Interest interest : interests) {
-      for (String keyword : interest.getKeyword()) {
+      for (String keyword : interest.getKeywords()) {
         try {
           List<ExternalNewsItem> newsItems = naver.fetchNews(keyword);
           log.debug("네이버에서 '{}' 키워드로 {}건 수집", keyword, newsItems.size());
@@ -156,7 +156,7 @@ public class NewsCollectionService {
   private boolean containsKeyword(ExternalNewsItem item, List<Interest> interests) {
     return interests.stream()
           .anyMatch(interest ->
-              interest.getKeyword().stream()
+              interest.getKeywords().stream()
                   .anyMatch(keyword -> item.title().contains(keyword)|| item.description().contains(keyword))
           );
   }

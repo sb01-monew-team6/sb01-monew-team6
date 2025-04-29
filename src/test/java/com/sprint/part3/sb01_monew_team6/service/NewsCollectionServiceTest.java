@@ -52,9 +52,10 @@ public class NewsCollectionServiceTest {
   @DisplayName("키워드 포함 기사만 저장")
   void save_News_Only_With_Keyword() {
     //given
-    Interest i = new Interest();
-    i.setName("스포츠");
-    i.setKeyword(List.of("축구","야구"));
+    Interest i = Interest.builder()
+        .name("스포츠")
+        .keywords(List.of("축구","야구"))
+        .build();
 
     given(interestRepository.findAll()).willReturn(List.of(i));
 
@@ -80,8 +81,10 @@ public class NewsCollectionServiceTest {
   @DisplayName("제목에는 없고 요약(설명)에 키워드가 포함될 시 저장")
   void save_News_With_Keyword_In_Description() {
     //given
-    Interest i = new Interest();
-    i.setKeyword(List.of("축구","야구","농구"));
+    Interest i = Interest.builder()
+        .name("k")
+        .keywords(List.of("축구","야구","농구"))
+        .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
 
     ExternalNewsItem e1 = new ExternalNewsItem(
@@ -109,9 +112,10 @@ public class NewsCollectionServiceTest {
   @DisplayName("중복 URL 하나만 저장")
   void duplicatedUrl_save_oneUrl() {
     //given
-    Interest i = new Interest();
-    i.setName("스포츠");
-    i.setKeyword(List.of("축구", "야구"));
+    Interest i = Interest.builder()
+        .name("스포츠")
+        .keywords(List.of("축구", "야구"))
+        .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
 
     ExternalNewsItem e1 = new ExternalNewsItem(
@@ -134,8 +138,10 @@ public class NewsCollectionServiceTest {
   @DisplayName("이미 DB에 있는 기사만 나왔을 땐, 예외 없이 종료하고 저장 안 함")
   void allExisting_throwNoNewsException() {
     // given
-    Interest it = new Interest();
-    it.setKeyword(List.of("x"));
+    Interest it = Interest.builder()
+        .name("k")
+        .keywords(List.of("x"))
+        .build();
     given(interestRepository.findAll()).willReturn(List.of(it));
     ExternalNewsItem e = new ExternalNewsItem("NAVER","x","x","x",Instant.now(),"");
     given(naverClient.fetchNews("x")).willReturn(List.of(e));
@@ -166,8 +172,10 @@ public class NewsCollectionServiceTest {
   @DisplayName("NaverClient 예외 발생 - collectAndSave in Service")
   void exception_NaverClient_in_collectAndSave() {
     //given
-    Interest i = new Interest();
-    i.setKeyword(List.of("x"));
+    Interest i = Interest.builder()
+        .name("k")
+        .keywords(List.of("x"))
+        .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
     given(naverClient.fetchNews("x")).willThrow(new NewsException(ErrorCode.NEWS_NAVERCLIENT_EXCEPTION,Instant.now(),
         HttpStatus.BAD_GATEWAY));
@@ -181,8 +189,10 @@ public class NewsCollectionServiceTest {
   @DisplayName("RssClient 예외 발생 - collectAndSave in Service")
   void excpetion_RssClient_in_collectAndSave(){
     //given
-    Interest i = new Interest();
-    i.setKeyword(List.of("x"));
+    Interest i = Interest.builder()
+        .name("k")
+        .keywords(List.of("x"))
+        .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
     // 네이버는 빈 리스트 반환 → RSS 로직으로 넘어가게
     given(naverClient.fetchNews("x")).willReturn(List.of());
@@ -204,8 +214,10 @@ public class NewsCollectionServiceTest {
   @DisplayName("관심사가 있을 떄 naver,rss 호출 결과 반환")
   void whenInterests_returnsItems(){
     //given
-    Interest i = new Interest();
-    i.setKeyword(List.of("key"));
+    Interest i = Interest.builder()
+        .name("k")
+        .keywords(List.of("key"))
+        .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
 
     ExternalNewsItem e1 = new ExternalNewsItem("NAVER","u1","u1","key 제목", Instant.now(),"");
