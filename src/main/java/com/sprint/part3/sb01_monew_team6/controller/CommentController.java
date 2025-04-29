@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.controller;
 
+import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import jakarta.validation.Valid;
@@ -18,8 +19,8 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping
-    public ResponseEntity<Void> registerComment(@Valid @RequestBody CommentRegisterRequest request) {
-        // 일단 임시로 201 Created로 응답
-        return ResponseEntity.status(201).build();
+    public ResponseEntity<CommentDto> registerComment(@Valid @RequestBody CommentRegisterRequest request) {
+        CommentDto commentDto = commentService.register(request);
+        return ResponseEntity.status(201).body(commentDto);
     }
 }
