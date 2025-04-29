@@ -15,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 @Configuration
 @EnableWebSecurity
@@ -37,10 +39,8 @@ public class SecurityConfig {
 
         // --- 명시적 예외 처리 핸들러 설정 ---
         .exceptionHandling(ex -> ex
-            // 인증 실패 시 → 401 뿜지 말고 "/sb/monew/login"으로 리다이렉트
-            .authenticationEntryPoint((request, response, authException) ->
-                response.sendRedirect("/sb/monew/login")
-            )
+            // 인증 실패 시 401 Unauthorized 상태 코드 반환
+            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             .accessDeniedHandler((request, response, accessDeniedException) ->
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN)
             )
