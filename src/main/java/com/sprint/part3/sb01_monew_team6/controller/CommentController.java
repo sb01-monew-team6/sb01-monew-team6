@@ -5,6 +5,7 @@ import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +22,6 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<CommentDto> registerComment(@Valid @RequestBody CommentRegisterRequest request) {
         CommentDto commentDto = commentService.register(request);
-        return ResponseEntity.status(201).body(commentDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(commentDto);
     }
 }
