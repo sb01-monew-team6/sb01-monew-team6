@@ -15,7 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import javax.swing.text.html.Option;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,6 +67,29 @@ class CommentServiceTest {
         //  then
         assertThat(result).isNotNull();
         assertThat(result.content()).isEqualTo("테스트 댓글입니다.");
+    }
+
+    @DisplayName("댓글 목록 조회 - 정상 조회 시 댓글 리스트 반환")
+    @Test
+    void getComments_shouldReturnCommentList() {
+        //  given
+        NewsArticle article = createTestArticle();
+        User user = createTestUser();
+        List<Comment> commentList = List.of(
+                createTestComment(user, article, "댓글 1"),
+                createTestComment(user,article, "댓글 2")
+        );
+
+        given(newsArticleRepository.findById(1L)).willReturn(Optional.of(article));
+        given(commentRepository.findAllByArticleId(1L)).willReturn(commentList);
+
+        //  when
+        List<CommentDto> result = commentService.getComments(1L);
+
+        //  then
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).content()).isEqualTo("댓글 1");
     }
 
     private NewsArticle createTestArticle() {
