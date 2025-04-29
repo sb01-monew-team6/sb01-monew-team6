@@ -16,6 +16,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -105,6 +106,33 @@ class CommentControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk());
     }
+
+    @DisplayName("댓글 목록 조회 성공 - 데이터가 존재할 경우 200 OK와 목록 반환")
+    @Test
+    @WithMockUser
+    void getComments_withValidParams_shouldReturnCommentList() throws Exception {
+        // given
+        CommentDto comment1 = new CommentDto(1L, 1L, 1L, "작성자1", "댓글 내용1", 5L, false, Instant.now());
+        CommentDto comment2 = new CommentDto(2L, 1L, 2L, "작성자2", "댓글 내용2", 3L, false, Instant.now());
+        List<CommentDto> commentList = List.of(comment1, comment2);
+
+        when(commentService.findAll(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(commentList);
+
+        // when & then
+        mockMvc.perform(get("/api/comments")
+                        .param("orderBy", "createdAt")
+                        .param("direction", "DESC")
+                        .param("limit", "10")
+                        .header("Monew-Request-User-ID", "1")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(commentList.size()))
+                .andExpect(jsonPath("$.content[0].content").value(comment1.content()))
+                .andExpect(jsonPath("$.content[1].content").value(comment2.content()));
+    }
+
 
 
 }
