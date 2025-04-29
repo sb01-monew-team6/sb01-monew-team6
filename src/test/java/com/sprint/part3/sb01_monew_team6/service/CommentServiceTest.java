@@ -50,31 +50,14 @@ class CommentServiceTest {
                 .content("테스트 댓글입니다.")
                 .build();
 
-        NewsArticle newsArticle = new NewsArticle();
-        newsArticle.setSource("테스트 출처");
-        newsArticle.setSourceUrl("http://test.com");
-        newsArticle.setArticleTitle("테스트 제목");
-        newsArticle.setArticlePublishedDate(Instant.now());
-        newsArticle.setArticleSummary("테스트 요약");
-
-        User user = User.builder()
-                .nickname("tester")
-                .email("tester@example.com")
-                .password("encodedPassword")
-                .build();
-
-        Comment comment = Comment.builder()
-                        .user(user)
-                                .article(newsArticle)
-                                        .content(request.content())
-                                                .build();
+        NewsArticle article = createTestArticle();
+        User user = createTestUser();
+        Comment comment = createTestComment(user, article, request.content());
 
 
-        given(newsArticleRepository.findById(1L)).willReturn(Optional.of(newsArticle));
+        given(newsArticleRepository.findById(1L)).willReturn(Optional.of(article));
         given(userRepository.findById(1L)).willReturn(Optional.of(user));
         given(commentRepository.save(any(Comment.class))).willReturn(comment);
-
-        // 아직 article, user, comment mocking 안함 (Green 단계에서 할 거야)
 
         //  when
         CommentDto result = commentService.register(request);
@@ -83,4 +66,31 @@ class CommentServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.content()).isEqualTo("테스트 댓글입니다.");
     }
+
+    private NewsArticle createTestArticle() {
+        NewsArticle article = new NewsArticle();
+        article.setSource("테스트 출처");
+        article.setSourceUrl("http://test.com");
+        article.setArticleTitle("테스트 제목");
+        article.setArticlePublishedDate(Instant.now());
+        article.setArticleSummary("테스트 요약");
+        return article;
+    }
+
+    private User createTestUser() {
+        return User.builder()
+                .nickname("tester")
+                .email("tester@example.com")
+                .password("encodedPassword")
+                .build();
+    }
+
+    private Comment createTestComment(User user, NewsArticle article, String content) {
+        return Comment.builder()
+                .user(user)
+                .article(article)
+                .content(content)
+                .build();
+    }
+
 }
