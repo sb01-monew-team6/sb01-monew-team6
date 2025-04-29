@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.dto;
 
+import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -15,4 +16,16 @@ public record CommentDto(
         boolean likedByMe,
         Instant createdAt
 ) {
+    public static CommentDto fromEntity(Comment comment) {
+        return CommentDto.builder()
+                .id(comment.getId())
+                .articleId(comment.getArticle().getId())
+                .userId(comment.getUser().getId())
+                .userNickname(comment.getUser().getNickname())
+                .content(comment.getContent())
+                .likeCount(0L)
+                .likedByMe(false)
+                .createdAt(comment.getCreatedAt())
+                .build();
+    }
 }
