@@ -32,7 +32,7 @@ public class CommentController {
             @RequestParam(required = false) Integer limit,
             @RequestHeader(value = "Monew-Request-User-ID", required = false) Long requestUserId
     ) {
-        if(orderBy == null || direction == null || limit == null ||requestUserId == null) {
+        if (orderBy == null || direction == null || limit == null || requestUserId == null) {
             return ResponseEntity.badRequest().build(); //  400 Bad Request
         }
 
