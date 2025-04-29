@@ -33,10 +33,4 @@ public class ArticleView extends BaseUpdatableEntity {
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private Instant articleViewDate;
-
-  //중복 조회 시 마지막으로 기사 본 시간으로 갱신
-  public ArticleView updateArticleViewDate() {
-    this.articleViewDate = Instant.now();
-    return this;
-  }
 }
