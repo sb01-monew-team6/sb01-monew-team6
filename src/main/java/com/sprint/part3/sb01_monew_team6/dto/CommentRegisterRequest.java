@@ -3,7 +3,9 @@ package com.sprint.part3.sb01_monew_team6.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 
+@Builder
 public record CommentRegisterRequest(
         @NotNull Long articleId,
         @NotNull Long userId,
