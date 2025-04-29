@@ -7,9 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
+import com.sprint.part3.sb01_monew_team6.exception.GlobalExceptionHandler;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.service.ArticleViewService;
 import java.time.Instant;
@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -26,18 +27,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ArticleViewController.class)
 @ActiveProfiles("test")
+@Import(GlobalExceptionHandler.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class ArticleViewControllerTest {
-  @Autowired
-  MockMvc mvc;
 
   @Autowired
-  private ObjectMapper objectMapper;  // JSON 직렬화/역직렬화
+  private MockMvc mockMvc;
 
   @MockitoBean
   ArticleViewService articleViewService;
-  @Autowired
-  private MockMvc mockMvc;
 
   @Test
   @DisplayName("유효한 articleId,userId로 조회 요청 시 200과 DTO 반환")
@@ -61,7 +59,7 @@ public class ArticleViewControllerTest {
 
     //when
     mockMvc.perform(post("/api/articles/{articleId}/article-views",1L)
-        .param("userId","2")
+            .header("Monew-Request-User-ID", 2L)
         .accept(MediaType.APPLICATION_JSON)
     )
         .andExpect(status().isOk())
@@ -93,8 +91,8 @@ public class ArticleViewControllerTest {
 
     //when : 중복 조회 요청
     mockMvc.perform(post("/api/articles/{articleId}/article-views", 1L)
-        .param("userId", "2")
-        .accept(MediaType.APPLICATION_JSON)
+            .header("Monew-Request-User-ID", 2L)
+            .accept(MediaType.APPLICATION_JSON)
     )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.articleViewCount").value(3));
@@ -110,7 +108,7 @@ public class ArticleViewControllerTest {
 
     // when & then: 404와 에러 메시지 반환
     mockMvc.perform(post("/api/articles/{articleId}/article-views", 1L)
-            .param("userId", "2")
+            .header("Monew-Request-User-ID", 2L)
             .accept(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isNotFound())
