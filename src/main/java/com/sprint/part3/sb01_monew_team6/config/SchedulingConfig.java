@@ -1,5 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.config;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -25,13 +27,15 @@ public class SchedulingConfig {
 
   @Scheduled(cron = CRON)
   public void collectNewsSchedule(){
-    // 실행마다 새로운 JobInstance 생성
-    JobParameters jobParameters = new JobParametersBuilder()
-        .addLong("time",System.currentTimeMillis())
+    // 포맷을 yyyy-MM-dd-HH 로 하면 한 시간에 한 번만 신규 인스턴스가 생성
+    String runId = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH")
+        .format(LocalDateTime.now());
+    JobParameters params = new JobParametersBuilder()
+        .addString("run.id", runId)
         .toJobParameters();
 
     try{
-      jobLauncher.run(newsJob,jobParameters);
+      jobLauncher.run(newsJob,params);
     }catch (JobExecutionAlreadyRunningException
             | JobRestartException
             | JobInstanceAlreadyCompleteException
