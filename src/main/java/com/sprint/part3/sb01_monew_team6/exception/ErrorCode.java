@@ -32,6 +32,8 @@ public enum ErrorCode {
 	USER_ACTIVITY_INVALID_EXCEPTION("유효하지 않은 요청입니다."),
 	USER_ACTIVITY_NOT_FOUND_EXCEPTION("존재하지 않는 유저입니다."),
 
+	//article_view
+	ARTICLE_VIEW_NOT_FOUND_EXCEPTION("기사 기록을 찾을 수 없습니다."),
 	// 기타
 	INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다.");
 
