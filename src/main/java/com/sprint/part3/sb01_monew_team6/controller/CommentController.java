@@ -44,6 +44,11 @@ public class CommentController {
             return ResponseEntity.badRequest().build();
         }
 
+        //  direction 검증 추가
+        if(!direction.equalsIgnoreCase("ASC") && !direction.equalsIgnoreCase("DESC")) {
+            return ResponseEntity.badRequest().build();
+        }
+
         List<CommentDto> commentList = commentService.findAll(
                 articleId, orderBy, direction, cursor, after, limit, requestUserId
         );
