@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.controller;
 
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -13,10 +14,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(NewsCollectionController.class)
+@WithMockUser
 public class NewsCollectionControllerTest {
   @Autowired
   MockMvc mvc;
@@ -32,7 +35,7 @@ public class NewsCollectionControllerTest {
     //when
 
     //then
-    mvc.perform(get("/api/articles/collect/news"))
+    mvc.perform(get("/api/articles/collect/news").with(csrf()))
         .andExpect(status().isOk());
   }
 
@@ -43,7 +46,7 @@ public class NewsCollectionControllerTest {
     willDoNothing().given(service).collectAndSave();
 
     // when / then
-    mvc.perform(post("/api/articles/collect/news"))
+    mvc.perform(post("/api/articles/collect/news").with(csrf()))
         .andExpect(status().isAccepted())                            // 202 Accepted
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.message").value("Batch job triggered"));
