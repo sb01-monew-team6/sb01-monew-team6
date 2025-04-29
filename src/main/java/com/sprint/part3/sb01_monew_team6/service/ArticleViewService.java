@@ -31,16 +31,22 @@ public class ArticleViewService {
         .orElseThrow(() -> new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND));
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new NewsException(ErrorCode.NEWS_NOT_USER_FOUND_EXCEPTION,Instant.now(),HttpStatus.NOT_FOUND));
-    // TODO: 나중에 예외 수정
 
     //조회 기록 처리
     ArticleView view;
     if (articleViewRepository.existsByArticleIdAndUserId(articleId, userId)) {
       // 중복인 경우: 기존 기록만 조회
-      view = articleViewRepository.findByArticleIdAndUserId(articleId, userId).orElseThrow();
+      view = articleViewRepository.findByArticleIdAndUserId(articleId, userId).orElseThrow(() -> new NewsException(
+          ErrorCode.ARTICLE_VIEW_NOT_FOUND_EXCEPTION,
+          Instant.now(),
+          HttpStatus.INTERNAL_SERVER_ERROR));
     } else {
       // 처음 보는 경우에만 저장
-      view = articleViewRepository.save(new ArticleView(article, user, Instant.now()));
+      ArticleView newView = ArticleView.builder()
+          .article(article)
+          .user(user)
+          .build();
+      view = articleViewRepository.save(newView);
     }
 
     //count 집계
