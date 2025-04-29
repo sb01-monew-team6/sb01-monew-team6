@@ -45,7 +45,7 @@ public class CommentController {
         }
 
         //  direction 검증 추가
-        if(!direction.equalsIgnoreCase("ASC") && !direction.equalsIgnoreCase("DESC")) {
+        if (!direction.equalsIgnoreCase("ASC") && !direction.equalsIgnoreCase("DESC")) {
             return ResponseEntity.badRequest().build();
         }
 
