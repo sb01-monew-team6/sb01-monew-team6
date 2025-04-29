@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
 public interface ArticleViewMapper {
   @Mapping(target = "id",                     source = "articleView.id")
   @Mapping(target = "viewedBy",               source = "articleView.user.id")
-  @Mapping(target = "createdAt",              source = "articleView.createdAt")
+  @Mapping(target = "createdAt",              source = "articleView.articleViewDate")
   @Mapping(target = "articleId",              source = "articleView.article.id")
   @Mapping(target = "source",                 source = "articleView.article.source")
   @Mapping(target = "sourceUrl",              source = "articleView.article.sourceUrl")

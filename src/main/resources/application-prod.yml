@@ -9,12 +9,12 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
-  data:
-    mongodb:
-      database: ${MONGO_DB_DATABASE} # user_api
-      host: ${MONGO_DB_HOST} # localhost
-      port: ${MONGO_DB_PORT} # 27017
-      auto-index-creation: true
+#  data:
+#    mongodb:
+#      database: ${MONGO_DB_DATABASE} # user_api
+#      host: ${MONGO_DB_HOST} # localhost
+#      port: ${MONGO_DB_PORT} # 27017
+#      auto-index-creation: true
 
 decorator:
   datasource:

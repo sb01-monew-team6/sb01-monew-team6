@@ -11,6 +11,7 @@ import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -64,12 +65,13 @@ public class NaverNewsClientImplTest {
   void apiResponse_whenFetchNews_thenMapped(){
     //given
     //응답 객체
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
     NaverResponse response = new NaverResponse();
     NaverResponse.Item item = new NaverResponse.Item();
     item.originallink = "o1";
     item.link          = "l1";
     item.title         = "t1";
-    item.pubDate      = DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now());
+    item.pubDate      = formatter.format(ZonedDateTime.now());
     item.description   = "d1";
     response.items = List.of(item);
 
