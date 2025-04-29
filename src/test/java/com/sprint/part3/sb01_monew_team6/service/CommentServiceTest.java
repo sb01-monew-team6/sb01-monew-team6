@@ -77,10 +77,10 @@ class CommentServiceTest {
         User user = createTestUser();
         List<Comment> commentList = List.of(
                 createTestComment(user, article, "댓글 1"),
-                createTestComment(user,article, "댓글 2")
+                createTestComment(user, article, "댓글 2")
         );
 
-        given(newsArticleRepository.findById(1L)).willReturn(Optional.of(article));
+        given(newsArticleRepository.existsById(1L)).willReturn(true);
         given(commentRepository.findAllByArticleId(1L)).willReturn(commentList);
 
         //  when
