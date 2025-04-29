@@ -51,6 +51,6 @@ public class ArticleViewService {
     long viewCount = articleViewRepository.countByArticleId(articleId);
 
     //dto 변환
-    return articleViewMapper.toDto(existingView);
+    return articleViewMapper.toDto(existingView.orElse(null));
   }
 }

@@ -1,8 +1,10 @@
 package com.sprint.part3.sb01_monew_team6.repository;
 
+import com.sprint.part3.sb01_monew_team6.config.TestDataJpaConfig;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import com.sprint.part3.sb01_monew_team6.config.JpaConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +14,12 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.*;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@Import(JpaConfig.class)
+@AutoConfigureTestDatabase(replace = NONE)
+@Import(TestDataJpaConfig.class)
 class UserRepositoryTest {
 
   @Autowired
