@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -38,6 +39,7 @@ public class BatchConfig {
   }
   // 서비스에서 뉴스 목록을 읽어 ListItemReader로 래핑
   @Bean
+  @StepScope // 실제 배치 Step이 실행될 때 호출됩니다.
   public ItemReader<ExternalNewsItem> newsReader(NewsCollectionService service) {
     List<ExternalNewsItem> allNews = service.fetchCandidates();
     return new ListItemReader<>(allNews);
