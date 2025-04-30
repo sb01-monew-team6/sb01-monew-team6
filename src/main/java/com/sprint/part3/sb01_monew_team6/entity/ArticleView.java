@@ -9,19 +9,27 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "article_view")
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
-public class ArticleView{
+@Table(
+    name = "article_view",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uq_article_view_user_article",
+        columnNames = {"article_id", "user_id"}
+    )
+)
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+@Builder
+public class ArticleView {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
