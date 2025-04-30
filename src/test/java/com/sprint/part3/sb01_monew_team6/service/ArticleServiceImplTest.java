@@ -11,7 +11,7 @@ import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageResponseArticleDto;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
-import com.sprint.part3.sb01_monew_team6.service.impl.ArticleServiceImpl;
+import com.sprint.part3.sb01_monew_team6.service.news.impl.ArticleServiceImpl;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;

@@ -1,4 +1,4 @@
-package com.sprint.part3.sb01_monew_team6.service;
+package com.sprint.part3.sb01_monew_team6.service.news;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageRequestArticleDto;
 import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageResponseArticleDto;

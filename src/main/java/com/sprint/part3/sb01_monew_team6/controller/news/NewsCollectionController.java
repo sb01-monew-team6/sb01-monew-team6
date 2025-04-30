@@ -1,6 +1,6 @@
-package com.sprint.part3.sb01_monew_team6.controller;
+package com.sprint.part3.sb01_monew_team6.controller.news;
 
-import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionImplService;
+import com.sprint.part3.sb01_monew_team6.service.news.impl.NewsCollectionImplService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

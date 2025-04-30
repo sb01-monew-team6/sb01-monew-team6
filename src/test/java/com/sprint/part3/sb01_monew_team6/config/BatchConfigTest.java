@@ -7,7 +7,7 @@ import static org.mockito.Mockito.mock;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
-import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionImplService;
+import com.sprint.part3.sb01_monew_team6.service.news.impl.NewsCollectionImplService;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;

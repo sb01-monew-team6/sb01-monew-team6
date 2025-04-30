@@ -1,4 +1,4 @@
-package com.sprint.part3.sb01_monew_team6.service.impl;
+package com.sprint.part3.sb01_monew_team6.service.news.impl;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
 import com.sprint.part3.sb01_monew_team6.entity.ArticleView;

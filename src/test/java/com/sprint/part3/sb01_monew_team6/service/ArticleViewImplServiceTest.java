@@ -18,7 +18,7 @@ import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
-import com.sprint.part3.sb01_monew_team6.service.impl.ArticleViewImplService;
+import com.sprint.part3.sb01_monew_team6.service.news.impl.ArticleViewImplService;
 import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;

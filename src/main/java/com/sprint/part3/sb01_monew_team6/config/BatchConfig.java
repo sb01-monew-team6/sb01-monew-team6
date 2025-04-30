@@ -2,7 +2,7 @@ package com.sprint.part3.sb01_monew_team6.config;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
-import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionImplService;
+import com.sprint.part3.sb01_monew_team6.service.news.impl.NewsCollectionImplService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

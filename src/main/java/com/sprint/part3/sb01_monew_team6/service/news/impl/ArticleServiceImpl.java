@@ -1,4 +1,4 @@
-package com.sprint.part3.sb01_monew_team6.service.impl;
+package com.sprint.part3.sb01_monew_team6.service.news.impl;
 
 import static com.sprint.part3.sb01_monew_team6.entity.QNewsArticle.newsArticle;
 
@@ -10,7 +10,7 @@ import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageResponseArticleDto;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
-import com.sprint.part3.sb01_monew_team6.service.ArticleService;
+import com.sprint.part3.sb01_monew_team6.service.news.ArticleService;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
