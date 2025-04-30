@@ -2,7 +2,6 @@ package com.sprint.part3.sb01_monew_team6.storage.s3;
 
 import static java.nio.charset.StandardCharsets.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import java.net.URI;
 import java.nio.file.Files;
@@ -32,8 +31,6 @@ class S3LogStorageTest {
 	@TempDir
 	private Path tempDir;
 
-	private S3LogStorage storage;
-
 	private static final String BUCKET = "monew";
 
 	@Container
@@ -41,6 +38,8 @@ class S3LogStorageTest {
 		.withInitialBuckets(BUCKET);
 
 	private S3Client s3Client;
+
+	private S3LogStorage storage;
 
 	@BeforeEach
 	void setUp() {
@@ -53,6 +52,11 @@ class S3LogStorageTest {
 			.endpointOverride(URI.create(S3_MOCK.getHttpEndpoint()))
 			.serviceConfiguration(config)
 			.build();
+
+		storage = new S3LogStorage(
+			s3Client,
+			BUCKET
+		);
 	}
 
 	@Test
@@ -82,7 +86,7 @@ class S3LogStorageTest {
 	}
 
 	@Test
-	@DisplayName("")
+	@DisplayName("uploadZip 정상 호출 시 정상 동작한다")
 	void uploadZipSuccessfully() throws Exception {
 		//given
 		Path zip = tempDir.resolve("test.zip");
@@ -92,7 +96,15 @@ class S3LogStorageTest {
 		storage.uploadZip(zip);
 
 		//then
-		verify(s3Client, times(1))
-			.putObject(any(PutObjectRequest.class), eq(zip));
+		ResponseBytes<GetObjectResponse> response = s3Client.getObject(
+			GetObjectRequest.builder()
+				.bucket(BUCKET)
+				.key("test.zip")
+				.build(),
+			ResponseTransformer.toBytes()
+		);
+
+		assertThat(response.asUtf8String())
+			.isEqualTo("data");
 	}
 }
