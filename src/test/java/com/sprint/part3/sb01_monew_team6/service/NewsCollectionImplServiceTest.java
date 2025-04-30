@@ -16,6 +16,7 @@ import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
+import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionImplService;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,19 +29,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
-public class NewsCollectionServiceTest {
+public class NewsCollectionImplServiceTest {
   @Mock NaverNewsClient naverClient;
   @Mock RssNewsClient   rssClient;
   @Mock InterestRepository interestRepository;
   @Mock NewsArticleRepository newsArticleRepository;
 
-  private NewsCollectionService service;
+  private NewsCollectionImplService service;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
     // 단일 목을 실제 리스트로 묶어서 서비스에 주입
-    service = new NewsCollectionService(
+    service = new NewsCollectionImplService(
         naverClient,
         List.of(rssClient),
         newsArticleRepository,

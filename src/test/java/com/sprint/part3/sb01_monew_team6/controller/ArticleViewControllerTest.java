@@ -11,7 +11,7 @@ import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.GlobalExceptionHandler;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
-import com.sprint.part3.sb01_monew_team6.service.ArticleViewService;
+import com.sprint.part3.sb01_monew_team6.service.impl.ArticleViewImplService;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ public class ArticleViewControllerTest {
   private MockMvc mockMvc;
 
   @MockitoBean
-  ArticleViewService articleViewService;
+  ArticleViewImplService articleViewImplService;
 
   @Test
   @DisplayName("유효한 articleId,userId로 조회 요청 시 200과 DTO 반환")
@@ -55,7 +55,7 @@ public class ArticleViewControllerTest {
         .articleCommentCount(0L)
         .articleViewCount(1L)
         .build();
-    given(articleViewService.viewArticle(1L, 2L)).willReturn(dto);
+    given(articleViewImplService.viewArticle(1L, 2L)).willReturn(dto);
 
     //when
     mockMvc.perform(post("/api/articles/{articleId}/article-views",1L)
@@ -87,7 +87,7 @@ public class ArticleViewControllerTest {
         .articleCommentCount(0L)
         .articleViewCount(3L)   // 이미 3번 조회
         .build();
-    given(articleViewService.viewArticle(1L, 2L)).willReturn(dto);
+    given(articleViewImplService.viewArticle(1L, 2L)).willReturn(dto);
 
     //when : 중복 조회 요청
     mockMvc.perform(post("/api/articles/{articleId}/article-views", 1L)
@@ -102,7 +102,7 @@ public class ArticleViewControllerTest {
   @DisplayName("존재하지 않는 userId면 404 에러")
   void viewArticle_userNotFound() throws Exception {
     // given: 서비스가 NotFoundException
-    given(articleViewService.viewArticle(anyLong(), anyLong()))
+    given(articleViewImplService.viewArticle(anyLong(), anyLong()))
         .willThrow(new NewsException(ErrorCode.NEWS_NOT_USER_FOUND_EXCEPTION,Instant.now(),
             HttpStatus.NOT_FOUND));
 

@@ -18,6 +18,7 @@ import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
+import com.sprint.part3.sb01_monew_team6.service.impl.ArticleViewImplService;
 import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-public class ArticleViewServiceTest {
+public class ArticleViewImplServiceTest {
   @Mock
   private NewsArticleRepository newsArticleRepository;
   @Mock
@@ -42,7 +43,7 @@ public class ArticleViewServiceTest {
   private ArticleViewMapper articleViewMapper;
 
   @InjectMocks
-  private ArticleViewService service;
+  private ArticleViewImplService service;
 
   @Test
   @DisplayName("articleId,userId ID가 있으면 저장 후 DTO 반환")

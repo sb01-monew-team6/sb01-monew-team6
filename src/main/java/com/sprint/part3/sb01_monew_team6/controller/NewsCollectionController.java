@@ -1,6 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.controller;
 
-import com.sprint.part3.sb01_monew_team6.service.NewsCollectionService;
+import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionImplService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,17 +12,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/articles/collect")
 @RequiredArgsConstructor
 public class NewsCollectionController {
-  private final NewsCollectionService newsCollectionService;
+  private final NewsCollectionImplService newsCollectionImplService;
 
   @GetMapping("/news")
   public ResponseEntity<Void> getCollectNews() {
-    newsCollectionService.collectAndSave();
+    newsCollectionImplService.collectAndSave();
     return ResponseEntity.ok().build();
   }
 
   @PostMapping("/news")
   public ResponseEntity<?> collectNews() {
-    newsCollectionService.collectAndSave();
+    newsCollectionImplService.collectAndSave();
     CollectResponse body = new CollectResponse("Batch job triggered");
     return ResponseEntity.accepted().body(body);
   }

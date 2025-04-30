@@ -2,7 +2,7 @@ package com.sprint.part3.sb01_monew_team6.config;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
-import com.sprint.part3.sb01_monew_team6.service.NewsCollectionService;
+import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionImplService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @EnableBatchProcessing
 @RequiredArgsConstructor
 public class BatchConfig {
-  private final NewsCollectionService service;
+  private final NewsCollectionImplService service;
 
   //newsJob이라는 이름의 배치 잡을 생성
   @Bean @Qualifier(value = "newsJob")
@@ -43,7 +43,7 @@ public class BatchConfig {
   // 서비스에서 뉴스 목록을 읽어 ListItemReader로 래핑
   @Bean
   @StepScope // 실제 배치 Step이 실행될 때 호출됩니다.
-  public ItemReader<ExternalNewsItem> newsReader(NewsCollectionService service) {
+  public ItemReader<ExternalNewsItem> newsReader(NewsCollectionImplService service) {
     List<ExternalNewsItem> allNews = service.fetchCandidates();
     return new ListItemReader<>(allNews);
   }

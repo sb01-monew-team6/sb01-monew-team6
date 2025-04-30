@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.sprint.part3.sb01_monew_team6.exception.GlobalExceptionHandler;
-import com.sprint.part3.sb01_monew_team6.service.NewsCollectionService;
+import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionImplService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class NewsCollectionControllerTest {
   @Autowired
   MockMvc mvc;
   @MockitoBean
-  NewsCollectionService service;
+  NewsCollectionImplService service;
 
   @Test
   @DisplayName("정상 서비스 → When GET /collect-news → Then 200 OK")

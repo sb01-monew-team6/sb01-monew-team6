@@ -7,7 +7,7 @@ import static org.mockito.Mockito.mock;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
-import com.sprint.part3.sb01_monew_team6.service.NewsCollectionService;
+import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionImplService;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +30,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @ExtendWith(MockitoExtension.class)
 public class BatchConfigTest {
   @Mock
-  private NewsCollectionService service;
+  private NewsCollectionImplService service;
   @Mock
   private JobRepository jobRepository;
   @Mock

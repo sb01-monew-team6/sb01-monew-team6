@@ -1,4 +1,4 @@
-package com.sprint.part3.sb01_monew_team6.service;
+package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import com.sprint.part3.sb01_monew_team6.client.NaverNewsClient;
 import com.sprint.part3.sb01_monew_team6.client.RssNewsClient;
@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NewsCollectionService {
+public class NewsCollectionImplService {
   private final NaverNewsClient naver;
   private final List<RssNewsClient> rssClients;
   private final NewsArticleRepository newsArticleRepository;
