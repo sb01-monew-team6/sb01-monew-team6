@@ -56,13 +56,16 @@ public class NaverNewsClientImpl implements NaverNewsClient {
               .parse(item.pubDate, rfc822)
               .toInstant();
 
+          // description이 null일 땐 빈 문자열로 대체
+          String description = item.description != null ? item.description : "";
+
           return new ExternalNewsItem(
               "NAVER",
               item.originallink,
               item.link,
               item.title,
               published,
-              item.description
+              description
           );
         })
         .toList();
