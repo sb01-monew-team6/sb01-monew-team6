@@ -62,6 +62,7 @@ jobs:
           echo "DB_USERNAME=${{ secrets.DB_USERNAME_DEV }}" >> $GITHUB_ENV
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD_DEV }}" >> $GITHUB_ENV
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> $GITHUB_ENV
+          echo "SPRING_PROFILES_ACTIVE=dev" >> $GITHUB_ENV
 
       # main 브랜치의 시크릿을 env에 설정
       - name: Set DB Secrets for PROD
@@ -71,6 +72,7 @@ jobs:
           echo "DB_USERNAME=${{ secrets.DB_USERNAME_PROD }}" >> $GITHUB_ENV
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }}" >> $GITHUB_ENV
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> $GITHUB_ENV
+          echo "SPRING_PROFILES_ACTIVE=prod" >> $GITHUB_ENV
 
       # 6-1. AWS 인증 (운영)
       - name: Configure AWS credentials (PROD)
@@ -123,7 +125,7 @@ jobs:
             DB_USERNAME=${{ env.DB_USERNAME }}
             DB_PASSWORD=${{ env.DB_PASSWORD }}
             MONGO_URI=${{ env.MONGO_URI }}
-            SPRING_PROFILES_ACTIVE=${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+            SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
 
       # 10. ECS 서비스에 새 Task 적용
       - name: Deploy to ECS

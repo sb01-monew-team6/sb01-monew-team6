@@ -30,6 +30,14 @@
         {
           "name": "DB_PASSWORD",
           "value": "REPLACEME_DB_PASSWORD"
+        },
+        {
+          "name": "MONGO_URI",
+          "value": "REPLACEME_MONGO_URI"
+        },
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "dev"
         }
       ],
       "logConfiguration": {
