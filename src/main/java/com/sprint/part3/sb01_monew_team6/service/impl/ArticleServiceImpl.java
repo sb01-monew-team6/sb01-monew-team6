@@ -27,25 +27,25 @@ public class ArticleServiceImpl implements ArticleService {
   @Transactional(readOnly=true)
   @Override
   public CursorPageResponseArticleDto searchArticles(CursorPageRequestArticleDto request) {
-    // 1) cursor 파싱: null 또는 빈 문자열이면 null 그대로
+    // cursor 파싱: null 또는 빈 문자열이면 null 그대로
     Long cursor = Optional.ofNullable(request.cursor())
         .filter(s -> !s.isBlank())
         .map(Long::valueOf)
         .orElse(null);
 
-    // 2) after 파싱: 이미 Instant 타입이므로 그냥 쓰거나 추가 포맷 체크
+    // after 파싱: 이미 Instant 타입이므로 그냥 쓰거나 추가 포맷 체크
     Instant after = request.after();
 
-    // 3) 정렬 스펙 생성
+    // 정렬 스펙 생성
     OrderSpecifier<?> orderSpec = buildOrder(request);
 
-    // 4) 실제 페이징 조회
+    // 실제 페이징 조회
     List<NewsArticle> newsArticles = newsArticleRepository.searchArticles(
         request, orderSpec, cursor, after, request.limit()
     );
     long totalElements = newsArticleRepository.countArticles(request);
 
-    // 5) DTO 변환
+    // DTO 변환
     List<ArticleDto> content = newsArticles.stream()
         .map(a -> ArticleDto.from(
             a,
@@ -55,7 +55,7 @@ public class ArticleServiceImpl implements ArticleService {
         ))
         .toList();
 
-    // 6) 페이징 정보 계산
+    // 페이징 정보 계산
     boolean hasNext = content.size() == request.limit();
     String nextCursor = hasNext
         ? String.valueOf(content.get(content.size() - 1).id())
@@ -64,7 +64,7 @@ public class ArticleServiceImpl implements ArticleService {
         ? content.get(content.size() - 1).publishDate()
         : null;
 
-    // 7) 응답 생성
+    // 응답 생성
     return CursorPageResponseArticleDto.toDto(
         content,
         nextCursor,
