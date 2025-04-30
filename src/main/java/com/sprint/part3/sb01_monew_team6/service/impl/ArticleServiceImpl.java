@@ -27,13 +27,13 @@ public class ArticleServiceImpl implements ArticleService {
   @Transactional(readOnly=true)
   @Override
   public CursorPageResponseArticleDto searchArticles(CursorPageRequestArticleDto request) {
-    // cursor 파싱: null 또는 빈 문자열이면 null 그대로
+    // cursor : null 또는 빈 문자열이면 null 그대로
     Long cursor = Optional.ofNullable(request.cursor())
         .filter(s -> !s.isBlank())
         .map(Long::valueOf)
         .orElse(null);
 
-    // after 파싱: 이미 Instant 타입이므로 그냥 쓰거나 추가 포맷 체크
+    // after : 이미 Instant 타입
     Instant after = request.after();
 
     // 정렬 스펙 생성
