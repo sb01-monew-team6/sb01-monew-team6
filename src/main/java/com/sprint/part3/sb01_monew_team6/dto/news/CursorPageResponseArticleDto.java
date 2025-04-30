@@ -4,15 +4,28 @@ import java.time.Instant;
 import java.util.List;
 
 public record CursorPageResponseArticleDto(
-  String keyword,
-  Long interestId,
-  List<String> sourceIn,
-  Instant publishDateFrom,
-  Instant publishDateTo,
-  String orderBy,
-  String direction,
-  Long cursor,
-  Instant after
+    List<ArticleDto> content,    // 조회된 Article 목록
+    String nextCursor,           // 다음 페이지를 위한 커서 값
+    Instant nextAfter,           // 다음 페이지를 위한 after 타임스탬프
+    int size,                    // 현재 페이지 항목 수
+    long totalElements,          // 전체 데이터 건수
+    boolean hasNext              // 다음 페이지 존재 여부
 ) {
-
+  public static CursorPageResponseArticleDto toDto(
+      List<ArticleDto> content,
+      String nextCursor,
+      Instant nextAfter,
+      int size,
+      long totalElements,
+      boolean hasNext
+  ) {
+    return new CursorPageResponseArticleDto(
+        content,
+        nextCursor,
+        nextAfter,
+        size,
+        totalElements,
+        hasNext
+    );
+  }
 }
