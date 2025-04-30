@@ -2,12 +2,16 @@ package com.sprint.part3.sb01_monew_team6.storage.s3;
 
 import static java.nio.charset.StandardCharsets.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -24,6 +28,11 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Testcontainers
 class S3LogStorageTest {
+
+	@TempDir
+	private Path tempDir;
+
+	private S3LogStorage storage;
 
 	private static final String BUCKET = "monew";
 
@@ -70,5 +79,20 @@ class S3LogStorageTest {
 		);
 
 		assertThat(response.asUtf8String()).isEqualTo(content);
+	}
+
+	@Test
+	@DisplayName("")
+	void uploadZipSuccessfully() throws Exception {
+		//given
+		Path zip = tempDir.resolve("test.zip");
+		Files.write(zip, "data".getBytes());
+
+		//when
+		storage.uploadZip(zip);
+
+		//then
+		verify(s3Client, times(1))
+			.putObject(any(PutObjectRequest.class), eq(zip));
 	}
 }
