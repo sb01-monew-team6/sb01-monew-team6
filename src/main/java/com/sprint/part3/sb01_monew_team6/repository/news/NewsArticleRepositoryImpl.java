@@ -19,6 +19,7 @@ import org.springframework.stereotype.Repository;
 public class NewsArticleRepositoryImpl implements NewsArticleRepositoryCustom {
   private final JPAQueryFactory jpaQueryFactory;
 
+  //검색(데이터 조회) 쿼리
   @Override
   public List<NewsArticle> searchArticles(CursorPageRequestArticleDto request,
       OrderSpecifier<?> orderSpec, Long cursor, Instant after, int limit) {
@@ -101,5 +102,46 @@ public class NewsArticleRepositoryImpl implements NewsArticleRepositoryCustom {
         .orderBy(realOrder)
         .limit(limit)
         .fetch();
+  }
+
+  //카운트 쿼리
+  // cursor/after 는 전체 count 에 포함하지 않음
+  @Override
+  public long countArticles(CursorPageRequestArticleDto req) {
+    BooleanExpression where = newsArticle.isDeleted.eq(false);
+
+    if (req.keyword() != null) {
+      where = where.and(
+          newsArticle.articleTitle.containsIgnoreCase(req.keyword())
+              .or(newsArticle.articleSummary.containsIgnoreCase(req.keyword()))
+      );
+    }
+    if (req.interestId() != null) {
+      where = where.and(
+          newsArticle.id.in(
+              jpaQueryFactory.select(newsArticleInterest.newsArticle.id)
+                  .from(newsArticleInterest)
+                  .where(newsArticleInterest.interest.id.eq(req.interestId()))
+          )
+      );
+    }
+    if (req.sourceIn() != null && !req.sourceIn().isEmpty()) {
+      where = where.and(newsArticle.source.in(req.sourceIn()));
+    }
+    if (req.publishDateFrom() != null) {
+      where = where.and(newsArticle.articlePublishedDate.goe(req.publishDateFrom()));
+    }
+    if (req.publishDateTo() != null) {
+      where = where.and(newsArticle.articlePublishedDate.loe(req.publishDateTo()));
+    }
+
+    Long totalWrapper = jpaQueryFactory
+        .select(newsArticle.count())
+        .from(newsArticle)
+        .where(where)
+        .fetchOne();
+
+    long total = (totalWrapper != null ? totalWrapper : 0L);
+    return total;
   }
 }

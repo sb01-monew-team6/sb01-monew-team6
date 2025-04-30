@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.List;
 
 public interface NewsArticleRepositoryCustom {
+  //검색(데이터 조회) 쿼리
   List<NewsArticle> searchArticles(
       CursorPageRequestArticleDto request, // 검색 조건
       OrderSpecifier<?> orderSpec, // 정렬 스펙
@@ -14,4 +15,6 @@ public interface NewsArticleRepositoryCustom {
       Instant after,
       int limit
   );
+  //카운트 쿼리
+  long countArticles(CursorPageRequestArticleDto req);
 }
