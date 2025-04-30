@@ -24,7 +24,8 @@ WORKDIR /tmp
 # AWS CLI 설치
 RUN apk add --no-cache curl unzip && \
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-    unzip awscliv2.zip && ./aws/install \
+    unzip awscliv2.zip && \
+    ./aws/install && \
     ln -s /usr/local/bin/aws /usr/bin/aws
 
 # Docker build 시 전달받을 AWS 인증 정보
