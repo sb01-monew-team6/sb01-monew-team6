@@ -5,6 +5,7 @@ import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +29,9 @@ class CommentServiceTest {
 
     @Mock
     private CommentRepository commentRepository;
+
+    @Mock
+    private CommentLikeRepository commentLikeRepository;
 
     @Mock
     private NewsArticleRepository newsArticleRepository;
@@ -89,6 +94,41 @@ class CommentServiceTest {
         assertThat(result).isNotNull();
         assertThat(result).hasSize(2);
         assertThat(result.get(0).content()).isEqualTo("댓글 1");
+    }
+
+    @DisplayName("댓글 목록 조회 - 페이지네이션 적용 시 댓글 리스트 반환")
+    @Test
+    void findAll_withPagination_shouldReturnPagedComments() {
+        // given
+        Long articleId = 1L;
+        String orderBy = "createdAt";
+        String direction = "DESC";
+        Integer limit = 2;
+        Long requestUserId = 1L;
+
+        // 댓글 객체 생성
+        Comment comment1 = createTestComment(createTestUser(), createTestArticle(), "댓글 1");
+        Comment comment2 = createTestComment(createTestUser(), createTestArticle(), "댓글 2");
+        Comment comment3 = createTestComment(createTestUser(), createTestArticle(), "댓글 3");
+        List<Comment> commentList = new ArrayList<>(List.of(comment1, comment2, comment3));
+
+        // mock 설정
+        given(commentRepository.findAllByArticleId(articleId)).willReturn(commentList);
+        given(commentLikeRepository.countByCommentId(comment1.getId())).willReturn(0L);
+        given(commentLikeRepository.countByCommentId(comment2.getId())).willReturn(5L);
+        given(commentLikeRepository.countByCommentId(comment3.getId())).willReturn(10L);
+        given(commentLikeRepository.existsByCommentIdAndUserId(comment1.getId(), requestUserId)).willReturn(false);
+        given(commentLikeRepository.existsByCommentIdAndUserId(comment2.getId(), requestUserId)).willReturn(true);
+        given(commentLikeRepository.existsByCommentIdAndUserId(comment3.getId(), requestUserId)).willReturn(true);
+
+        // when
+        List<CommentDto> result = commentService.findAll(articleId, orderBy, direction, null, null, limit, requestUserId);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(2);  // 페이지당 2개의 댓글이 반환되어야 함
+        assertThat(result.get(0).content()).isEqualTo("댓글 1");  // 첫 번째 댓글
+        assertThat(result.get(1).content()).isEqualTo("댓글 2");  // 두 번째 댓글
     }
 
     private NewsArticle createTestArticle() {
