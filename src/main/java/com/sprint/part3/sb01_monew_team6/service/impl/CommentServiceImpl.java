@@ -8,6 +8,7 @@ import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
+import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
@@ -18,7 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,6 +32,7 @@ public class CommentServiceImpl implements CommentService {
     private final NewsArticleRepository newsArticleRepository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final CommentLikeRepository commentLikeRepository;
 
     @Override
     public CommentDto register(CommentRegisterRequest request) {
@@ -74,8 +78,48 @@ public class CommentServiceImpl implements CommentService {
             Integer limit,
             Long requestUserId
     ) {
-        // 일단 임시로 아무거나 리턴 (테스트 통과용)
-        return null;
+        // 1. orderBy 값 검증
+        if (!orderBy.equals("createdAt") && !orderBy.equals("likeCount")) {
+            throw new IllegalArgumentException("Invalid orderBy value");
+        }
+
+        // 2. direction 값 검증
+        if (!direction.equalsIgnoreCase("ASC") && !direction.equalsIgnoreCase("DESC")) {
+            throw new IllegalArgumentException("Invalid direction value");
+        }
+
+        // 3. 댓글 목록 조회
+        List<Comment> comments;
+
+        if (articleId != null) {
+            comments = commentRepository.findAllByArticleId(articleId);
+        } else {
+            comments = commentRepository.findAll(); // 특정 게시글 ID가 없으면 전체 댓글 조회
+        }
+
+        // 4. 댓글 정렬
+        if (direction.equalsIgnoreCase("ASC")) {
+            comments.sort((c1, c2) -> c1.getCreatedAt().compareTo(c2.getCreatedAt()));  // createdAt 기준 오름차순
+        } else {
+            comments.sort((c1, c2) -> c2.getCreatedAt().compareTo(c1.getCreatedAt()));  // createdAt 기준 내림차순
+        }
+
+        // 5. 댓글 목록을 CommentDto로 변환
+        List<CommentDto> commentDtos = comments.stream()
+                .limit(limit != null ? limit : 10)  // limit이 null이면 기본 10개 반환
+                .map(comment -> {
+                    // 좋아요 수 가져오기
+                    long likeCount = commentLikeRepository.countByCommentId(comment.getId());
+
+                    // 내가 좋아요를 눌렀는지 여부 확인
+                    boolean likedByMe = commentLikeRepository.existsByCommentIdAndUserId(comment.getId(), requestUserId);
+
+                    // CommentDto로 변환
+                    return CommentDto.fromEntity(comment, likeCount, likedByMe);
+                })
+                .collect(Collectors.toList());
+
+        return commentDtos;
     }
 
     @Override
@@ -87,9 +131,20 @@ public class CommentServiceImpl implements CommentService {
             throw new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND);
         }
 
+
+
         //  댓글 목록 조회 및 변환
         return commentRepository.findAllByArticleId(articleId).stream()
-                .map(CommentDto::fromEntity)
-                .toList();
+                .map(comment -> {
+                    // 좋아요 수 가져오기
+                    long likeCount = commentLikeRepository.countByCommentId(comment.getId());
+
+                    // 내가 좋아요를 눌렀는지 여부 확인
+                    boolean likedByMe = commentLikeRepository.existsByCommentIdAndUserId(comment.getId(), 1L);  // 예시로 1L을 requestUserId로 사용
+
+                    // CommentDto로 변환
+                    return CommentDto.fromEntity(comment, likeCount, likedByMe);
+                })
+                .collect(Collectors.toList());
     }
 }

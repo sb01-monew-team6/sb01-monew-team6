@@ -16,15 +16,15 @@ public record CommentDto(
         boolean likedByMe,
         Instant createdAt
 ) {
-    public static CommentDto fromEntity(Comment comment) {
+    public static CommentDto fromEntity(Comment comment, long likeCount, boolean likedByMe) {
         return CommentDto.builder()
                 .id(comment.getId())
                 .articleId(comment.getArticle().getId())
                 .userId(comment.getUser().getId())
                 .userNickname(comment.getUser().getNickname())
                 .content(comment.getContent())
-                .likeCount(0L)
-                .likedByMe(false)
+                .likeCount(likeCount)
+                .likedByMe(likedByMe)
                 .createdAt(comment.getCreatedAt())
                 .build();
     }
