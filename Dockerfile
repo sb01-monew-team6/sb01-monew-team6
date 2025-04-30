@@ -21,12 +21,12 @@ FROM amazoncorretto:17.0.7-alpine AS cert
 # 작업 디렉토리 설정
 WORKDIR /tmp
 
-# AWS CLI 설치 (S3 접근을 위해 필요)
+# AWS CLI 설치
 RUN apk add --no-cache curl unzip && \
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && ./aws/install
 
-# Docker build 시 전달받을 AWS 인증 정보 (S3 접근용)
+# Docker build 시 전달받을 AWS 인증 정보
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
 ARG AWS_REGION
