@@ -1,0 +1,84 @@
+package com.sprint.part3.sb01_monew_team6.handler;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
+import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
+import com.sprint.part3.sb01_monew_team6.exception.notification.NotificationDomainException;
+import com.sprint.part3.sb01_monew_team6.service.NotificationService;
+
+@ExtendWith(MockitoExtension.class)
+class NotificationEventHandlerTest {
+
+	@Mock
+	private NotificationService notificationService;
+
+	@InjectMocks
+	private NotificationEventHandler notificationEventHandler;
+
+	@Test
+	@DisplayName("createNotificationByEventHandler 가 알림 생성 로직을 호출한다")
+	public void createNotificationByEventHandler() throws Exception {
+		//given
+		NotificationCreateEvent event = new NotificationCreateEvent(
+			1L,
+			null,
+			ResourceType.COMMENT,
+			"유저",
+			null
+		);
+		doNothing().when(notificationService).createFromEvent(event);
+
+		//when
+		notificationEventHandler.handleNotificationCreateEvent(event);
+
+		//then
+		verify(notificationService, times(1)).createFromEvent(event);
+	}
+
+	@Test
+	@DisplayName("createNotificationByEventHandler 호출 시 userId 가 유효하지 않다면 예외를 던진다")
+	public void throwNotificationDomainExceptionWhenUserIdIsInvalidWhileCreateNotificationByEventHandler() throws
+		Exception {
+		//given
+		NotificationCreateEvent event = new NotificationCreateEvent(
+			null,
+			null,
+			ResourceType.COMMENT,
+			"유저",
+			null
+		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			notificationEventHandler.handleNotificationCreateEvent(event)
+		).isInstanceOf(NotificationDomainException.class);
+	}
+
+	@Test
+	@DisplayName("createNotificationByEventHandler 호출 시 INTEREST 리소스 타입일 때 content 혹은 articleCount 가 유효하지 않다면 예외를 던진다")
+	public void throwNotificationDomainExceptionWhenResourceTypeIsInterestAndContentOrArticleCountIsInvalidWhileCreateNotificationByEventHandler() throws
+		Exception {
+		//given
+		NotificationCreateEvent event = new NotificationCreateEvent(
+			1L,
+			null,
+			ResourceType.INTEREST,
+			"여행",
+			null
+		);
+
+		//when & then
+		assertThatThrownBy(() ->
+			notificationEventHandler.handleNotificationCreateEvent(event)
+		).isInstanceOf(NotificationDomainException.class);
+	}
+}
