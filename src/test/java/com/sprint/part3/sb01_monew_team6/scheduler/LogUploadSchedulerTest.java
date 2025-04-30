@@ -1,12 +1,12 @@
 package com.sprint.part3.sb01_monew_team6.scheduler;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,15 +23,23 @@ import com.sprint.part3.sb01_monew_team6.storage.s3.S3LogStorage;
 class LogUploadSchedulerTest {
 
 	@TempDir
-	Path tempDir;
+	private Path tempDir;
 
 	@Mock
 	private S3LogStorage storage;
 	@InjectMocks
 	private LogUploadScheduler scheduler;
 
+	@BeforeEach
+	void setUp() {
+		scheduler = new LogUploadScheduler(
+			storage,
+			tempDir.toString()
+		);
+	}
+
 	@Test
-	@DisplayName("")
+	@DisplayName("uploadLogEveryWeekSuccessfully 정상 호출 시 정상 동작한다")
 	void uploadLogEveryWeekSuccessfully() throws Exception {
 		//given
 		LocalDate now = LocalDate.now();
@@ -40,6 +48,8 @@ class LogUploadSchedulerTest {
 			Files.write(file, ("content" + i).getBytes());
 		}
 
+		doNothing().when(storage).uploadZip(any(Path.class));
+
 		//when
 		scheduler.uploadLogEveryWeek();
 
@@ -47,8 +57,16 @@ class LogUploadSchedulerTest {
 		String zipName = String.format("logs-%s-to-%s.zip",
 			now.minusDays(7), now.minusDays(1));
 		Path zipPath = tempDir.resolve(zipName);
-
 		assertThat(Files.exists(zipPath)).isTrue();
+
+		try (ZipFile zipFile = new ZipFile(zipPath.toFile())) {
+			assertThat(zipFile.size()).isEqualTo(7);
+			for (int i = 1; i <= 7; ++i) {
+				String entryName = "application-" + now.minusDays(i) + ".log";
+				assertThat(zipFile.getEntry(entryName)).isNotNull();
+			}
+		}
+
 		verify(storage, times(1)).uploadZip(zipPath);
 	}
 }
