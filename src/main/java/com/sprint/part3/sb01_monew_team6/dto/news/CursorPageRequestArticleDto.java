@@ -1,13 +1,14 @@
 package com.sprint.part3.sb01_monew_team6.dto.news;
 
 import java.time.Instant;
+import java.util.List;
 import lombok.Builder;
 
 @Builder
 public record CursorPageRequestArticleDto(
     String keyword, //검색어
     Long interestId, //관심사 ID
-    String sourceIn, //출처
+    List<String> sourceIn, //출처
     Instant publishDateFrom, //날짜 시작(범위)
     Instant publishDateTo, //날짜 끝(범위)
     String orderBy, //정렬 속성 이름

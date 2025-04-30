@@ -8,8 +8,8 @@ import java.util.List;
 
 public interface NewsArticleRepositoryCustom {
   List<NewsArticle> searchArticles(
-      CursorPageRequestArticleDto request,
-      OrderSpecifier<?> orderSpec,
+      CursorPageRequestArticleDto request, // 검색 조건
+      OrderSpecifier<?> orderSpec, // 정렬 스펙
       Long cursor,
       Instant after,
       int limit
