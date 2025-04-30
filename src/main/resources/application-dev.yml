@@ -24,6 +24,9 @@ spring:
 #      host: ${MONGO_DB_HOST} # localhost
 #      port: ${MONGO_DB_PORT} # 27017
 #      auto-index-creation: true
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
 
 logging:
   level:
