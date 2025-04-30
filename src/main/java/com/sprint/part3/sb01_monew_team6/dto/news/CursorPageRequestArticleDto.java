@@ -9,6 +9,7 @@ import lombok.Builder;
 
 @Builder
 public record CursorPageRequestArticleDto(
+    Long userId, //요청자 ID
     String keyword, //검색어
     Long interestId, //관심사 ID
     List<String> sourceIn, //출처
@@ -22,7 +23,6 @@ public record CursorPageRequestArticleDto(
     Instant after, //보조 커서(createdAt) 값
     @NotNull @Min(1)
     Integer limit //커서 페이지 크기
-    //Long Monew_Request_User_ID //요청자 ID
 ) {
 
 }

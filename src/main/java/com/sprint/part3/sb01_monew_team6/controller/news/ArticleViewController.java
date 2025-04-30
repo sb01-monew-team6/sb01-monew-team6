@@ -5,8 +5,8 @@ import com.sprint.part3.sb01_monew_team6.service.news.impl.ArticleViewImplServic
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -18,7 +18,7 @@ public class ArticleViewController {
 
   @PostMapping
   public ArticleViewDto viewArticle(
-      @PathVariable Long articleId, @RequestParam("Monew-Request-User-ID") Long userId){
+      @PathVariable Long articleId, @RequestHeader("Monew-Request-User-ID") Long userId){
     return articleViewImplService.viewArticle(articleId, userId);
   }
 }

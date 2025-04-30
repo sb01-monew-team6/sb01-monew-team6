@@ -33,6 +33,7 @@ public class NewsArticleRepositoryImplTest {
   @Autowired
   private NewsArticleInterestRepository newsArticleInterestRepository;
 
+
   private NewsArticle a1,a2,a3;
   private Interest iSport;
 
@@ -135,7 +136,7 @@ public class NewsArticleRepositoryImplTest {
   void seartch_withKeyword_onlySpring() {
     // Given
     CursorPageRequestArticleDto req = new CursorPageRequestArticleDto(
-        "Spring",null,null,null,null,"publishDate","DESC",null,null,5
+        1L,"Spring",null,null,null,null,"publishDate","DESC",null,null,5
     );
     // When
     List<NewsArticle> res = newsArticleRepository.searchArticles(req,null,null,null,5);
@@ -147,6 +148,7 @@ public class NewsArticleRepositoryImplTest {
   void nokeyword_totalCount_3() {
     // Given
     CursorPageRequestArticleDto req = new CursorPageRequestArticleDto(
+        1L,
         null,null,null,
         Instant.parse("2025-04-01T00:00:00Z"),
         Instant.parse("2025-04-03T23:59:59Z"),

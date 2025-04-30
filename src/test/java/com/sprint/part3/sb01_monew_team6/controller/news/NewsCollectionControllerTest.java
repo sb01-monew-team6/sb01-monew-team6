@@ -1,4 +1,4 @@
-package com.sprint.part3.sb01_monew_team6.controller;
+package com.sprint.part3.sb01_monew_team6.controller.news;
 
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.sprint.part3.sb01_monew_team6.controller.news.NewsCollectionController;
 import com.sprint.part3.sb01_monew_team6.exception.GlobalExceptionHandler;
 import com.sprint.part3.sb01_monew_team6.service.news.impl.NewsCollectionImplService;
 import org.junit.jupiter.api.DisplayName;

@@ -24,6 +24,9 @@ public enum ErrorCode {
 	NEWS_BATCH_NO_NEWS_EXCEPTION("Batch - 저장 대상 뉴스가 없습니다."),
 	NEWS_ARTICLE_NOT_FOUND_EXCEPTION("기사가 존재하지 않습니다."),
 	NEWS_NOT_USER_FOUND_EXCEPTION("유저가 존재하지 않습니다."),
+	NEWS_LIMIT_MORE_THAN_ONE_EXCEPTION("limit은 1 이상의 값이어야 합니다."),
+	NEWS_ORDERBY_IS_NOT_SUPPORT_EXCEPTION("지원하지 않는 orderBy 입니다."),
+	NEWS_CALL_NEWSARTICLEREPOSITORY_EXCEPTION("NewsArticleRepository 호출 중 에러"),
 	//notification
 	NOTIFICATION_INVALID_EXCEPTION("유효하지 않은 요청입니다."),
 	NOTIFICATION_USER_NOT_FOUND_EXCEPTION("존재하지 않는 유저입니다."),

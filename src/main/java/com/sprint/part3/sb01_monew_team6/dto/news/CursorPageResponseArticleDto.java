@@ -8,7 +8,7 @@ public record CursorPageResponseArticleDto(
     String nextCursor,           // 다음 페이지를 위한 커서 값
     Instant nextAfter,           // 다음 페이지를 위한 after 타임스탬프
     int size,                    // 현재 페이지 항목 수
-    long totalElements,          // 전체 데이터 건수
+    Long totalElements,          // 전체 데이터 건수
     boolean hasNext              // 다음 페이지 존재 여부
 ) {
   public static CursorPageResponseArticleDto toDto(
@@ -16,7 +16,7 @@ public record CursorPageResponseArticleDto(
       String nextCursor,
       Instant nextAfter,
       int size,
-      long totalElements,
+      Long totalElements,
       boolean hasNext
   ) {
     return new CursorPageResponseArticleDto(
