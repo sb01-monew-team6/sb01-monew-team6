@@ -19,7 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -98,14 +98,25 @@ public class CommentServiceImpl implements CommentService {
         }
 
         // 4. 댓글 정렬
+        List<Comment> modifiableComments = new ArrayList<>(comments);
         if (direction.equalsIgnoreCase("ASC")) {
-            comments.sort((c1, c2) -> c1.getCreatedAt().compareTo(c2.getCreatedAt()));  // createdAt 기준 오름차순
+            modifiableComments.sort((c1, c2) -> {
+                if (c1.getCreatedAt() == null) {
+                    return -1;  // createdAt이 null이면 가장 먼저 오게 처리
+                }
+                return c1.getCreatedAt().compareTo(c2.getCreatedAt());
+            });
         } else {
-            comments.sort((c1, c2) -> c2.getCreatedAt().compareTo(c1.getCreatedAt()));  // createdAt 기준 내림차순
+            modifiableComments.sort((c1, c2) -> {
+                if(c1.getCreatedAt() == null) {
+                    return 1; // createdAt이 null이면 가장 뒤로 오게 처리
+                }
+                return c2.getCreatedAt().compareTo(c1.getCreatedAt());
+            });
         }
 
         // 5. 댓글 목록을 CommentDto로 변환
-        List<CommentDto> commentDtos = comments.stream()
+        List<CommentDto> commentDtos = modifiableComments.stream()
                 .limit(limit != null ? limit : 10)  // limit이 null이면 기본 10개 반환
                 .map(comment -> {
                     // 좋아요 수 가져오기
