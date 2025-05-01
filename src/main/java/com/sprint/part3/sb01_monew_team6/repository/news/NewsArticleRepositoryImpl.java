@@ -92,7 +92,7 @@ public class NewsArticleRepositoryImpl implements NewsArticleRepositoryCustom {
     }
     // 특정 시간 이전(createdAt < after) 필터
     if (after != null) {
-      where = where.and(newsArticle.createdAt.lt(after));
+      where = where.and(newsArticle.createdAt.gt(after));
     }
 
 
