@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.service.news.impl;
 
 import static com.sprint.part3.sb01_monew_team6.entity.QNewsArticle.newsArticle;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
@@ -16,8 +17,10 @@ import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.news.ArticleService;
+import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,7 +33,10 @@ import org.springframework.data.domain.SliceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -124,7 +130,54 @@ public class ArticleServiceImpl implements ArticleService {
   }
   //백업 복구
   @Override
-  public List<ArticleRestoreResultDto> restore(LocalDate from, LocalDate to){
-    return List.of(new ArticleRestoreResultDto(from, List.of(1L), 1L));
+  public List<ArticleRestoreResultDto> restore(LocalDate from, LocalDate to) throws IOException {
+    // 복구 결과를 날짜별로 담을 리스트 생성
+    List<ArticleRestoreResultDto> restoreArticles = new ArrayList<>();
+
+    // from부터 to까지 하루씩 순회하며 백업 파일 처리
+    for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
+      // 2.1) S3에서 날짜별 백업 JSON 가져오기
+      String key = String.format("backup/%s.json", date);
+      GetObjectRequest getReq = GetObjectRequest.builder()
+          .bucket(bucketName)    // S3 버킷 이름
+          .key(key)              // 객체 키 (backup/2025-05-02.json 등)
+          .build();
+      ResponseBytes<GetObjectResponse> resp = s3Client.getObjectAsBytes(getReq);
+
+      // JSON을 NewsArticle 리스트로 역직렬화
+      List<NewsArticle> backups = objectMapper.readValue(
+          resp.asByteArray(), new TypeReference<List<NewsArticle>>() {}
+      );
+
+      // 이 날짜에 새로 복구된 기사 ID를 모을 리스트
+      List<Long> restoredIds = new ArrayList<>();
+
+      // 백업된 각 기사에 대해 DB 존재 여부 확인 후 복구
+      for (NewsArticle backup : backups) {
+        if (!newsArticleRepository.existsBySourceUrl(backup.getSourceUrl())) {
+          NewsArticle toSave = NewsArticle.builder()
+              .source(backup.getSource())
+              .sourceUrl(backup.getSourceUrl())
+              .articleTitle(backup.getArticleTitle())
+              .articlePublishedDate(backup.getArticlePublishedDate())
+              .articleSummary(backup.getArticleSummary())
+              .isDeleted(false)    // 논리삭제 초기화
+              .build();
+
+          // 복구 엔티티 저장 및 ID 수집
+          NewsArticle saved = newsArticleRepository.save(toSave);
+          restoredIds.add(saved.getId());
+        }
+      }
+
+      // 날짜 복구 결과 DTO 생성 및 리스트에 추가
+      restoreArticles.add(new ArticleRestoreResultDto(
+          date,
+          restoredIds,
+          restoredIds.size()
+      ));
+    }
+
+    return restoreArticles;
   }
 }

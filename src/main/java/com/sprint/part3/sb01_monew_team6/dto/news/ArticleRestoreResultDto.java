@@ -8,7 +8,7 @@ import lombok.Builder;
 public record ArticleRestoreResultDto(
     LocalDate restoreDate,
     List<Long> restoredArticleIds,
-    Long restoredArticleCount
+    long restoredArticleCount
 ) {
 
 }

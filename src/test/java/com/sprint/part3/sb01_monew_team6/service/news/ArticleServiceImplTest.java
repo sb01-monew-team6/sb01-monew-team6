@@ -1,5 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.service.news;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -7,6 +9,9 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import com.fasterxml.jackson.core.type.TypeReference;
+
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
@@ -29,7 +34,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Slice;
 import org.springframework.test.util.ReflectionTestUtils;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 @ExtendWith(MockitoExtension.class)
 public class ArticleServiceImplTest {
@@ -147,14 +155,31 @@ public class ArticleServiceImplTest {
   @Test
   @DisplayName("restore(): DB에 없는 백업 기사만 복구하고 카운트 반환")
   void restore_addsMissingOnly() throws Exception {
-    // Given
+    // given
     LocalDate date = LocalDate.of(2025, 5, 2);
+    byte[] bytes = "[{\"id\":999}]".getBytes();
 
-    // When
+    GetObjectResponse dummyResp = GetObjectResponse.builder().build();
+    ResponseBytes<GetObjectResponse> respBytes =
+        ResponseBytes.fromByteArray(dummyResp, bytes);
+
+    when(s3Client.getObjectAsBytes(any(GetObjectRequest.class)))
+        .thenReturn(respBytes);
+
+    when(objectMapper.readValue(any(byte[].class), any(TypeReference.class)))
+        .thenReturn(List.of(new NewsArticle()));
+    when(newsArticleRepository.existsBySourceUrl(any())).thenReturn(false);
+    when(newsArticleRepository.save(any(NewsArticle.class)))
+        .thenAnswer(inv -> {
+          NewsArticle a = inv.getArgument(0, NewsArticle.class);
+          ReflectionTestUtils.setField(a, "id", 999L);
+          return a;
+        });
+
+    // when
     List<ArticleRestoreResultDto> result = articleService.restore(date, date);
 
-
-    // Then
+    // then
     assertThat(result).hasSize(1);
     assertThat(result.get(0).restoredArticleCount()).isEqualTo(1);
   }
@@ -162,13 +187,96 @@ public class ArticleServiceImplTest {
   @Test
   @DisplayName("restore(): 이미 DB에 있으면 save 호출 없이 카운트 0 반환")
   void restore_skipsExisting() throws Exception {
+    // given
+    LocalDate date = LocalDate.of(2025, 5, 2);
+    byte[] bytes = "[{\"sourceUrl\":\"u1\"}]".getBytes();
+    GetObjectResponse dummyResp = GetObjectResponse.builder().build();
+    ResponseBytes<GetObjectResponse> respBytes =
+        ResponseBytes.fromByteArray(dummyResp, bytes);
 
+    // S3에서 바이트 배열 받아오기
+    when(s3Client.getObjectAsBytes(any(GetObjectRequest.class)))
+        .thenReturn(respBytes);
+
+    // JSON → List<NewsArticle>
+    NewsArticle backup = new NewsArticle();
+    ReflectionTestUtils.setField(backup, "sourceUrl", "u1");
+    when(objectMapper.readValue(eq(bytes), any(TypeReference.class)))
+        .thenReturn(List.of(backup));
+
+    // 이미 존재한다고 응답
+    when(newsArticleRepository.existsBySourceUrl("u1")).thenReturn(true);
+
+    // when
+    List<ArticleRestoreResultDto> results = articleService.restore(date, date);
+
+    // then
+    assertThat(results).hasSize(1);
+    assertThat(results.get(0).restoredArticleCount()).isZero();
+    verify(newsArticleRepository, never()).save(any(NewsArticle.class));
   }
 
   @Test
   @DisplayName("restore(): 다중 날짜 범위 처리")
   void restore_multipleDays() throws Exception {
+    // given
+    LocalDate from = LocalDate.of(2025, 5, 1);
+    LocalDate to   = LocalDate.of(2025, 5, 2);
 
+    // Day1 백업
+    byte[] b1 = "[{\"sourceUrl\":\"u1\"}]".getBytes();
+    GetObjectResponse r1 = GetObjectResponse.builder().build();
+    ResponseBytes<GetObjectResponse> rb1 =
+        ResponseBytes.fromByteArray(r1, b1);
+    NewsArticle ba1 = new NewsArticle();
+    ReflectionTestUtils.setField(ba1, "sourceUrl", "u1");
+
+    // Day2 백업
+    byte[] b2 = "[{\"sourceUrl\":\"u2\"}]".getBytes();
+    GetObjectResponse r2 = GetObjectResponse.builder().build();
+    ResponseBytes<GetObjectResponse> rb2 =
+        ResponseBytes.fromByteArray(r2, b2);
+    NewsArticle ba2 = new NewsArticle();
+    ReflectionTestUtils.setField(ba2, "sourceUrl", "u2");
+
+    // S3 호출 순서대로 두 번 리턴
+    when(s3Client.getObjectAsBytes(any(GetObjectRequest.class)))
+        .thenReturn(rb1, rb2);
+
+    // JSON → 객체 리스트 순서대로 리턴
+    when(objectMapper.readValue(any(byte[].class), any(TypeReference.class)))
+        .thenReturn(List.of(ba1), List.of(ba2));
+
+    // DB에 없다고 응답
+    when(newsArticleRepository.existsBySourceUrl("u1")).thenReturn(false);
+    when(newsArticleRepository.existsBySourceUrl("u2")).thenReturn(false);
+
+    // save 시 id 부여
+    when(newsArticleRepository.save(any(NewsArticle.class)))
+        .thenAnswer(inv -> {
+          NewsArticle a = inv.getArgument(0, NewsArticle.class);
+          String url = (String) ReflectionTestUtils.getField(a, "sourceUrl");
+          long id = url.equals("u1") ? 1L : 2L;
+          ReflectionTestUtils.setField(a, "id", id);
+          return a;
+        });
+
+    // when
+    List<ArticleRestoreResultDto> results = articleService.restore(from, to);
+
+    // then
+    assertThat(results).hasSize(2);
+
+    assertThat(results.get(0).restoreDate()).isEqualTo(from);
+    assertThat(results.get(0).restoredArticleCount()).isEqualTo(1);
+    assertThat(results.get(0).restoredArticleIds()).containsExactly(1L);
+
+    assertThat(results.get(1).restoreDate()).isEqualTo(to);
+    assertThat(results.get(1).restoredArticleCount()).isEqualTo(1);
+    assertThat(results.get(1).restoredArticleIds()).containsExactly(2L);
+
+    verify(s3Client, times(2)).getObjectAsBytes(any(GetObjectRequest.class));
+    verify(newsArticleRepository, times(2)).save(any(NewsArticle.class));
   }
 
 }
