@@ -10,9 +10,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleDto;
+import com.sprint.part3.sb01_monew_team6.dto.news.ArticleRestoreResultDto;
 import com.sprint.part3.sb01_monew_team6.exception.GlobalExceptionHandler;
 import com.sprint.part3.sb01_monew_team6.service.news.ArticleService;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -100,5 +102,21 @@ public class ArticleControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.contents", hasSize(0)))
         .andExpect(jsonPath("$.totalElements").value(0));
+  }
+  //백업 복구
+  @Test
+  @DisplayName("GET /api/articles/restore 호출 시 정상 JSON 반환")
+  void getRestore() throws Exception {
+    // Given
+    LocalDate d = LocalDate.of(2025,4,30);
+    var dto = new ArticleRestoreResultDto(d, List.of(1L), 1);
+    given(articleService.restore(d, d)).willReturn(List.of(dto));
+
+    // When & Then
+    mvc.perform(get("/api/articles/restore")
+            .param("from","2025-04-30T00:00:00")
+            .param("to","2025-04-30T23:59:59"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].restoredArticleCount").value(1));
   }
 }
