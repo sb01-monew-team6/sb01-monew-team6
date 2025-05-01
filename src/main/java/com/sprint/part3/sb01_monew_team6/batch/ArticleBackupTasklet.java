@@ -3,6 +3,9 @@ package com.sprint.part3.sb01_monew_team6.batch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.StepContribution;
@@ -22,13 +25,25 @@ public class ArticleBackupTasklet implements Tasklet {
 
   @Override
   public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-    List<NewsArticle> articles = newsArticleRepository.findAllByCreatedAtBetween(null,null);
+    //00:00 ~ 익일 00:00 UTC 범위 계산
+    LocalDate today = LocalDate.now();
+    Instant start = today.atStartOfDay().toInstant(ZoneOffset.UTC);
+    Instant end = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+
+    // 해당 기간 기사 조회
+    List<NewsArticle> articles = newsArticleRepository.findAllByCreatedAtBetween(start, end);
+
+    // JSON 직렬화
     String json = objectMapper.writeValueAsString(articles);
 
-    s3Client.putObject(
-        PutObjectRequest.builder().bucket(bucketName).key("stub.json").build(),
-        RequestBody.fromString(json)
-    );
+    // S3에 업로드
+    String key = String.format("backup/%s.json", today);
+    PutObjectRequest request = PutObjectRequest.builder()
+        .bucket(bucketName)
+        .key(key)
+        .build();
+    s3Client.putObject(request, RequestBody.fromString(json));
+
     return RepeatStatus.FINISHED;
   }
 }
