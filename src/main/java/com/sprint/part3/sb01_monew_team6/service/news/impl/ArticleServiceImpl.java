@@ -7,6 +7,7 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleDto;
+import com.sprint.part3.sb01_monew_team6.dto.news.ArticleRestoreResultDto;
 import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageRequestArticleDto;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
@@ -16,6 +17,7 @@ import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.news.ArticleService;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -119,5 +121,10 @@ public class ArticleServiceImpl implements ArticleService {
     } else {
       return new OrderSpecifier<>(dir, newsArticle.id);
     }
+  }
+  //백업 복구
+  @Override
+  public List<ArticleRestoreResultDto> restore(LocalDate from, LocalDate to){
+    return List.of(new ArticleRestoreResultDto(from, List.of(1L), 1L));
   }
 }
