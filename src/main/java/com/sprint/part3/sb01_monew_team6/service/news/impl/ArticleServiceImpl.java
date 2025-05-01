@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.service.news.impl;
 
 import static com.sprint.part3.sb01_monew_team6.entity.QNewsArticle.newsArticle;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
@@ -20,12 +21,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.s3.S3Client;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +37,12 @@ public class ArticleServiceImpl implements ArticleService {
   private final NewsArticleRepository newsArticleRepository;
   private final CommentRepository commentRepository;
   private final PageResponseMapper pageResponseMapper;
+  private final S3Client s3Client;
+  @Value("${cloud.aws.s3.bucket}")
+  private final String bucketName;
+  private final ObjectMapper objectMapper;
 
+  //목록 조회 : 페이지네이션
   @Transactional(readOnly=true)
   @Override
   public PageResponse<ArticleDto> searchArticles(CursorPageRequestArticleDto request) {
