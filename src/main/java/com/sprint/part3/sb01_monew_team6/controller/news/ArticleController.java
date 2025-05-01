@@ -73,7 +73,6 @@ public class ArticleController {
       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
       LocalDateTime to
   ) throws IOException {
-    // LocalDateTime → LocalDate 로 변환
     return articleService.restore(
         from.toLocalDate(),
         to.toLocalDate()
