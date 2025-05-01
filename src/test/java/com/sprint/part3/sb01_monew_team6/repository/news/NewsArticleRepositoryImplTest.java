@@ -3,7 +3,8 @@ package com.sprint.part3.sb01_monew_team6.repository.news;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE;
 
-import com.sprint.part3.sb01_monew_team6.config.TestDataJpaConfig;
+import com.sprint.part3.sb01_monew_team6.config.JpaConfig;
+import com.sprint.part3.sb01_monew_team6.config.QueryDslConfig;
 import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageRequestArticleDto;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
@@ -22,7 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@Import(TestDataJpaConfig.class)
+@Import({ QueryDslConfig.class, JpaConfig.class })
 @AutoConfigureTestDatabase(replace = NONE)
 public class NewsArticleRepositoryImplTest {
 
@@ -158,5 +159,21 @@ public class NewsArticleRepositoryImplTest {
     long total = newsArticleRepository.countArticles(req);
     // Then
     assertThat(total).isEqualTo(3L);
+  }
+  @Test
+  @DisplayName("searchArticles : interestId 필터링 (a2만 반환)")
+  void seartch_withInterestId_onlyA2() {
+    //given
+    CursorPageRequestArticleDto req = CursorPageRequestArticleDto.builder()
+        .interestId(iSport.getId())
+        .orderBy("publishDate")
+        .direction("DESC")
+        .limit(10)
+        .build();
+    //when
+    List<NewsArticle> result = newsArticleRepository.searchArticles(req, null, null, null, 10);
+
+    //then
+    assertThat(result).hasSize(1).containsExactly(a2);
   }
 }
