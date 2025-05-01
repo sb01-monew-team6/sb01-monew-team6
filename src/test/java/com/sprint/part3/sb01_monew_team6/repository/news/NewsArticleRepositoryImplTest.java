@@ -180,7 +180,7 @@ public class NewsArticleRepositoryImplTest {
     assertThat(result).hasSize(1).containsExactly(a2);
   }
   @Test
-  @DisplayName("earchArticles: sourceIn 필터링 (NAVER만)")
+  @DisplayName("searchArticles: sourceIn 필터링 (NAVER만)")
   void sereach_withSourceIn_onlyNAVER() {
     //given
     CursorPageRequestArticleDto req = CursorPageRequestArticleDto.builder()
@@ -279,8 +279,8 @@ public class NewsArticleRepositoryImplTest {
         Order.ASC, QNewsArticle.newsArticle.articleTitle);
 
     CursorPageRequestArticleDto req = CursorPageRequestArticleDto.builder()
-        .orderBy("publishDate")  // 무시당함
-        .direction("DESC")       // 무시당함
+        .orderBy("publishDate")
+        .direction("DESC")
         .limit(10)
         .build();
 
