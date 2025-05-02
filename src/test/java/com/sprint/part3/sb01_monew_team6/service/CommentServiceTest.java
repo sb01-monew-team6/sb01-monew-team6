@@ -6,6 +6,7 @@ import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotSoftDeletedException;
 import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -76,6 +80,94 @@ class CommentServiceTest {
         assertThat(result.content()).isEqualTo("테스트 댓글입니다.");
     }
 
+    @DisplayName("댓글 등록 - 잘못된 articleId일 경우 예외 발생")
+    @Test
+    void registerComment_withInvalidArticleId_shouldThrowNewsException() {
+        // given
+        CommentRegisterRequest request = new CommentRegisterRequest(999L, 1L, "테스트 댓글");
+
+        // mock
+        given(newsArticleRepository.findById(999L)).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(NewsException.class, () -> commentService.register(request));
+    }
+
+    @DisplayName("댓글 등록 - 잘못된 userId일 경우 예외 발생")
+    @Test
+    void registerComment_withInvalidUserId_shouldThrowNewsException() {
+        // given
+        CommentRegisterRequest request = CommentRegisterRequest.builder()
+                .articleId(1L)
+                .userId(999L)   // 존재하지 않는 userId
+                .content("테스트 댓글")
+                .build();
+
+        // mock
+        given(userRepository.findById(999L)).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(NewsException.class, () -> commentService.register(request));
+    }
+
+    @DisplayName("댓글 등록 실패 - content가 비어있을 경우 예외 발생")
+    @Test
+    void registerComment_withBlankContent_shouldThrowException() {
+        CommentRegisterRequest request = new CommentRegisterRequest(1L, 1L, " ");
+        given(commentRepository.save(any(Comment.class))).willThrow(new IllegalArgumentException("Content cannot be empty"));
+
+        assertThrows(NewsException.class, () -> commentService.register(request));
+    }
+
+    @DisplayName("댓글 등록 실패 - content가 너무 길 경우 예외 발생")
+    @Test
+    void registerComment_withTooLongContent_shouldThrowException() {
+        // given
+        String longContent = "a".repeat(1001); // 1001자
+        CommentRegisterRequest request = new CommentRegisterRequest(1L, 1L, longContent);
+
+        // when & then
+        assertThrows(NewsException.class, () -> commentService.register(request));
+    }
+
+    @DisplayName("댓글 등록 실패 - articleId가 null일 경우 예외 발생")
+    @Test
+    void registerComment_withNullArticleId_shouldThrowException() {
+        // given
+        CommentRegisterRequest request = new CommentRegisterRequest(null, 1L, "테스트 댓글");
+
+        // when & then
+        assertThrows(NewsException.class, () -> commentService.register(request));
+    }
+
+    @DisplayName("댓글 목록 조회 실패 - 잘못된 orderBy일 경우 예외 발생")
+    @Test
+    void findAll_withInvalidOrderBy_shouldThrowException() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            commentService.findAll(1L, "invalidOrderBy", "ASC", null, null, 10, 1L);
+        });
+    }
+
+    @DisplayName("댓글 목록 조회 실패 - 잘못된 direction일 경우 예외 발생")
+    @Test
+    void findAll_withInvalidDirection_shouldThrowException() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            commentService.findAll(1L, "createdAt", "INVALID", null, null, 10, 1L);
+        });
+    }
+
+    @DisplayName("댓글 목록 조회 실패 - 존재하지 않는 articleId일 경우 예외 발생")
+    @Test
+    void getComments_withInvalidArticleId_shouldThrowNewsException() {
+        // given
+        Long invalidArticleId = 999L;
+        given(newsArticleRepository.existsById(invalidArticleId)).willReturn(false);
+
+        // when & then
+        assertThrows(NewsException.class, () -> commentService.getComments(invalidArticleId));
+    }
+
+
     @DisplayName("댓글 목록 조회 - 정상 조회 시 댓글 리스트 반환")
     @Test
     void getComments_shouldReturnCommentList() {
@@ -116,6 +208,7 @@ class CommentServiceTest {
         List<Comment> commentList = new ArrayList<>(List.of(comment1, comment2, comment3));
 
         // mock 설정
+        given(newsArticleRepository.existsById(articleId)).willReturn(true);
         given(commentRepository.findAllByArticleId(articleId)).willReturn(commentList);
         given(commentLikeRepository.countByCommentId(comment1.getId())).willReturn(0L);
         given(commentLikeRepository.countByCommentId(comment2.getId())).willReturn(5L);
@@ -133,6 +226,133 @@ class CommentServiceTest {
         assertThat(result.get(0).content()).isEqualTo("댓글 1");  // 첫 번째 댓글
         assertThat(result.get(1).content()).isEqualTo("댓글 2");  // 두 번째 댓글
     }
+
+    @DisplayName("댓글 목록 조회 - articleId가 null일 경우 전체 댓글 조회")
+    @Test
+    void getComments_withNullArticleId_shouldReturnAllComments() {
+        // given
+        List<Comment> commentList = List.of(createTestComment(createTestUser(), createTestArticle(), "댓글 1"));
+        given(commentRepository.findAll()).willReturn(commentList);
+
+        // when
+        List<CommentDto> result = commentService.getComments(null);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).content()).isEqualTo("댓글 1");
+    }
+
+    @DisplayName("댓글 목록 조회 - createdAt이 null인 댓글 포함 시 ASC 정렬 정상 처리")
+    @Test
+    void findAll_withNullCreatedAt_shouldSortCorrectly_ASC() {
+        Comment nullCreated = commentWithCreatedAt(null);
+        Comment validCreated = commentWithCreatedAt(Instant.now());
+
+        given(newsArticleRepository.existsById(1L)).willReturn(true);
+        given(commentRepository.findAllByArticleId(1L)).willReturn(List.of(validCreated, nullCreated));
+        given(commentLikeRepository.countByCommentId(any())).willReturn(0L);
+        given(commentLikeRepository.existsByCommentIdAndUserId(any(), any())).willReturn(false);
+
+        List<CommentDto> result = commentService.findAll(1L, "createdAt", "ASC", null, null, 10, 1L);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).createdAt()).isNull(); // null createdAt이 먼저 나와야 ASC 정렬 성공
+    }
+
+    @DisplayName("댓글 목록 조회 - limit이 null이면 기본값 10개로 제한")
+    @Test
+    void findAll_withNullLimit_shouldDefaultTo10() {
+        // given
+        Long articleId = 1L;
+        String orderBy = "createdAt";
+        String direction = "ASC";
+        Long requestUserId = 1L;
+
+        // 11개 댓글 생성
+        List<Comment> commentList = new ArrayList<>();
+        for (int i = 1; i <= 11; i++) {
+            Comment comment = createTestComment(createTestUser(), createTestArticle(), "댓글 " + i);
+            commentList.add(comment);
+        }
+
+        given(newsArticleRepository.existsById(articleId)).willReturn(true);
+        given(commentRepository.findAllByArticleId(articleId)).willReturn(commentList);
+        given(commentLikeRepository.countByCommentId(any())).willReturn(0L);
+        given(commentLikeRepository.existsByCommentIdAndUserId(any(), any())).willReturn(false);
+
+        // when
+        List<CommentDto> result = commentService.findAll(articleId, orderBy, direction, null, null, null, requestUserId);
+
+        // then
+        assertThat(result).hasSize(10); // 기본 limit = 10
+    }
+
+    @DisplayName("댓글 목록 조회 - likeCount 기준 DESC 정렬")
+    @Test
+    void findAll_sortByLikeCountDesc_shouldSortProperly() {
+        // 댓글 3개 생성 (내용만 다르고 ID는 아래에서 강제 설정)
+        Comment commentLow = createTestComment(createTestUser(), createTestArticle(), "댓글 1");
+        Comment commentMid = createTestComment(createTestUser(), createTestArticle(), "댓글 2");
+        Comment commentHigh = createTestComment(createTestUser(), createTestArticle(), "댓글 3");
+
+        // ID 수동 세팅 (Mockito 매칭 위해 필요)
+        forceSetId(commentLow, 1L);
+        forceSetId(commentMid, 2L);
+        forceSetId(commentHigh, 3L);
+
+        System.out.println("commentHigh ID (리플렉션) = " + getId(commentHigh));
+        System.out.println("commentHigh.getId() = " + commentHigh.getId());
+
+        // 확인용 로그
+        System.out.println("commentHigh ID = " + getId(commentHigh));
+
+        given(newsArticleRepository.existsById(1L)).willReturn(true);
+
+        given(commentRepository.findAllByArticleId(1L))
+                .willReturn(List.of(commentHigh, commentMid, commentLow));
+
+        given(commentLikeRepository.countByCommentId(anyLong()))
+                .willReturn(10L, 5L, 0L);
+
+        given(commentLikeRepository.existsByCommentIdAndUserId(any(), any())).willReturn(false);
+
+        List<CommentDto> result = commentService.findAll(1L, "likeCount", "DESC", null, null, 10, 1L);
+
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).likeCount()).isEqualTo(10L); // commentHigh
+        assertThat(result.get(1).likeCount()).isEqualTo(5L);  // commentMid
+        assertThat(result.get(2).likeCount()).isEqualTo(0L);  // commentLow
+    }
+
+    @DisplayName("댓글 목록 조회 - createdAt 기준 DESC 정렬")
+    @Test
+    void findAll_sortByCreatedAtDesc_shouldSortProperly() {
+        Comment c1 = createTestComment(createTestUser(), createTestArticle(), "첫 댓글");
+        Comment c2 = createTestComment(createTestUser(), createTestArticle(), "두 번째 댓글");
+        Comment c3 = createTestComment(createTestUser(), createTestArticle(), "세 번째 댓글");
+
+        forceSetId(c1, 1L);
+        forceSetId(c2, 2L);
+        forceSetId(c3, 3L);
+
+        // 날짜 수동 설정
+        forceSetCreatedAt(c1, Instant.parse("2024-05-01T10:00:00Z"));
+        forceSetCreatedAt(c2, Instant.parse("2024-05-01T12:00:00Z"));
+        forceSetCreatedAt(c3, Instant.parse("2024-05-01T11:00:00Z"));
+
+        given(newsArticleRepository.existsById(1L)).willReturn(true);
+        given(commentRepository.findAllByArticleId(1L)).willReturn(List.of(c1, c2, c3));
+        given(commentLikeRepository.countByCommentId(anyLong())).willReturn(0L, 0L, 0L);
+        given(commentLikeRepository.existsByCommentIdAndUserId(any(), any())).willReturn(false);
+
+        List<CommentDto> result = commentService.findAll(1L, "createdAt", "DESC", null, null, 10, 1L);
+
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).content()).isEqualTo("두 번째 댓글");
+        assertThat(result.get(1).content()).isEqualTo("세 번째 댓글");
+        assertThat(result.get(2).content()).isEqualTo("첫 댓글");
+    }
+
 
     private NewsArticle createTestArticle() {
         NewsArticle article = new NewsArticle();
@@ -264,4 +484,72 @@ void deleteComment_marksDeleted_true() {
         return comment;
     }
 
+    private Comment commentWithCreatedAt(Instant createdAt) {
+        Comment comment = Comment.builder()
+                .user(createTestUser())
+                .article(createTestArticle())
+                .content("댓글")
+                .build();
+
+        try {
+            Field field = Comment.class
+                    .getSuperclass()
+                    .getSuperclass()
+                    .getDeclaredField("createdAt");
+
+            field.setAccessible(true);
+            field.set(comment, createdAt);
+        } catch (Exception e) {
+            throw new RuntimeException("createdAt 강제 설정 실패", e);
+        }
+
+        return comment;
+    }
+
+    private void forceSetId(Comment comment, Long id) {
+        try {
+            Field idField = Comment.class
+                    .getSuperclass()       // BaseUpdatableEntity
+                    .getSuperclass()       // BaseEntity
+                    .getDeclaredField("id");
+
+            idField.setAccessible(true);
+            idField.set(comment, id);
+        } catch (Exception e) {
+            throw new RuntimeException("ID 설정 실패", e);
+        }
+    }
+
+    private Long getId(Comment comment) {
+        try {
+            Field idField = Comment.class
+                    .getSuperclass()
+                    .getSuperclass()
+                    .getDeclaredField("id");
+
+            idField.setAccessible(true);
+            return (Long) idField.get(comment);
+        } catch (Exception e) {
+            throw new RuntimeException("ID 조회 실패", e);
+        }
+    }
+
+    private void forceSetCreatedAt(Comment comment, Instant time) {
+        try {
+            Class<?> clazz = comment.getClass();
+            while (clazz != null) {
+                try {
+                    Field createdAtField = clazz.getDeclaredField("createdAt");
+                    createdAtField.setAccessible(true);
+                    createdAtField.set(comment, time);
+                    return;
+                } catch (NoSuchFieldException e) {
+                    clazz = clazz.getSuperclass(); // 한 단계 위로 올라가서 다시 시도
+                }
+            }
+            throw new RuntimeException("createdAt 필드를 찾을 수 없습니다.");
+        } catch (Exception e) {
+            throw new RuntimeException("createdAt 설정 실패", e);
+        }
+    }
 }

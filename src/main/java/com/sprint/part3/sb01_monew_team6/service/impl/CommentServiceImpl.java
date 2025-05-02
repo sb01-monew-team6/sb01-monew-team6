@@ -7,6 +7,7 @@ import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
+import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotFoundException;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotSoftDeletedException;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
@@ -31,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
-
 
     private final NewsArticleRepository newsArticleRepository;
     private final UserRepository userRepository;
@@ -94,8 +94,11 @@ public class CommentServiceImpl implements CommentService {
 
         // 3. 댓글 목록 조회
         List<Comment> comments;
-
         if (articleId != null) {
+            boolean exists = newsArticleRepository.existsById(articleId);
+            if(!exists) {
+                throw new CommentException(ErrorCode.COMMENT_NOT_FOUND, Instant.now(), HttpStatus.BAD_REQUEST);
+            }
             comments = commentRepository.findAllByArticleId(articleId);
         } else {
             comments = commentRepository.findAll(); // 특정 게시글 ID가 없으면 전체 댓글 조회
@@ -141,21 +144,26 @@ public class CommentServiceImpl implements CommentService {
     public List<CommentDto> getComments(Long articleId) {
         log.info("댓글 목록 조회 요청: articleId={}", articleId);
 
-        //  게시글 존재 여부 확인
-        if (!newsArticleRepository.existsById(articleId)) {
-            throw new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND);
+        // 게시글 ID가 null인 경우, 모든 댓글을 조회하도록 수정
+        List<Comment> comments;
+        if (articleId == null) {
+            comments = commentRepository.findAll();  // 모든 댓글 조회
+        } else {
+            // 게시글이 존재하는지 확인
+            if (!newsArticleRepository.existsById(articleId)) {
+                throw new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND);
+            }
+            comments = commentRepository.findAllByArticleId(articleId);
         }
 
-
-
-        //  댓글 목록 조회 및 변환
-        return commentRepository.findAllByArticleId(articleId).stream()
+        //  댓글 목록을 CommentDto로 변환하여 반환
+        return comments.stream()
                 .map(comment -> {
-                    // 좋아요 수 가져오기
+                    // 좋아요 수
                     long likeCount = commentLikeRepository.countByCommentId(comment.getId());
 
-                    // 내가 좋아요를 눌렀는지 여부 확인
-                    boolean likedByMe = commentLikeRepository.existsByCommentIdAndUserId(comment.getId(), 1L);  // 예시로 1L을 requestUserId로 사용
+                    // 내가 좋아요를 눌렀는지 확인
+                    boolean likedByMe = commentLikeRepository.existsByCommentIdAndUserId(comment.getId(), 1L);
 
                     // CommentDto로 변환
                     return CommentDto.fromEntity(comment, likeCount, likedByMe);

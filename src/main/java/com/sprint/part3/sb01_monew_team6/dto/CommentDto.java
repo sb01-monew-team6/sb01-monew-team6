@@ -19,9 +19,9 @@ public record CommentDto(
     public static CommentDto fromEntity(Comment comment, long likeCount, boolean likedByMe) {
         return CommentDto.builder()
                 .id(comment.getId())
-                .articleId(comment.getArticle().getId())
-                .userId(comment.getUser().getId())
-                .userNickname(comment.getUser().getNickname())
+                .articleId(comment.getArticle() != null ? comment.getArticle().getId() : null)
+                .userId(comment.getUser() != null ? comment.getUser().getId() : null)
+                .userNickname(comment.getUser() != null ? comment.getUser().getNickname() : null)
                 .content(comment.getContent())
                 .likeCount(likeCount)
                 .likedByMe(likedByMe)

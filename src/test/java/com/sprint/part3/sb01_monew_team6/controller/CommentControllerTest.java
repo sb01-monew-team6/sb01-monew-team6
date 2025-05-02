@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.config.SecurityConfig;
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
+import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
+import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
 import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -126,6 +129,48 @@ class CommentControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @DisplayName("댓글 목록 조회 실패 - 잘못된 articleId일 경우 400 반환")
+    @Test
+    @WithMockUser
+    void getComments_withInvalidArticleId_shouldReturnBadRequest() throws Exception {
+        // given
+        when(commentService.findAll(any(), any(), any(), any(), any(), any(), any()))
+                .thenThrow(new CommentException(ErrorCode.COMMENT_NOT_FOUND, Instant.now(), HttpStatus.BAD_REQUEST));
+
+        mockMvc.perform(get("/api/comments")
+                .param("articleId", "99999")
+                .param("orderBy", "createdAt")
+                .param("direction", "DESC")
+                .param("limit", "10")
+                .header("Monew-Request-User-ID", "1")
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @DisplayName("댓글 목록 조회 실패 - 잘못된 limit 값일 경우 400 반환")
+    @Test
+    @WithMockUser
+    void getComments_withInvalidLimit_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/api/comments")
+                .param("orderBy", "createdAt")
+                .param("direction", "DESC")
+                .param("limit", "-10") // 잘못된 limit 값
+                .header("Monew-Request-User-ID", "1")
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @DisplayName("댓글 목록 조회 실패 - 헤더 값 누락 시 400 반환")
+    @Test
+    @WithMockUser
+    void getComment_withMissingUserId_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/api/comments")
+                .param("orderBy", "createdAt")
+                .param("direction", "DESC")
+                .param("limit", "10")
+                .with(csrf())) // 헤더 값
+                .andExpect(status().isBadRequest());
+    }
 
     @DisplayName("댓글 목록 조회 성공 - 필수 파라미터를 모두 제공할 경우 200 OK 반환")
     @Test
@@ -164,6 +209,19 @@ class CommentControllerTest {
                 .andExpect(jsonPath("$.content.length()").value(commentList.size()))
                 .andExpect(jsonPath("$.content[0].content").value(comment1.content()))
                 .andExpect(jsonPath("$.content[1].content").value(comment2.content()));
+    }
+
+    @DisplayName("댓글 목록 조회 - 최대 limit 값일 경우")
+    @Test
+    @WithMockUser
+    void getComments_withMaxLimit_shouldReturnPagedComments() throws Exception {
+        mockMvc.perform(get("/api/comments")
+                .param("orderBy", "createdAt")
+                .param("direction", "DESC")
+                .param("limit", "1000") // 최대값
+                .header("Monew-Request-User-ID", "1")
+                .with(csrf()))
+                .andExpect(status().isOk());
     }
 
 //----------------------------------------------------------------------------------------------------------------------

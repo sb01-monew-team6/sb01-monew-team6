@@ -29,7 +29,7 @@ public class CommentController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getComments(
+    public ResponseEntity<?> findAll(
             @RequestParam(required = false) Long articleId,
             @RequestParam(required = false) String orderBy,
             @RequestParam(required = false) String direction,
@@ -38,6 +38,16 @@ public class CommentController {
             @RequestParam(required = false) Integer limit,
             @RequestHeader(value = "Monew-Request-User-ID", required = false) Long requestUserId
     ) {
+        // 잘못된 articleId 값 처리: articleId가 null일 때는 모든 댓글을 조회하도록 설정
+        if(articleId != null && articleId < 1) {
+            return ResponseEntity.badRequest().build(); // 잘못된 articleId에 대해 400 반환
+        }
+
+        // 잘못된 limit 값 처리: limit이 0 이하일 경우 400 반환
+        if(limit != null && limit <= 0) {
+            return ResponseEntity.badRequest().build(); // 잘못된 limit 값에 대해 400 반환
+        }
+
         if (orderBy == null || direction == null || limit == null || requestUserId == null) {
             return ResponseEntity.badRequest().build(); //  400 Bad Request
         }
