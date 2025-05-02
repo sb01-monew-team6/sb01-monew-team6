@@ -165,7 +165,7 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = commentRepository.findById(id)
             .orElseThrow(() -> new NullPointerException("임시"));
 
-        comment.markDeleted();
+        comment.softDelete();
 
         commentRepository.save(comment);
     }

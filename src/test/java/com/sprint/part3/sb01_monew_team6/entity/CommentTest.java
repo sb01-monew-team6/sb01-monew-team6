@@ -15,7 +15,7 @@ class CommentTest {
         .isDeleted(false).build();
 
     //when
-    comment.markDeleted();
+    comment.softDelete();
 
     //then
     assertThat(comment.isDeleted()).isTrue();
