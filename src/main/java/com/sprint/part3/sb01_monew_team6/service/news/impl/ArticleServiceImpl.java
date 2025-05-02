@@ -180,4 +180,16 @@ public class ArticleServiceImpl implements ArticleService {
 
     return restoreArticles;
   }
+
+  //논리삭제
+  @Override
+  public void deleteArticle(Long articleId){
+    //기사가 있는지 id로 확인
+    NewsArticle newsArticle = newsArticleRepository.findById(articleId)
+        .orElseThrow(() -> new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND));
+    //isDeleted = true
+    newsArticle.changeDeleted();
+
+    newsArticleRepository.save(newsArticle);
+  }
 }

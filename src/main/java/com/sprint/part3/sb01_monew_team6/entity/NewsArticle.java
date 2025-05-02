@@ -49,7 +49,7 @@ public class NewsArticle extends BaseEntity {
   @Column(nullable = false, columnDefinition = "TEXT")
   private String articleSummary;
 
-  @Column(nullable = false)
+  @Column(name="is_deleted",nullable = false)
   @Builder.Default
   private boolean isDeleted = false;
 
@@ -78,5 +78,8 @@ public class NewsArticle extends BaseEntity {
     a.articlePublishedDate = e.pubDate(); //발행일
     a.articleSummary = e.description(); //요약
     return a;
+  }
+  public void changeDeleted(){
+    this.isDeleted = true;
   }
 }

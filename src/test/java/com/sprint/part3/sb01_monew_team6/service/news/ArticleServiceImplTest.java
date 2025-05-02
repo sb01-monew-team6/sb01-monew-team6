@@ -1,19 +1,19 @@
 package com.sprint.part3.sb01_monew_team6.service.news;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.core.type.TypeReference;
-
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleDto;
@@ -21,7 +21,6 @@ import com.sprint.part3.sb01_monew_team6.dto.news.ArticleRestoreResultDto;
 import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageRequestArticleDto;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
-import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
@@ -296,7 +295,7 @@ public class ArticleServiceImplTest {
     assertThrows(NewsException.class,() -> articleService.deleteArticle(1L));
   }
   @Test
-  @DisplayName("ID가 있으면 isDeleted=true ")
+  @DisplayName("ID가 있으면 isDeleted=true")
   void id_thenIsDeletedTrue() {
     //given
     NewsArticle a1 = NewsArticle.from(
