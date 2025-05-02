@@ -59,13 +59,14 @@ public class NewsCollectionControllerTest {
     Instant published = Instant.parse("2025-04-27T12:00:00Z");
 
     Long articleId = 1L;
-    NewsArticle article = new NewsArticle();
-    article.setSource("Naver");
-    article.setSourceUrl("https://test.api.com");
-    article.setArticleTitle("test");
-    article.setArticlePublishedDate(published);
-    article.setArticleSummary("test");
-    article.setDeleted(false);
+    NewsArticle article = NewsArticle.builder()
+        .source("Naver")
+        .sourceUrl("https://test.api.com")
+        .articleTitle("test")
+        .articlePublishedDate(published)
+        .articleSummary("test")
+        .isDeleted(false)
+        .build();
     ReflectionTestUtils.setField(article, "id", articleId);
 
     List<NewsArticle> savedList = List.of(article);
