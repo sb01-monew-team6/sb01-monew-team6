@@ -196,8 +196,9 @@ public class ArticleServiceImpl implements ArticleService {
   @Override
   public void hardDeleteArticle(Long articleId){
     //기사가 있는지 id로 확인
-    NewsArticle newsArticle = newsArticleRepository.findById(articleId)
-        .orElseThrow(() -> new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND));
+    if(!newsArticleRepository.existsById(articleId)){
+      throw new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND);
+    }
 
     //hard 삭제
     newsArticleRepository.deleteById(articleId);

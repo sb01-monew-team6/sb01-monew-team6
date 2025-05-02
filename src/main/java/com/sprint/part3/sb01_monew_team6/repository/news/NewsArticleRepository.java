@@ -9,5 +9,4 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle,Long>,N
   boolean existsBySourceUrl(String sourceUrl);
 
   List<NewsArticle> findAllByCreatedAtBetween(Instant from, Instant to);
-  
 }

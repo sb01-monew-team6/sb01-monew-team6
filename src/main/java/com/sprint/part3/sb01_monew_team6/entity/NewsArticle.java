@@ -20,7 +20,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
@@ -30,7 +29,6 @@ import org.hibernate.annotations.SQLRestriction;
 @Getter
 @Setter
 @Builder
-@SQLDelete(sql = "UPDATE news_article SET isDeleted = true WHERE id = ?")
 @SQLRestriction("isDeleted = false")
 public class NewsArticle extends BaseEntity {
 
