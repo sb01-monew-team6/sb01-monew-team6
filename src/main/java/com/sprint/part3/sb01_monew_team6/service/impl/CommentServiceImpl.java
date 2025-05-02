@@ -161,12 +161,11 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Transactional
-    public void deleteComment(Long id){
+    public void softDeleteComment(Long id){
         Comment comment = commentRepository.findById(id)
-            .orElseThrow(() -> new NullPointerException("임시"));
+            .orElseThrow(() -> new CommentNotFoundException());
 
         comment.softDelete();
-
         commentRepository.save(comment);
     }
 }

@@ -27,6 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
@@ -45,10 +46,6 @@ class CommentServiceTest {
 
     @InjectMocks
     private CommentServiceImpl commentService;
-
-    public CommentServiceTest() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @DisplayName("댓글 등록 - 정상 등록 시 CommentDto 반환")
     @Test
@@ -194,12 +191,12 @@ class CommentServiceTest {
         ReflectionTestUtils.setField(comment, "id", commentId);
 
         given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
         // when
-        commentService.deleteComment(commentId);
+        commentService.softDeleteComment(commentId);
 
         // then
         assertThat(comment.isDeleted()).isTrue();
+        verify(commentRepository).findById(commentId);
     }
 }
