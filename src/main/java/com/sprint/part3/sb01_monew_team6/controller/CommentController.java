@@ -5,6 +5,7 @@ import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/comments")
 @RequiredArgsConstructor
@@ -60,7 +62,9 @@ public class CommentController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> softDelete(@PathVariable Long id){
+        log.info("[CommentController] 사용자 논리 삭제 요청: CommentId : {}",id);
         commentService.softDeleteComment(id);
+        log.info("[CommentController] 사용자 논리 삭제 요청 성공: CommentId : {}",id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
