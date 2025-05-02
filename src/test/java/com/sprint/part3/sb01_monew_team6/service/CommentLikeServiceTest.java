@@ -4,6 +4,7 @@ import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
+import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
 import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
@@ -16,11 +17,9 @@ import org.mockito.MockitoAnnotations;
 
 import java.lang.reflect.Field;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 class CommentLikeServiceTest {
@@ -48,21 +47,21 @@ class CommentLikeServiceTest {
         Long commentId = 1L;
         Long userId = 100L;
 
-        Comment comment = Comment.builder()
-                .content("댓글입니다")
-                .build();
-
-        User user = User.builder()
+        User testUser = User.builder()
                 .nickname("사용자")
                 .email("user@example.com")
                 .password("password")
                 .build();
+        forceSetUserId(testUser, userId);
 
+        Comment comment = Comment.builder()
+                .content("댓글입니다")
+                .user(testUser)
+                .build();
         forceSetCommentId(comment, commentId);
-        forceSetUserId(user, userId);
 
         given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
         given(commentLikeRepository.existsByCommentIdAndUserId(commentId, userId)).willReturn(false);
         given(commentLikeRepository.countByCommentId(commentId)).willReturn(1L);
 
@@ -90,17 +89,35 @@ class CommentLikeServiceTest {
     @Test
     @DisplayName("댓글 좋아요 등록 실패 - 존재하지 않는 사용자 ID")
     void likeComment_withInvalidUserId_shouldThrowException() {
-        given(commentRepository.findById(1L)).willReturn(Optional.of(Comment.builder().id(1L).build()));
+        Comment comment = Comment.builder()
+                .content("댓글")
+                .build();
+        forceSetCommentId(comment, 1L);
+
+        given(commentRepository.findById(1L)).willReturn(Optional.of(comment));
         given(userRepository.findById(999L)).willReturn(Optional.empty());
 
-        assertThrows(CommentException.class, () -> commentLikeService.likeComment(1L, 999L));
+        assertThrows(UserException.class, () -> commentLikeService.likeComment(1L, 999L));
     }
 
     @Test
     @DisplayName("댓글 좋아요 등록 실패 - 이미 좋아요한 경우 예외 발생")
     void likeComment_whenAlreadyLiked_shouldThrowException() {
-        given(commentRepository.findById(1L)).willReturn(Optional.of(Comment.builder().id(1L).build()));
-        given(userRepository.findById(1L)).willReturn(Optional.of(User.builder().id(1L).build()));
+        User testUser = User.builder()
+                .nickname("사용자")
+                .email("user@example.com")
+                .password("password")
+                .build();
+        forceSetUserId(testUser, 1L);
+
+        Comment comment = Comment.builder()
+                .content("댓글")
+                .user(testUser)
+                .build();
+        forceSetCommentId(comment, 1L);
+
+        given(commentRepository.findById(1L)).willReturn(Optional.of(comment));
+        given(userRepository.findById(1L)).willReturn(Optional.of(testUser));
         given(commentLikeRepository.existsByCommentIdAndUserId(1L, 1L)).willReturn(true);
 
         assertThrows(CommentException.class, () -> commentLikeService.likeComment(1L, 1L));
@@ -109,29 +126,28 @@ class CommentLikeServiceTest {
     private void forceSetCommentId(Comment comment, Long id) {
         try {
             Field idField = Comment.class
-                    .getSuperclass()       // BaseUpdatableEntity
-                    .getSuperclass()       // BaseEntity
+                    .getSuperclass()
+                    .getSuperclass()
                     .getDeclaredField("id");
 
             idField.setAccessible(true);
             idField.set(comment, id);
         } catch (Exception e) {
-            throw new RuntimeException("ID 설정 실패", e);
+            throw new RuntimeException("댓글 ID 설정 실패", e);
         }
     }
 
     private void forceSetUserId(User user, Long id) {
         try {
-            Field idField = Comment.class
-                    .getSuperclass()       // BaseUpdatableEntity
-                    .getSuperclass()       // BaseEntity
+            Field idField = User.class
+                    .getSuperclass()
+                    .getSuperclass()
                     .getDeclaredField("id");
 
             idField.setAccessible(true);
-            idField.set(comment, id);
+            idField.set(user, id);
         } catch (Exception e) {
-            throw new RuntimeException("ID 설정 실패", e);
+            throw new RuntimeException("유저 ID 설정 실패", e);
         }
     }
-
 }
