@@ -60,7 +60,7 @@ public class CommentController {
 
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long id){
-        commentService.deleteComment(id);
+        commentService.softDeleteComment(id);
         return ResponseEntity.noContent().build();
     }
 }

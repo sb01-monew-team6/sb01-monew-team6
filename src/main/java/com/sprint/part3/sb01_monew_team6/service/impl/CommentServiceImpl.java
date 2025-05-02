@@ -6,6 +6,7 @@ import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
+import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotFoundException;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
 import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
