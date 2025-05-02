@@ -12,6 +12,7 @@ import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.CommentServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -20,11 +21,14 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
+@ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
 
     @Mock
@@ -156,5 +160,46 @@ class CommentServiceTest {
                 .content(content)
                 .build();
     }
+//    -----------------------------------------------------------------------------------------------------------------------------------------------------------
+    @DisplayName("댓글 논리 삭제 - 삭제요청시 삭제 정상응답확인 ")
+    @Test
+    void deleteComment_marksDeleted_true() {
+        // given
+        Long commentId = 1L;
+        Long userId = 2L;
+        Long newsAticleId = 3L;
 
+        User user = User.builder()
+            .email("user@example.com")
+            .nickname("nickname")
+            .password("password")
+            .build();
+        ReflectionTestUtils.setField(user, "id", userId);
+
+        NewsArticle article = NewsArticle.builder()
+            .source("naver")
+            .sourceUrl("https://example.com")
+            .articleTitle("아무 제목")
+            .articlePublishedDate(Instant.now())
+            .articleSummary("테스트 기사임")
+            .build();
+        ReflectionTestUtils.setField(article, "id", newsAticleId);
+
+        Comment comment = Comment.builder()
+            .user(user)
+            .article(article)
+            .content("삭제할 댓글")
+            .isDeleted(false)
+            .build();
+        ReflectionTestUtils.setField(comment, "id", commentId);
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+        // when
+        commentService.deleteComment(commentId);
+
+        // then
+        assertThat(comment.isDeleted()).isTrue();
+    }
 }
