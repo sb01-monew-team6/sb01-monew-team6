@@ -16,9 +16,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
 
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -51,6 +54,12 @@ class S3LogStorageTest {
 		s3Client = S3Client.builder()
 			.endpointOverride(URI.create(S3_MOCK.getHttpEndpoint()))
 			.serviceConfiguration(config)
+			.region(Region.AP_NORTHEAST_2)
+			.credentialsProvider(
+				StaticCredentialsProvider.create(
+					AwsBasicCredentials.create("accessKey", "secretKey")
+				)
+			)
 			.build();
 
 		storage = new S3LogStorage(
