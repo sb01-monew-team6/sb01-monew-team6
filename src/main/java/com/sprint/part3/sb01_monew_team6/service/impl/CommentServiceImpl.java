@@ -163,10 +163,12 @@ public class CommentServiceImpl implements CommentService {
 
     @Transactional
     public void softDeleteComment(Long id){
+        log.info("[CommentServiceImpl] 댓글 논리 삭제 시작: id:{}", id);
         Comment comment = commentRepository.findById(id)
             .orElseThrow(() -> new CommentNotFoundException());
 
         comment.softDelete();
         commentRepository.save(comment);
+        log.info("[CommentServiceImpl] 댓글 논리 삭제 성공: id:{}", id);
     }
 }
