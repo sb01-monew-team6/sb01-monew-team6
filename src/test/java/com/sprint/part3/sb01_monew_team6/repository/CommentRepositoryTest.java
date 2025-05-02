@@ -2,7 +2,8 @@ package com.sprint.part3.sb01_monew_team6.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.part3.sb01_monew_team6.config.TestDataJpaConfig;
+import com.sprint.part3.sb01_monew_team6.config.JpaConfig;
+import com.sprint.part3.sb01_monew_team6.config.QueryDslConfig;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
@@ -21,7 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 @DataJpaTest
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = Replace.NONE)
-@Import(TestDataJpaConfig.class)
+@Import({JpaConfig.class, QueryDslConfig.class})
 public class CommentRepositoryTest {
 
   @Autowired

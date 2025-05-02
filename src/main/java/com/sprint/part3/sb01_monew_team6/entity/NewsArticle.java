@@ -29,7 +29,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Getter
 @Setter
 @Builder
-@SQLRestriction("isDeleted = false")
+@SQLRestriction("is_deleted = false")
 public class NewsArticle extends BaseEntity {
 
   @Column(nullable = false)
