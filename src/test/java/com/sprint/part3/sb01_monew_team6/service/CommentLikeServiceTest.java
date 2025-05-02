@@ -47,20 +47,10 @@ class CommentLikeServiceTest {
         Long commentId = 1L;
         Long userId = 100L;
 
-        User testUser = User.builder()
-                .nickname("사용자")
-                .email("user@example.com")
-                .password("password")
-                .build();
-        forceSetUserId(testUser, userId);
+        User testUser = createTestUser(userId);
+        Comment testComment = createTestComment(commentId, testUser, "댓글입니다");
 
-        Comment comment = Comment.builder()
-                .content("댓글입니다")
-                .user(testUser)
-                .build();
-        forceSetCommentId(comment, commentId);
-
-        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(testComment));
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
         given(commentLikeRepository.existsByCommentIdAndUserId(commentId, userId)).willReturn(false);
         given(commentLikeRepository.countByCommentId(commentId)).willReturn(1L);
@@ -89,12 +79,9 @@ class CommentLikeServiceTest {
     @Test
     @DisplayName("댓글 좋아요 등록 실패 - 존재하지 않는 사용자 ID")
     void likeComment_withInvalidUserId_shouldThrowException() {
-        Comment comment = Comment.builder()
-                .content("댓글")
-                .build();
-        forceSetCommentId(comment, 1L);
+        Comment testComment = createTestComment(1L, null, "댓글");
 
-        given(commentRepository.findById(1L)).willReturn(Optional.of(comment));
+        given(commentRepository.findById(1L)).willReturn(Optional.of(testComment));
         given(userRepository.findById(999L)).willReturn(Optional.empty());
 
         assertThrows(UserException.class, () -> commentLikeService.likeComment(1L, 999L));
@@ -103,51 +90,46 @@ class CommentLikeServiceTest {
     @Test
     @DisplayName("댓글 좋아요 등록 실패 - 이미 좋아요한 경우 예외 발생")
     void likeComment_whenAlreadyLiked_shouldThrowException() {
-        User testUser = User.builder()
-                .nickname("사용자")
-                .email("user@example.com")
-                .password("password")
-                .build();
-        forceSetUserId(testUser, 1L);
+        User testUser = createTestUser(1L);
+        Comment testComment = createTestComment(1L, testUser, "댓글");
 
-        Comment comment = Comment.builder()
-                .content("댓글")
-                .user(testUser)
-                .build();
-        forceSetCommentId(comment, 1L);
-
-        given(commentRepository.findById(1L)).willReturn(Optional.of(comment));
+        given(commentRepository.findById(1L)).willReturn(Optional.of(testComment));
         given(userRepository.findById(1L)).willReturn(Optional.of(testUser));
         given(commentLikeRepository.existsByCommentIdAndUserId(1L, 1L)).willReturn(true);
 
         assertThrows(CommentException.class, () -> commentLikeService.likeComment(1L, 1L));
     }
 
-    private void forceSetCommentId(Comment comment, Long id) {
-        try {
-            Field idField = Comment.class
-                    .getSuperclass()
-                    .getSuperclass()
-                    .getDeclaredField("id");
-
-            idField.setAccessible(true);
-            idField.set(comment, id);
-        } catch (Exception e) {
-            throw new RuntimeException("댓글 ID 설정 실패", e);
-        }
+    private User createTestUser(Long id) {
+        User user = User.builder()
+                .nickname("사용자")
+                .email("user@example.com")
+                .password("password")
+                .build();
+        forceSetId(user, id);
+        return user;
     }
 
-    private void forceSetUserId(User user, Long id) {
+    private Comment createTestComment(Long id, User user, String content) {
+        Comment comment = Comment.builder()
+                .content(content)
+                .user(user)
+                .build();
+        forceSetId(comment, id);
+        return comment;
+    }
+
+    private void forceSetId(Object target, Long id) {
         try {
-            Field idField = User.class
+            Field idField = target.getClass()
                     .getSuperclass()
                     .getSuperclass()
                     .getDeclaredField("id");
 
             idField.setAccessible(true);
-            idField.set(user, id);
+            idField.set(target, id);
         } catch (Exception e) {
-            throw new RuntimeException("유저 ID 설정 실패", e);
+            throw new RuntimeException("ID 설정 실패", e);
         }
     }
 }
