@@ -318,7 +318,7 @@ public class ArticleServiceImplTest {
     //given
 
     //when
-    when(newsArticleRepository.findById(1L)).thenReturn(Optional.empty());
+    when(newsArticleRepository.existsById(1L)).thenReturn(false);
 
     //then
     assertThrows(NewsException.class,()->articleService.hardDeleteArticle(1L));
@@ -330,7 +330,7 @@ public class ArticleServiceImplTest {
     NewsArticle a1 = NewsArticle.from(
         new ExternalNewsItem("Naver","url1","url1","title1",Instant.now(),"desc1"));
     ReflectionTestUtils.setField(a1, "id", 1L);
-    when(newsArticleRepository.findById(1L)).thenReturn(Optional.of(a1));
+    when(newsArticleRepository.existsById(1L)).thenReturn(true);
 
     //when
     articleService.hardDeleteArticle(1L);

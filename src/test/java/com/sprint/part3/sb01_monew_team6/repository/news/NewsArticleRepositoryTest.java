@@ -3,7 +3,8 @@
  import static org.assertj.core.api.Assertions.assertThat;
  import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE;
 
- import com.sprint.part3.sb01_monew_team6.config.TestDataJpaConfig;
+ import com.sprint.part3.sb01_monew_team6.config.JpaConfig;
+ import com.sprint.part3.sb01_monew_team6.config.QueryDslConfig;
  import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
  import java.time.Instant;
  import java.util.List;
@@ -18,7 +19,7 @@
 
  @DataJpaTest
  @ActiveProfiles("test")
- @Import(TestDataJpaConfig.class)
+ @Import({JpaConfig.class, QueryDslConfig.class})
  @AutoConfigureTestDatabase(replace = NONE)
  public class NewsArticleRepositoryTest {
 

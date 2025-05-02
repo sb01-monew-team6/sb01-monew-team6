@@ -20,8 +20,10 @@ import com.sprint.part3.sb01_monew_team6.service.news.ArticleService;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
 @RequiredArgsConstructor
@@ -127,46 +130,60 @@ public class ArticleServiceImpl implements ArticleService {
       return new OrderSpecifier<>(dir, newsArticle.id);
     }
   }
+
   //백업 복구
   @Override
   public List<ArticleRestoreResultDto> restore(LocalDate from, LocalDate to) throws IOException {
+    log.info("백업 복구 시작 : from={}, to={}", from, to);
     // 복구 결과를 날짜별로 담을 리스트 생성
     List<ArticleRestoreResultDto> restoreArticles = new ArrayList<>();
 
     // from부터 to까지 하루씩 순회하며 백업 파일 처리
     for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
-      // 2.1) S3에서 날짜별 백업 JSON 가져오기
+      // S3에서 날짜별 백업 JSON 가져오기
       String key = String.format("backup/%s.json", date);
-      GetObjectRequest getReq = GetObjectRequest.builder()
-          .bucket(bucketName)    // S3 버킷 이름
-          .key(key)              // 객체 키 (backup/2025-05-02.json 등)
-          .build();
-      ResponseBytes<GetObjectResponse> resp = s3Client.getObjectAsBytes(getReq);
+      log.info("날짜별 복구 처리 : date={}, key={}", date, key);
 
-      // JSON을 NewsArticle 리스트로 역직렬화
-      List<NewsArticle> backups = objectMapper.readValue(
-          resp.asByteArray(), new TypeReference<List<NewsArticle>>() {}
-      );
-
-      // 이 날짜에 새로 복구된 기사 ID를 모을 리스트
       List<Long> restoredIds = new ArrayList<>();
+      try{
+        //S3에서 가져오기
+        GetObjectRequest getReq = GetObjectRequest.builder()
+            .bucket(bucketName)    // S3 버킷 이름
+            .key(key)              // 객체 키 (backup/2025-05-02.json 등)
+            .build();
+        ResponseBytes<GetObjectResponse> resp = s3Client.getObjectAsBytes(getReq);
 
-      // 백업된 각 기사에 대해 DB 존재 여부 확인 후 복구
-      for (NewsArticle backup : backups) {
-        if (!newsArticleRepository.existsBySourceUrl(backup.getSourceUrl())) {
-          NewsArticle toSave = NewsArticle.builder()
-              .source(backup.getSource())
-              .sourceUrl(backup.getSourceUrl())
-              .articleTitle(backup.getArticleTitle())
-              .articlePublishedDate(backup.getArticlePublishedDate())
-              .articleSummary(backup.getArticleSummary())
-              .isDeleted(false)    // 논리삭제 초기화
-              .build();
+        // JSON을 NewsArticle 리스트로 역직렬화
+        List<NewsArticle> backups = objectMapper.readValue(
+            resp.asByteArray(), new TypeReference<List<NewsArticle>>() {}
+        );
 
-          // 복구 엔티티 저장 및 ID 수집
-          NewsArticle saved = newsArticleRepository.save(toSave);
-          restoredIds.add(saved.getId());
+        // 백업된 각 기사에 대해 DB 존재 여부 확인 후 복구
+        for (NewsArticle backup : backups) {
+          if (!newsArticleRepository.existsBySourceUrl(backup.getSourceUrl())) {
+            NewsArticle toSave = NewsArticle.builder()
+                .source(backup.getSource())
+                .sourceUrl(backup.getSourceUrl())
+                .articleTitle(backup.getArticleTitle())
+                .articlePublishedDate(backup.getArticlePublishedDate())
+                .articleSummary(backup.getArticleSummary())
+                .isDeleted(false)    // 논리삭제 초기화
+                .build();
+
+            // 복구 엔티티 저장 및 ID 수집
+            NewsArticle saved = newsArticleRepository.save(toSave);
+            restoredIds.add(saved.getId());
+            log.debug("복구 완료 : sourceUrl={}, id={}", backup.getSourceUrl(), saved.getId());
+          }else{
+            log.debug("이미 존재하여 넘어감 : sourceUrl={}, id={}", backup.getSourceUrl(), backup.getId());
+          }
         }
+      }catch(NoSuchElementException e){
+        //S3 에 파일이 없는 경우
+        log.warn("백업 파일 없어서 건너뜀 : key={}(date={})", key, date);
+      }catch (IOException| S3Exception e){
+        log.error("백업 복구 중 오류 : date={}, key={}, error={}", date, key, e.getMessage());
+        throw new NewsException(ErrorCode.INTERNAL_SERVER_ERROR,Instant.now(),HttpStatus.INTERNAL_SERVER_ERROR);
       }
 
       // 날짜 복구 결과 DTO 생성 및 리스트에 추가
@@ -175,32 +192,41 @@ public class ArticleServiceImpl implements ArticleService {
           restoredIds,
           restoredIds.size()
       ));
+      log.info("날짜별 복구 결과 : date={} , restoredCount={}", date, restoredIds.size());
     }
-
+    log.info("백업 복구 완료: totalDays={} 결과건수={}", ChronoUnit.DAYS.between(from, to) + 1, restoreArticles.size());
     return restoreArticles;
   }
 
   //논리삭제
   @Override
   public void deleteArticle(Long articleId){
+    log.info("논리 삭제 시작 : articleId={}", articleId);
     //기사가 있는지 id로 확인
     NewsArticle newsArticle = newsArticleRepository.findById(articleId)
-        .orElseThrow(() -> new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND));
+        .orElseThrow(() ->{
+          log.error("논리 삭제 실패(기사 미발견) : articleId={}", articleId);
+          return new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND);
+        });
     //isDeleted = true
     newsArticle.changeDeleted();
 
     newsArticleRepository.save(newsArticle);
+    log.info("논리 삭제 완료 : articleId={}", articleId);
   }
 
   //물리삭제
   @Override
   public void hardDeleteArticle(Long articleId){
+    log.info("물리 삭제 시작 : articleId={}", articleId);
     //기사가 있는지 id로 확인
     if(!newsArticleRepository.existsById(articleId)){
+      log.error("물리 삭제 실패(기사 미발견) : articleId={}", articleId);
       throw new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND);
     }
 
     //hard 삭제
     newsArticleRepository.deleteById(articleId);
+    log.info("물리 삭제 완료 : articleId={}", articleId);
   }
 }
