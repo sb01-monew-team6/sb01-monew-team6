@@ -63,7 +63,8 @@ public class SecurityConfig {
             ).permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
-            .anyRequest().authenticated()
+//            .anyRequest().authenticated()
+                .anyRequest().permitAll()
         );
 
     return http.build();
