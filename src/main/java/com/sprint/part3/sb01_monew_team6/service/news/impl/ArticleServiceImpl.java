@@ -46,8 +46,8 @@ public class ArticleServiceImpl implements ArticleService {
   private final CommentRepository commentRepository;
   private final PageResponseMapper pageResponseMapper;
   private final S3Client s3Client;
-  @Value("${cloud.aws.s3.bucket}")
-  private final String bucketName;
+//  @Value("${cloud.aws.s3.bucket}")
+  private final String bucketName = "monew";
   private final ObjectMapper objectMapper;
 
   //목록 조회 : 페이지네이션

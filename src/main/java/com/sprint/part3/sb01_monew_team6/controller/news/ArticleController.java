@@ -73,9 +73,6 @@ public class ArticleController {
       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
       LocalDateTime to
   ) throws IOException {
-    return articleService.restore(
-        from.toLocalDate(),
-        to.toLocalDate()
-    );
+    return articleService.restore(from.toLocalDate(), to.toLocalDate());
   }
 }

@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ public class NewsCollectionImplService {
     log.debug("조회된 관심사 개수: {}", interests.size());
 
     // 관심사 x
-    if (interests.isEmpty()) {
+    if (interests.isEmpty() || interests.get(0).getKeywords() == null || interests.get(0).getKeywords().isEmpty()) {
       log.info("등록된 관심사가 없어 뉴스 수집을 건너뜁니다");
       return;   // 예외 대신 조용히 리턴
     }
@@ -68,7 +69,7 @@ public class NewsCollectionImplService {
     log.debug("조회된 관심사 개수: {}", interests.size());
 
     //관심사 x
-    if(interests.isEmpty()){
+    if(interests.isEmpty() || interests.get(0).getKeywords() == null || interests.get(0).getKeywords().isEmpty()){
       log.info("Batch용 등록된 관심사가 없어 빈 리스트 반환");
       return List.of();   // 예외 대신 빈 리스트
     }

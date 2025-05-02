@@ -63,6 +63,7 @@ public class SecurityConfig {
             ).permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
+            .requestMatchers(HttpMethod.POST,"/api/articles/collect/news").permitAll()
             .anyRequest().authenticated()
         );
 

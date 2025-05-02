@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.service.news;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,6 +20,8 @@ import com.sprint.part3.sb01_monew_team6.dto.news.ArticleDto;
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleRestoreResultDto;
 import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageRequestArticleDto;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
+import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
+import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
@@ -26,6 +29,7 @@ import com.sprint.part3.sb01_monew_team6.service.news.impl.ArticleServiceImpl;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -278,5 +282,26 @@ public class ArticleServiceImplTest {
     verify(s3Client, times(2)).getObjectAsBytes(any(GetObjectRequest.class));
     verify(newsArticleRepository, times(2)).save(any(NewsArticle.class));
   }
+  //논리삭제
+  @Test
+  @DisplayName("ID가 없으면 예외 발생")
+  void noId_thenException() {
+    //given
 
+    //when
+    when(newsArticleRepository.findById(1L)).thenReturn(Optional.empty());
+
+    //then
+    assertThrows(NewsException.class,() -> articleService.deleteArticle(1L));
+  }
+  @Test
+  @DisplayName("ID가 있으면 isDeleted=true ")
+  void id_thenIsDeletedTrue() {
+    //given
+    NewsArticle article = new NewsArticle();
+    //when
+
+    //then
+
+  }
 }
