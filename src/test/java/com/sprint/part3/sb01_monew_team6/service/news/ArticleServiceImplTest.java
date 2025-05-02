@@ -310,4 +310,32 @@ public class ArticleServiceImplTest {
     assertThat(a1.isDeleted()).isTrue();
     verify(newsArticleRepository).save(a1);
   }
+
+  //물리 삭제
+  @Test
+  @DisplayName("hard : ID가 없으면 예외")
+  void hard_noId_thenException(){
+    //given
+
+    //when
+    when(newsArticleRepository.findById(1L)).thenReturn(Optional.empty());
+
+    //then
+    assertThrows(NewsException.class,()->articleService.hardDeleteArticle(1L));
+  }
+  @Test
+  @DisplayName("hard : ID가 있으면 삭제")
+  void hard_id_thenDelete(){
+    //given
+    NewsArticle a1 = NewsArticle.from(
+        new ExternalNewsItem("Naver","url1","url1","title1",Instant.now(),"desc1"));
+    ReflectionTestUtils.setField(a1, "id", 1L);
+    when(newsArticleRepository.findById(1L)).thenReturn(Optional.of(a1));
+
+    //when
+    articleService.hardDeleteArticle(1L);
+
+    //then
+    verify(newsArticleRepository).deleteById(1L);
+  }
 }
