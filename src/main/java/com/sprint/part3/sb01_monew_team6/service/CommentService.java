@@ -21,5 +21,5 @@ public interface CommentService {
 
     List<CommentDto> getComments(Long articleId);
 
-    void deleteComment(Long id);
+    void softDeleteComment(Long id);
 }
