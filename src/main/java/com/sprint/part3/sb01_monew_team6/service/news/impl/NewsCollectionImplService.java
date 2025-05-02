@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class NewsCollectionImplService {
   private final InterestRepository interestRepository;
 
   @Transactional
-  public void collectAndSave() {
+  public Optional<List<NewsArticle>> collectAndSave() {
     log.info("뉴스 수집 시작");
 
     List<Interest> interests = interestRepository.findAll();
@@ -40,7 +40,7 @@ public class NewsCollectionImplService {
     // 관심사 x
     if (interests.isEmpty() || interests.get(0).getKeywords() == null || interests.get(0).getKeywords().isEmpty()) {
       log.info("등록된 관심사가 없어 뉴스 수집을 건너뜁니다");
-      return;   // 예외 대신 조용히 리턴
+      return Optional.empty(); // 예외 대신 조용히 리턴
     }
     // 외부 뉴스 수집
     List<ExternalNewsItem> externalNewsItems = fetchExternalNews(interests);
@@ -53,11 +53,12 @@ public class NewsCollectionImplService {
     //저장
     if (toSave.isEmpty()) {
       log.info("저장할 뉴스가 없어 작업을 종료합니다");
-      return;   // 예외 대신 조용히 리턴
+      return Optional.empty();   // 예외 대신 조용히 리턴
     }
 
     newsArticleRepository.saveAll(toSave);
     log.info("뉴스 {}건 저장 완료", toSave.size());
+    return Optional.of(toSave);  // 저장된 뉴스 반환
   }
 
   //Batch Chunk - ItemReader
