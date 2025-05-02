@@ -7,7 +7,7 @@ import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CommentActivityDtoTest {
+class CommentActivityDtoTest {
 
     @Test
     @DisplayName("CommentActivityDto 생성자 테스트 - 필드 초기화 확인")
