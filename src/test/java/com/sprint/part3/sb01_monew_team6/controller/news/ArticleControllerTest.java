@@ -163,14 +163,14 @@ public class ArticleControllerTest {
     mvc.perform(delete("/api/articles/{id}/hard",1L))
         .andExpect(status().isNoContent());
 
-    verify(articleService).deleteArticle(1L);
+    verify(articleService).hardDeleteArticle(1L);
   }
   @Test
   @DisplayName("DELETE /api/articles/{id}/hard -> ID 없음 -> 404")
   void deleteArticle_hard_notFound() throws Exception {
     //given
     doThrow(new NewsException(ErrorCode.NEWS_NOT_USER_FOUND_EXCEPTION,Instant.now(), HttpStatus.NOT_FOUND))
-        .when(articleService).deleteArticle(1L);
+        .when(articleService).hardDeleteArticle(1L);
 
     //when,then
     mvc.perform(delete("/api/articles/{id}/hard",1L).accept(MediaType.APPLICATION_JSON))
