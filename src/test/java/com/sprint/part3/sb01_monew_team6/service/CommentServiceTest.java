@@ -353,6 +353,52 @@ class CommentServiceTest {
         assertThat(result.get(2).content()).isEqualTo("첫 댓글");
     }
 
+    @DisplayName("댓글 목록 조회 - 댓글이 하나도 없을 경우 빈 리스트 반환")
+    @Test
+    void findAll_withNoComments_shouldReturnEmptyList() {
+        // given
+        Long articleId = 1L;
+        given(newsArticleRepository.existsById(1L)).willReturn(true);
+        given(commentRepository.findAllByArticleId(1L)).willReturn(List.of());
+
+        // when
+        List<CommentDto> result = commentService.findAll(articleId, "createdAt", "ASC", null, null, 10, 1L);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
+    }
+
+    @DisplayName("댓글 목록 조회 - limit보다 적은 수의 댓글만 있을 경우 정상 반환")
+    @Test
+    void findAll_withLessThanLimitComments_shouldReturnAll() {
+
+        // given
+        Long articleId = 1L;
+        Integer limit = 5;
+
+        Comment c1 = createTestComment(createTestUser(), createTestArticle(), "댓글 1");
+        Comment c2 = createTestComment(createTestUser(), createTestArticle(), "댓글 2");
+
+        // createdAt 값을 명시적으로 설정하여 정렬 기준 통제
+        forceSetCreatedAt(c1, Instant.parse("2024-05-01T10:00:00Z"));
+        forceSetCreatedAt(c2, Instant.parse("2024-05-01T11:00:00Z"));
+
+        List<Comment> comments = List.of(c1, c2);
+
+        given(newsArticleRepository.existsById(1L)).willReturn(true);
+        given(commentRepository.findAllByArticleId(1L)).willReturn(comments);
+        given(commentLikeRepository.countByCommentId(any())).willReturn(0L);
+        given(commentLikeRepository.existsByCommentIdAndUserId(any(), any())).willReturn(false);
+
+        // when
+        List<CommentDto> result = commentService.findAll(articleId, "createdAt", "ASC", null, null, limit, 1L);
+
+        // then
+        assertThat(result).hasSize(2); // limit = 10이지만 댓글은 2개
+        assertThat(result.get(0).content()).isEqualTo("댓글 1");
+        assertThat(result.get(1).content()).isEqualTo("댓글 2");
+    }
 
     private NewsArticle createTestArticle() {
         NewsArticle article = new NewsArticle();
