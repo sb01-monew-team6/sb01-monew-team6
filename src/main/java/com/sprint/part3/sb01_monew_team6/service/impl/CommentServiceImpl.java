@@ -163,7 +163,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public void deleteComment(Long id){
         Comment comment = commentRepository.findById(id)
-            .orElseThrow(() -> new CommentNotFoundException(ErrorCode);
+            .orElseThrow(() -> new NullPointerException("임시"));
 
         comment.markDeleted();
 
