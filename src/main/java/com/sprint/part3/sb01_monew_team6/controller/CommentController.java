@@ -57,4 +57,10 @@ public class CommentController {
         return ResponseEntity.ok()
                 .body(Map.of("content", commentList));
     }
+
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Long id){
+        commentService.deleteComment(id);
+        return ResponseEntity.noContent().build();
+    }
 }
