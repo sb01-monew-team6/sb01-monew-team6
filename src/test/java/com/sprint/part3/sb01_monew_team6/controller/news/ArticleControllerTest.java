@@ -3,6 +3,9 @@ package com.sprint.part3.sb01_monew_team6.controller.news;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,7 +14,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleDto;
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleRestoreResultDto;
+import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.GlobalExceptionHandler;
+import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.service.news.ArticleService;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -22,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -107,16 +113,68 @@ public class ArticleControllerTest {
   @Test
   @DisplayName("GET /api/articles/restore 호출 시 정상 JSON 반환")
   void getRestore() throws Exception {
-    // Given
+    // given
     LocalDate d = LocalDate.of(2025,4,30);
     var dto = new ArticleRestoreResultDto(d, List.of(1L), 1);
     given(articleService.restore(d, d)).willReturn(List.of(dto));
 
-    // When & Then
+    // when & then
     mvc.perform(get("/api/articles/restore")
             .param("from","2025-04-30T00:00:00")
             .param("to","2025-04-30T23:59:59"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].restoredArticleCount").value(1));
+  }
+  
+  //논리 삭제
+  @Test
+  @DisplayName("DELETE /api/articles/{id} -> 204(No Content)")
+  void deleteArticle_api_returnNoContent() throws Exception {
+    //given
+    
+    //when,then
+    mvc.perform(delete("/api/articles/{id}",1L))
+        .andExpect(status().isNoContent());
+
+    verify(articleService).deleteArticle(1L);
+  }
+
+  @Test
+  @DisplayName("DELETE /api/articles/{id} -> ID 없음 -> 404")
+  void deleteArticle_api_notFound() throws Exception {
+    //given
+    doThrow(new NewsException(ErrorCode.NEWS_NOT_USER_FOUND_EXCEPTION,Instant.now(), HttpStatus.NOT_FOUND))
+        .when(articleService).deleteArticle(1L);
+
+    //when,then
+    mvc.perform(delete("/api/articles/{id}",1L).accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("유저가 존재하지 않습니다."));
+  }
+
+  //물리 삭제
+  @Test
+  @DisplayName("DELETE /api/articles/{id}/hard-> 204(No Content)")
+  void deleteArticle_hard_returnNoContent() throws Exception {
+    //given
+
+
+    // when,then
+    mvc.perform(delete("/api/articles/{id}/hard",1L))
+        .andExpect(status().isNoContent());
+
+    verify(articleService).deleteArticle(1L);
+  }
+  @Test
+  @DisplayName("DELETE /api/articles/{id}/hard -> ID 없음 -> 404")
+  void deleteArticle_hard_notFound() throws Exception {
+    //given
+    doThrow(new NewsException(ErrorCode.NEWS_NOT_USER_FOUND_EXCEPTION,Instant.now(), HttpStatus.NOT_FOUND))
+        .when(articleService).deleteArticle(1L);
+
+    //when,then
+    mvc.perform(delete("/api/articles/{id}/hard",1L).accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("유저가 존재하지 않습니다."));
   }
 }
