@@ -40,5 +40,4 @@ public class Comment extends BaseUpdatableEntity {
 
   @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CommentLike> commentLikes = new ArrayList<>();
-
 }
