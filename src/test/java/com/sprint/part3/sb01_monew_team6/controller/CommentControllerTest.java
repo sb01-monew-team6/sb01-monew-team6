@@ -18,8 +18,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.util.List;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import static org.awaitility.Awaitility.given;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -163,13 +167,16 @@ class CommentControllerTest {
     }
 
 //----------------------------------------------------------------------------------------------------------------------
-    @DisplayName("DElETE /api/comments/{id} - 요청시 정상응답 204 반환")
+    @DisplayName("DELETE /api/comments/{id} - 요청시 정상응답 204 반환")
     @Test
-    void deleteComment() throws Exception{
+    void deleteComment() throws Exception {
+        //given
         Long commentId = 1L;
-        Long userId = 2L;
 
-        mockMvc.perform(delete("/api/commnets/" + commentId)).andExpect(status().isNoContent());
+        //when
+        doNothing().when(commentService).softDeleteComment(commentId);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/comments/" + commentId))
+            .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
-
 }
