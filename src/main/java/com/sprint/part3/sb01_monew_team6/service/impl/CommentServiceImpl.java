@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -157,5 +158,15 @@ public class CommentServiceImpl implements CommentService {
                     return CommentDto.fromEntity(comment, likeCount, likedByMe);
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteComment(Long id){
+        Comment comment = commentRepository.findById(id)
+            .orElseThrow(() -> new CommentNotFoundException(ErrorCode);
+
+        comment.markDeleted();
+
+        commentRepository.save(comment);
     }
 }
