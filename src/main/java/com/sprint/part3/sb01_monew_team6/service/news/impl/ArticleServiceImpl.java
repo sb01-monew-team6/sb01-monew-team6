@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -191,5 +190,16 @@ public class ArticleServiceImpl implements ArticleService {
     newsArticle.changeDeleted();
 
     newsArticleRepository.save(newsArticle);
+  }
+
+  //물리삭제
+  @Override
+  public void hardDeleteArticle(Long articleId){
+    //기사가 있는지 id로 확인
+    NewsArticle newsArticle = newsArticleRepository.findById(articleId)
+        .orElseThrow(() -> new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND));
+
+    //hard 삭제
+    newsArticleRepository.deleteById(articleId);
   }
 }
