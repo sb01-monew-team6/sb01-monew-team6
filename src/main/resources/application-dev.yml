@@ -18,12 +18,6 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
-#  data:
-#    mongodb:
-#      database: ${MONGO_DB_DATABASE} # user_api
-#      host: ${MONGO_DB_HOST} # localhost
-#      port: ${MONGO_DB_PORT} # 27017
-
   data:
     mongodb:
       uri: ${MONGO_URI}
