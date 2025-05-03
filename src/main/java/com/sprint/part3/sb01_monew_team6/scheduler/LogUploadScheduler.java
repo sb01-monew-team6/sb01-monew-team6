@@ -21,64 +21,64 @@ import com.sprint.part3.sb01_monew_team6.storage.s3.S3LogStorage;
 @Component
 public class LogUploadScheduler {
 
-	private final S3LogStorage storage;
+  private final S3LogStorage storage;
 
-	private final String logDir;
+  private final String logDir;
 
-	private static final int LOG_DATE_BEGIN_INDEX = 12;
-	private static final int LOG_DATE_END_INDEX = 22;
+  private static final int LOG_DATE_BEGIN_INDEX = 12;
+  private static final int LOG_DATE_END_INDEX = 22;
 
-	@Autowired
-	public LogUploadScheduler(
-		S3LogStorage storage,
-		@Value("${log.dir}") String logDir
-	) {
-		this.storage = storage;
-		this.logDir = logDir;
-	}
+  @Autowired
+  public LogUploadScheduler(
+      S3LogStorage storage,
+      @Value("${log.dir}") String logDir
+  ) {
+    this.storage = storage;
+    this.logDir = logDir;
+  }
 
-	@Scheduled(cron = "0 0 0 * * Mon")
-	public void uploadLogEveryWeek() throws IOException {
-		Path dir = Paths.get(logDir);
-		LocalDate today = LocalDate.now();
-		List<Path> toZip = preprocessCompress(dir, today);
+  @Scheduled(cron = "0 0 0 * * Mon")
+  public void uploadLogEveryWeek() throws IOException {
+    Path dir = Paths.get(logDir);
+    LocalDate today = LocalDate.now();
+    List<Path> toZip = preprocessCompress(dir, today);
 
-		if (toZip.isEmpty())
-			return;
+    if (toZip.isEmpty())
+      return;
 
-		String zipName = String.format("logs-%s-to-%s.zip",
-			today.minusDays(7), today.minusDays(1));
-		Path zipPath = dir.resolve(zipName);
+    String zipName = String.format("logs-%s-to-%s.zip",
+        today.minusDays(7), today.minusDays(1));
+    Path zipPath = dir.resolve(zipName);
 
-		processCompress(zipPath, toZip);
+    processCompress(zipPath, toZip);
 
-		storage.uploadZip(zipPath);
-	}
+    storage.uploadZip(zipPath);
+  }
 
-	private static void processCompress(Path zipPath, List<Path> toZip) throws IOException {
-		try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipPath))) {
-			for (Path file : toZip) {
-				ZipEntry entry = new ZipEntry(file.getFileName().toString());
-				zos.putNextEntry(entry);
-				Files.copy(file, zos);
-				zos.closeEntry();
-			}
-		}
-	}
+  private static void processCompress(Path zipPath, List<Path> toZip) throws IOException {
+    try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipPath))) {
+      for (Path file : toZip) {
+        ZipEntry entry = new ZipEntry(file.getFileName().toString());
+        zos.putNextEntry(entry);
+        Files.copy(file, zos);
+        zos.closeEntry();
+      }
+    }
+  }
 
-	private List<Path> preprocessCompress(Path dir, LocalDate today) throws IOException {
-		List<Path> toZip;
-		try (Stream<Path> stream = Files.list(dir)) {
-			toZip = stream.filter(path -> {
-					String name = path.getFileName().toString();
-					if (name.length() < LOG_DATE_END_INDEX)
-						return false;
-					String date = name.substring(LOG_DATE_BEGIN_INDEX, LOG_DATE_END_INDEX);
-					return IntStream.rangeClosed(1, 7)
-						.anyMatch(i -> date.equals(today.minusDays(i).toString()));
-				})
-				.toList();
-		}
-		return toZip;
-	}
+  private List<Path> preprocessCompress(Path dir, LocalDate today) throws IOException {
+    List<Path> toZip;
+    try (Stream<Path> stream = Files.list(dir)) {
+      toZip = stream.filter(path -> {
+            String name = path.getFileName().toString();
+            if (name.length() < LOG_DATE_END_INDEX)
+              return false;
+            String date = name.substring(LOG_DATE_BEGIN_INDEX, LOG_DATE_END_INDEX);
+            return IntStream.rangeClosed(1, 7)
+                .anyMatch(i -> date.equals(today.minusDays(i).toString()));
+          })
+          .toList();
+    }
+    return toZip;
+  }
 }

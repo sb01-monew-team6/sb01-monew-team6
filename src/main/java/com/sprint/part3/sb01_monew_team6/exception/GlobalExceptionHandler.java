@@ -7,8 +7,12 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.security.sasl.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -123,5 +127,66 @@ public class GlobalExceptionHandler {
 					status.value()
 				)
 			);
+	}
+
+	@ExceptionHandler(MonewException.class)
+	public ResponseEntity<ErrorResponse> handleMonewException(MonewException e) {
+		ErrorCode code = e.getCode();
+		return ResponseEntity
+				.status(e.getStatus())
+				.body(new ErrorResponse(
+						e.getTimestamp(),
+						code.toString(),
+						code.getMessage(),
+						e.getClass().getSimpleName(),
+						e.getStatus().value()
+				));
+	}
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
+		ErrorCode code = ErrorCode.VALIDATION_ERROR;
+
+		String message = e.getBindingResult().getAllErrors()
+				.stream()
+				.findFirst()
+				.map(ObjectError::getDefaultMessage)
+				.orElse("입력값이 유효하지 않습니다.");
+
+		return ResponseEntity
+				.status(HttpStatus.BAD_REQUEST) // 직접 지정
+				.body(new ErrorResponse(
+						Instant.now(),
+						code.name(),
+						message,
+						e.getClass().getSimpleName(),
+						HttpStatus.BAD_REQUEST.value()
+				));
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ErrorResponse> handleUnexpectedException(Exception e) {
+		return ResponseEntity
+				.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body(new ErrorResponse(
+						Instant.now(),
+						"INTERNAL_SERVER_ERROR",
+						"예상치 못한 오류가 발생했습니다.",
+						e.getClass().getSimpleName(),
+						HttpStatus.INTERNAL_SERVER_ERROR.value()
+				));
+	}
+
+	@ExceptionHandler(AuthorizationDeniedException.class)
+	public ResponseEntity<ErrorResponse> handleAuthException(AuthenticationException e) {
+		return ResponseEntity
+				.status(HttpStatus.FORBIDDEN)
+				.body(new ErrorResponse(
+						Instant.now(),
+						"FORBIDDEN",
+						"권한이 없습니다.",
+						e.getClass().getSimpleName(),
+						HttpStatus.FORBIDDEN.value()
+				));
 	}
 }
