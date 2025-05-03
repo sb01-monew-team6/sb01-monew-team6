@@ -70,4 +70,28 @@ class GlobalExceptionHandlerTest {
     assertThat(body.status()).isEqualTo(400);
     assertThat(body.timestamp()).isNotNull();
   }
+
+  @DisplayName("예상치 못한 예외 발생 시 500 에러 응답 확인")
+  @Test
+  void handleUnexpectedException_shouldReturnInternalServerError() {
+    // given
+    GlobalExceptionHandler handler = new GlobalExceptionHandler();
+    RuntimeException exception = new RuntimeException("DB 연결 실패");
+
+    // when
+    ResponseEntity<ErrorResponse> response = handler.handleUnexpectedException(exception);
+
+    // then
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+
+    ErrorResponse body = response.getBody();
+    assertNotNull(body);
+    assertEquals("INTERNAL_SERVER_ERROR", body.code());
+    assertEquals("예상치 못한 오류가 발생했습니다.", body.message());
+    assertEquals("RuntimeException", body.exceptionType());
+    assertEquals(500, body.status());
+    assertNotNull(body.timestamp());
+  }
+
+
 }
