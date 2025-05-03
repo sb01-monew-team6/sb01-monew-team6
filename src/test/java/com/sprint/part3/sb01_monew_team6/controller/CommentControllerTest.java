@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.config.SecurityConfig;
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
+import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -179,4 +180,41 @@ class CommentControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/comments/" + commentId))
             .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
+
+    @DisplayName("댓글 수정 성공 - PATCH /api/comments/{commentId}")
+    @Test
+    @WithMockUser
+    void updateComment_withValidRequest_shouldReturnOk() throws Exception {
+        // given
+        Long commentId = 1L;
+        Long userId = 10L;
+        String updatedContent = "수정된 댓글 내용";
+
+        CommentUpdateRequest request = new CommentUpdateRequest(updatedContent);
+        String requestBody = objectMapper.writeValueAsString(request);
+
+        CommentDto responseDto = CommentDto.builder()
+            .id(commentId)
+            .articleId(100L)
+            .userId(userId)
+            .userNickname("작성자")
+            .content(updatedContent)
+            .likeCount(5L)
+            .likedByMe(false)
+            .createdAt(Instant.now())
+            .build();
+
+        when(commentService.updateComment(eq(commentId), eq(userId), any(CommentUpdateRequest.class)))
+            .thenReturn(responseDto);
+
+        // when & then
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/comments/{commentId}", commentId)
+                .header("Monew-Request-User-ID", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody)
+                .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").value(updatedContent));
+    }
+
 }
