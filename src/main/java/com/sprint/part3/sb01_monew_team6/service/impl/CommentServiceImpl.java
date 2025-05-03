@@ -183,4 +183,16 @@ public class CommentServiceImpl implements CommentService {
 
         return CommentDto.fromEntity(comment, 0L, false); // likeCount, likedByMe는 기본값으로 처리
     }
+
+    @Override
+    @Transactional
+    public void hardDeleteComment(Long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new CommentNotFoundException());
+
+        if (!comment.isDeleted()) {
+            throw new IllegalStateException("논리 삭제되지 않은 댓글은 물리 삭제할 수 없습니다.");
+        }
+        commentRepository.delete(comment);
+    }
 }
