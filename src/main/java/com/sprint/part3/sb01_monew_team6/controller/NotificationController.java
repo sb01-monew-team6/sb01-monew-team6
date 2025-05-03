@@ -35,7 +35,7 @@ public class NotificationController {
 
 	@GetMapping
 	public ResponseEntity<PageResponse<NotificationDto>> findAllByUserId(
-		@RequestHeader("Monew-Request-User-Id") @Min(value = 1, groups = NotificationValidationGroup.class) Long userId,
+		@RequestHeader("Monew-Request-User-ID") @Min(value = 1, groups = NotificationValidationGroup.class) Long userId,
 		@RequestParam(required = false) Instant cursor,
 		@RequestParam(required = false) Instant after,
 		@PageableDefault(
@@ -53,7 +53,7 @@ public class NotificationController {
 
 	@PatchMapping
 	public ResponseEntity<Void> updateAllByUserId(
-		@RequestHeader("Monew-Request-User-Id") @Min(value = 1, groups = NotificationValidationGroup.class) Long userId
+		@RequestHeader("Monew-Request-User-ID") @Min(value = 1, groups = NotificationValidationGroup.class) Long userId
 	) {
 		notificationService.updateAllByUserId(userId);
 
@@ -62,7 +62,7 @@ public class NotificationController {
 
 	@PatchMapping("/{notificationId}")
 	public ResponseEntity<Void> updateByUserId(
-		@RequestHeader("Monew-Request-User-Id") @Min(value = 1, groups = NotificationValidationGroup.class) Long userId,
+		@RequestHeader("Monew-Request-User-ID") @Min(value = 1, groups = NotificationValidationGroup.class) Long userId,
 		@PathVariable @Min(value = 1, groups = NotificationValidationGroup.class) Long notificationId
 	) {
 		notificationService.updateByUserId(userId, notificationId);
