@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
+import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
@@ -170,5 +171,16 @@ public class CommentServiceImpl implements CommentService {
         comment.softDelete();
         commentRepository.save(comment);
         log.info("[CommentServiceImpl] 댓글 논리 삭제 성공: id:{}", id);
+    }
+
+    @Transactional
+    @Override
+    public CommentDto updateComment(Long commentId, Long userId, CommentUpdateRequest request) {
+        Comment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+
+        comment.updateContent(request.content()); // 이 메서드 Comment 엔티티에 있어야 함
+
+        return CommentDto.fromEntity(comment, 0L, false); // likeCount, likedByMe는 기본값으로 처리
     }
 }
