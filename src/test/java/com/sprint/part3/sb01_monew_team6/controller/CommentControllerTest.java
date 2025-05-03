@@ -218,4 +218,23 @@ class CommentControllerTest {
             .andExpect(jsonPath("$.content").value(updatedContent));
     }
 
+    @DisplayName("댓글 물리 삭제 성공 - DELETE /api/comments/{commentId}/hard 요청시 204 반환")
+    @Test
+    @WithMockUser
+    void hardDeleteComment_shouldReturnNoContent() throws Exception {
+        // given
+        Long commentId = 1L;
+
+        // mock 설정
+        doNothing().when(commentService).hardDeleteComment(commentId);
+
+        // when & then
+        mockMvc.perform(MockMvcRequestBuilders
+                .delete("/api/comments/{commentId}/hard", commentId)
+                .with(csrf()))
+            .andExpect(status().isNoContent());
+    }
+
+
+
 }
