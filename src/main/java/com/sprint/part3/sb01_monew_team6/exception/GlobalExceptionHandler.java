@@ -162,5 +162,17 @@ public class GlobalExceptionHandler {
 				));
 	}
 
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ErrorResponse> handleUnexpectedException(Exception e) {
+		return ResponseEntity
+				.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body(new ErrorResponse(
+						Instant.now(),
+						"INTERNAL_SERVER_ERROR",
+						"예상치 못한 오류가 발생했습니다.",
+						e.getClass().getSimpleName(),
+						HttpStatus.INTERNAL_SERVER_ERROR.value()
+				));
+	}
 
 }
