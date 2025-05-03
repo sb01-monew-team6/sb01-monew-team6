@@ -79,5 +79,9 @@ public class CommentController {
         return ResponseEntity.ok(updatedComment);
     }
 
-
+    @DeleteMapping("/{commentId}/hard")
+    public ResponseEntity<Void> hardDelete(@PathVariable Long commentId) {
+        commentService.hardDeleteComment(commentId);
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
 }
