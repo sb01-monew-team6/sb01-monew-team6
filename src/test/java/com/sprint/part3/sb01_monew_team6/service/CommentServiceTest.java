@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.service;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
+import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
@@ -25,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -199,4 +201,50 @@ class CommentServiceTest {
         assertThat(comment.isDeleted()).isTrue();
         verify(commentRepository).findById(commentId);
     }
+
+    @DisplayName("댓글 수정 - 내용 수정 시 CommentDto 반환")
+    @Test
+    void shouldUpdateContentAndReturnDto() {
+        // given
+        Long commentId = 1L;
+        Long userId = 42L;
+        String originalContent = "원래 댓글";
+        String updatedContent = "수정된 댓글";
+
+        User user = User.builder()
+            .email("user@example.com")
+            .nickname("테스터")
+            .password("password")
+            .build();
+        ReflectionTestUtils.setField(user, "id", userId);
+
+        NewsArticle article = NewsArticle.builder()
+            .source("source")
+            .sourceUrl("https://source.com")
+            .articleTitle("기사 제목")
+            .articlePublishedDate(Instant.now())
+            .articleSummary("요약")
+            .build();
+        ReflectionTestUtils.setField(article, "id", 100L);
+
+        Comment comment = Comment.builder()
+            .content(originalContent)
+            .user(user)
+            .article(article)
+            .build();
+        ReflectionTestUtils.setField(comment, "id", commentId);
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+        CommentUpdateRequest request = new CommentUpdateRequest(updatedContent);
+
+        // when
+        CommentDto result = commentService.updateComment(commentId, userId, request); // ⛔ 아직 구현 안 되어 있어야 함 (Red)
+
+        // then
+        assertEquals(updatedContent, result.content());
+        assertEquals(commentId, result.id());
+        assertEquals(userId, result.userId());
+    }
+
 }
