@@ -28,7 +28,7 @@ public class UserActivityController {
 	 */
 	@GetMapping("/{userId}")
 	public ResponseEntity<UserActivityDto> findByUserId(
-		@RequestHeader("Monew-Request-User-Id")
+		@RequestHeader("Monew-Request-User-ID")
 		@Min(value = 1, groups = UserActivityValidationGroup.class) Long requestUserId,
 
 		@PathVariable
