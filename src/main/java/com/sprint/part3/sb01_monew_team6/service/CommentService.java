@@ -24,5 +24,7 @@ public interface CommentService {
 
     void softDeleteComment(Long id);
 
-    CommentDto updateComment(Long commentId, Long userId, CommentUpdateRequest request)
-;}
+    CommentDto updateComment(Long commentId, Long userId, CommentUpdateRequest request);
+
+    void hardDeleteComment(Long commentId);
+}

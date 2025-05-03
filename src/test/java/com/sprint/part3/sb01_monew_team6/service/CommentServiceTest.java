@@ -279,7 +279,7 @@ class CommentServiceTest {
         given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
 
         // when
-        commentService.hardDelete(commentId);
+        commentService.hardDeleteComment(commentId);
 
         // then
         verify(commentRepository).findById(commentId);
