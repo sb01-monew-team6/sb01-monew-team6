@@ -239,12 +239,52 @@ class CommentServiceTest {
         CommentUpdateRequest request = new CommentUpdateRequest(updatedContent);
 
         // when
-        CommentDto result = commentService.updateComment(commentId, userId, request); // ⛔ 아직 구현 안 되어 있어야 함 (Red)
+        CommentDto result = commentService.updateComment(commentId, userId, request);
 
         // then
         assertEquals(updatedContent, result.content());
         assertEquals(commentId, result.id());
         assertEquals(userId, result.userId());
     }
+
+    @DisplayName("댓글 물리 삭제 - isDeleted가 true일 때 정상 삭제")
+    @Test
+    void shouldDeleteCommentIfSoftDeleted() {
+        // given
+        Long commentId = 1L;
+        User user = User.builder()
+            .nickname("tester")
+            .email("test@example.com")
+            .password("1234")
+            .build();
+        ReflectionTestUtils.setField(user, "id", 10L);
+
+        NewsArticle article = NewsArticle.builder()
+            .source("naver")
+            .sourceUrl("https://news.com")
+            .articleTitle("테스트 기사")
+            .articleSummary("요약")
+            .articlePublishedDate(Instant.now())
+            .build();
+        ReflectionTestUtils.setField(article, "id", 100L);
+
+        Comment comment = Comment.builder()
+            .user(user)
+            .article(article)
+            .content("삭제 대상 댓글")
+            .isDeleted(true) // 논리 삭제됨
+            .build();
+        ReflectionTestUtils.setField(comment, "id", commentId);
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+        // when
+        commentService.hardDelete(commentId);
+
+        // then
+        verify(commentRepository).findById(commentId);
+        verify(commentRepository).delete(comment);
+    }
+
 
 }
