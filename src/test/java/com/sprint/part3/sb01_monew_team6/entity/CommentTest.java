@@ -20,4 +20,19 @@ class CommentTest {
     //then
     assertThat(comment.isDeleted()).isTrue();
   }
+
+  @DisplayName("updateContent - content만 수정됨을 검증")
+  @Test
+  void updateContent_shouldChangeOnlyContent() {
+    // given
+    Comment comment = Comment.builder()
+        .content("기존 내용")
+        .build();
+
+    // when
+    comment.updateContent("수정된 내용");
+
+    // then
+    assertThat(comment.getContent()).isEqualTo("수정된 내용");
+  }
 }
