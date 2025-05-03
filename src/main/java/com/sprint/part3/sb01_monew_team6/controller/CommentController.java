@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.controller;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
+import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -67,5 +68,16 @@ public class CommentController {
         log.info("[CommentController] 사용자 논리 삭제 요청 성공: CommentId : {}",id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
-    
+
+    @PatchMapping("/{commentId}")
+    public ResponseEntity<CommentDto> updateComment(
+        @PathVariable Long commentId,
+        @RequestHeader("Monew-Request-User-ID") Long userId,
+        @RequestBody @Valid CommentUpdateRequest request
+    ) {
+        CommentDto updatedComment = commentService.updateComment(commentId, userId, request);
+        return ResponseEntity.ok(updatedComment);
+    }
+
+
 }
