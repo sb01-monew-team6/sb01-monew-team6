@@ -4,23 +4,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.config.SecurityConfig;
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
+import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.util.List;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -37,7 +42,7 @@ class CommentControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private CommentService commentService;
 
     @Test
@@ -160,6 +165,74 @@ class CommentControllerTest {
                 .andExpect(jsonPath("$.content[0].content").value(comment1.content()))
                 .andExpect(jsonPath("$.content[1].content").value(comment2.content()));
     }
+
+//----------------------------------------------------------------------------------------------------------------------
+    @DisplayName("DELETE /api/comments/{id} - 요청시 정상응답 204 반환")
+    @Test
+    void deleteComment() throws Exception {
+        //given
+        Long commentId = 1L;
+
+        //when
+        doNothing().when(commentService).softDeleteComment(commentId);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/comments/" + commentId))
+            .andExpect(MockMvcResultMatchers.status().isNoContent());
+    }
+
+    @DisplayName("댓글 수정 성공 - PATCH /api/comments/{commentId}")
+    @Test
+    @WithMockUser
+    void updateComment_withValidRequest_shouldReturnOk() throws Exception {
+        // given
+        Long commentId = 1L;
+        Long userId = 10L;
+        String updatedContent = "수정된 댓글 내용";
+
+        CommentUpdateRequest request = new CommentUpdateRequest(updatedContent);
+        String requestBody = objectMapper.writeValueAsString(request);
+
+        CommentDto responseDto = CommentDto.builder()
+            .id(commentId)
+            .articleId(100L)
+            .userId(userId)
+            .userNickname("작성자")
+            .content(updatedContent)
+            .likeCount(5L)
+            .likedByMe(false)
+            .createdAt(Instant.now())
+            .build();
+
+        when(commentService.updateComment(eq(commentId), eq(userId), any(CommentUpdateRequest.class)))
+            .thenReturn(responseDto);
+
+        // when & then
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/comments/{commentId}", commentId)
+                .header("Monew-Request-User-ID", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody)
+                .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").value(updatedContent));
+    }
+
+    @DisplayName("댓글 물리 삭제 성공 - DELETE /api/comments/{commentId}/hard 요청시 204 반환")
+    @Test
+    @WithMockUser
+    void hardDeleteComment_shouldReturnNoContent() throws Exception {
+        // given
+        Long commentId = 1L;
+
+        // mock 설정
+        doNothing().when(commentService).hardDelete(commentId);
+
+        // when & then
+        mockMvc.perform(MockMvcRequestBuilders
+                .delete("/api/comments/{commentId}/hard", commentId)
+                .with(csrf()))
+            .andExpect(status().isNoContent());
+    }
+
 
 
 }

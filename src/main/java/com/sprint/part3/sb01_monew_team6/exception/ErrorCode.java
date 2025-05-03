@@ -34,7 +34,8 @@ public enum ErrorCode {
 
 	// comment
 	COMMENT_NOT_FOUND("댓글을 찾을 수 없습니다."),
-
+	VALIDATION_ERROR("입력값이 유효하지 않습니다."),
+	COMMENT_NOT_SOFT_DELETED("논리 삭제되지 않은 댓글은 물리 삭제할 수 없습니다."),
 	//article_view
 	ARTICLE_VIEW_NOT_FOUND_EXCEPTION("기사 기록을 찾을 수 없습니다."),
 	// 기타
