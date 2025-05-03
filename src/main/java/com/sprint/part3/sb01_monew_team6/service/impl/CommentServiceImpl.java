@@ -177,7 +177,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentDto updateComment(Long commentId, Long userId, CommentUpdateRequest request) {
         Comment comment = commentRepository.findById(commentId)
-            .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+            .orElseThrow(() -> new CommentNotFoundException());
 
         comment.updateContent(request.content()); // 이 메서드 Comment 엔티티에 있어야 함
 
