@@ -8,6 +8,7 @@ import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotFoundException;
+import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotSoftDeletedException;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
 import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
@@ -186,12 +187,12 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public void hardDeleteComment(Long commentId) {
+    public void hardDelete(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new CommentNotFoundException());
 
         if (!comment.isDeleted()) {
-            throw new IllegalStateException("논리 삭제되지 않은 댓글은 물리 삭제할 수 없습니다.");
+            throw new CommentNotSoftDeletedException();
         }
         commentRepository.delete(comment);
     }

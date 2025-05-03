@@ -6,6 +6,7 @@ import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotSoftDeletedException;
 import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -160,47 +160,24 @@ class CommentServiceTest {
                 .build();
     }
 //    -----------------------------------------------------------------------------------------------------------------------------------------------------------
-    @DisplayName("댓글 논리 삭제 - 삭제요청시 삭제 정상응답확인 ")
-    @Test
-    void deleteComment_marksDeleted_true() {
-        // given
-        Long commentId = 1L;
-        Long userId = 2L;
-        Long newsAticleId = 3L;
+@DisplayName("댓글 논리 삭제 - 삭제요청시 삭제 정상응답확인")
+@Test
+void deleteComment_marksDeleted_true() {
+    // given
+    Long commentId = 1L;
+    User user = createUser(2L);
+    NewsArticle article = createArticle(3L);
+    Comment comment = createComment(commentId, user, article, "삭제할 댓글", false);
 
-        User user = User.builder()
-            .email("user@example.com")
-            .nickname("nickname")
-            .password("password")
-            .build();
-        ReflectionTestUtils.setField(user, "id", userId);
+    given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
 
-        NewsArticle article = NewsArticle.builder()
-            .source("naver")
-            .sourceUrl("https://example.com")
-            .articleTitle("아무 제목")
-            .articlePublishedDate(Instant.now())
-            .articleSummary("테스트 기사임")
-            .build();
-        ReflectionTestUtils.setField(article, "id", newsAticleId);
+    // when
+    commentService.softDeleteComment(commentId);
 
-        Comment comment = Comment.builder()
-            .user(user)
-            .article(article)
-            .content("삭제할 댓글")
-            .isDeleted(false)
-            .build();
-        ReflectionTestUtils.setField(comment, "id", commentId);
-
-        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
-
-        // when
-        commentService.softDeleteComment(commentId);
-
-        // then
-        assertThat(comment.isDeleted()).isTrue();
-        verify(commentRepository).findById(commentId);
-    }
+    // then
+    assertThat(comment.isDeleted()).isTrue();
+    verify(commentRepository).findById(commentId);
+}
 
     @DisplayName("댓글 수정 - 내용 수정 시 CommentDto 반환")
     @Test
@@ -208,31 +185,11 @@ class CommentServiceTest {
         // given
         Long commentId = 1L;
         Long userId = 42L;
-        String originalContent = "원래 댓글";
         String updatedContent = "수정된 댓글";
 
-        User user = User.builder()
-            .email("user@example.com")
-            .nickname("테스터")
-            .password("password")
-            .build();
-        ReflectionTestUtils.setField(user, "id", userId);
-
-        NewsArticle article = NewsArticle.builder()
-            .source("source")
-            .sourceUrl("https://source.com")
-            .articleTitle("기사 제목")
-            .articlePublishedDate(Instant.now())
-            .articleSummary("요약")
-            .build();
-        ReflectionTestUtils.setField(article, "id", 100L);
-
-        Comment comment = Comment.builder()
-            .content(originalContent)
-            .user(user)
-            .article(article)
-            .build();
-        ReflectionTestUtils.setField(comment, "id", commentId);
+        User user = createUser(userId);
+        NewsArticle article = createArticle(100L);
+        Comment comment = createComment(commentId, user, article, "원래 댓글", false);
 
         given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
 
@@ -250,15 +207,41 @@ class CommentServiceTest {
     @DisplayName("댓글 물리 삭제 - isDeleted가 true일 때 정상 삭제")
     @Test
     void shouldDeleteCommentIfSoftDeleted() {
-        // given
         Long commentId = 1L;
+        Comment comment = createComment(commentId, createUser(10L), createArticle(100L), "삭제 대상 댓글", true);
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+        commentService.hardDelete(commentId);
+
+        verify(commentRepository).findById(commentId);
+        verify(commentRepository).delete(comment);
+    }
+
+    @DisplayName("댓글 물리 삭제 실패 - isDeleted가 false일 경우 예외 발생")
+    @Test
+    void shouldThrowExceptionIfNotSoftDeleted() {
+        Long commentId = 1L;
+        Comment comment = createComment(commentId, createUser(10L), createArticle(100L), "삭제 대상 댓글", false);
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+        org.junit.jupiter.api.Assertions.assertThrows(CommentNotSoftDeletedException.class, () -> {
+            commentService.hardDelete(commentId);
+        });
+    }
+
+    private User createUser(Long id) {
         User user = User.builder()
             .nickname("tester")
             .email("test@example.com")
             .password("1234")
             .build();
-        ReflectionTestUtils.setField(user, "id", 10L);
+        ReflectionTestUtils.setField(user, "id", id);
+        return user;
+    }
 
+    private NewsArticle createArticle(Long id) {
         NewsArticle article = NewsArticle.builder()
             .source("naver")
             .sourceUrl("https://news.com")
@@ -266,25 +249,19 @@ class CommentServiceTest {
             .articleSummary("요약")
             .articlePublishedDate(Instant.now())
             .build();
-        ReflectionTestUtils.setField(article, "id", 100L);
+        ReflectionTestUtils.setField(article, "id", id);
+        return article;
+    }
 
+    private Comment createComment(Long id, User user, NewsArticle article, String content, boolean isDeleted) {
         Comment comment = Comment.builder()
             .user(user)
             .article(article)
-            .content("삭제 대상 댓글")
-            .isDeleted(true) // 논리 삭제됨
+            .content(content)
+            .isDeleted(isDeleted)
             .build();
-        ReflectionTestUtils.setField(comment, "id", commentId);
-
-        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
-
-        // when
-        commentService.hardDeleteComment(commentId);
-
-        // then
-        verify(commentRepository).findById(commentId);
-        verify(commentRepository).delete(comment);
+        ReflectionTestUtils.setField(comment, "id", id);
+        return comment;
     }
-
 
 }
