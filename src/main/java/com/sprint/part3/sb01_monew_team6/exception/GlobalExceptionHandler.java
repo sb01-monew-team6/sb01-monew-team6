@@ -9,6 +9,8 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -138,5 +140,27 @@ public class GlobalExceptionHandler {
 						e.getStatus().value()
 				));
 	}
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
+		ErrorCode code = ErrorCode.VALIDATION_ERROR;
+
+		String message = e.getBindingResult().getAllErrors()
+				.stream()
+				.findFirst()
+				.map(ObjectError::getDefaultMessage)
+				.orElse("입력값이 유효하지 않습니다.");
+
+		return ResponseEntity
+				.status(HttpStatus.BAD_REQUEST) // 직접 지정
+				.body(new ErrorResponse(
+						Instant.now(),
+						code.name(),
+						message,
+						e.getClass().getSimpleName(),
+						HttpStatus.BAD_REQUEST.value()
+				));
+	}
+
 
 }
