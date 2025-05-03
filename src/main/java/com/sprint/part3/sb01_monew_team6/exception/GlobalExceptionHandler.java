@@ -125,4 +125,18 @@ public class GlobalExceptionHandler {
 			);
 	}
 
+	@ExceptionHandler(MonewException.class)
+	public ResponseEntity<ErrorResponse> handleMonewException(MonewException e) {
+		ErrorCode code = e.getCode();
+		return ResponseEntity
+				.status(e.getStatus())
+				.body(new ErrorResponse(
+						e.getTimestamp(),
+						code.toString(),
+						code.getMessage(),
+						e.getClass().getSimpleName(),
+						e.getStatus().value()
+				));
+	}
+
 }
