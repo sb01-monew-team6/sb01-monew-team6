@@ -8,7 +8,6 @@ import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -22,7 +21,6 @@ import java.util.List;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import static org.awaitility.Awaitility.given;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -226,7 +224,7 @@ class CommentControllerTest {
         Long commentId = 1L;
 
         // mock 설정
-        doNothing().when(commentService).hardDeleteComment(commentId);
+        doNothing().when(commentService).hardDelete(commentId);
 
         // when & then
         mockMvc.perform(MockMvcRequestBuilders
