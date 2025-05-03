@@ -67,4 +67,5 @@ public class CommentController {
         log.info("[CommentController] 사용자 논리 삭제 요청 성공: CommentId : {}",id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
+    
 }
