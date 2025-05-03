@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
+import com.sprint.part3.sb01_monew_team6.dto.UserDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.UserActivityDto;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 import com.sprint.part3.sb01_monew_team6.mapper.user_activity.UserActivityMapper;
@@ -51,5 +52,26 @@ class UserActivityMapperTest {
 		assertThat(dto.subscriptions().get(0).interestKeywords()).containsExactly("k");
 		assertThat(dto.subscriptions().get(0).interestSubscriberCount()).isEqualTo(3L);
 
+	}
+
+	@Test
+	@DisplayName("fromUserDto 정상 호출 시 userDto 가 userActivity 로 정상 변환")
+	public void returnUserActivityWhenFromUserDtoSuccessfullyCalled() throws Exception {
+		//given
+		UserDto userDto = new UserDto(
+			1L,
+			"asd@asd.asd",
+			"asd",
+			Instant.now()
+		);
+
+		//when
+		UserActivity userActivity = userActivityMapper.fromUserDto(userDto);
+
+		//then
+		assertThat(userActivity.getUserId()).isEqualTo(userDto.id());
+		assertThat(userActivity.getEmail()).isEqualTo(userDto.email());
+		assertThat(userActivity.getNickname()).isEqualTo(userDto.nickname());
+		assertThat(userActivity.getUserCreatedAt()).isEqualTo(userDto.createdAt());
 	}
 }
