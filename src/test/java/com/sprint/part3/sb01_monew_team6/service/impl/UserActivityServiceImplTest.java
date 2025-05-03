@@ -15,11 +15,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.sprint.part3.sb01_monew_team6.dto.UserDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.ArticleViewHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.UserActivityDto;
+import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityDomainException;
 import com.sprint.part3.sb01_monew_team6.exception.user_activity.UserActivityException;
@@ -457,5 +459,54 @@ class UserActivityServiceImplTest {
 		assertThatThrownBy(() ->
 			userActivityService.findByUserId(userId)
 		).isInstanceOf(UserActivityException.class);
+	}
+
+	@Test
+	@DisplayName("createUserActivity 정상 호출 시 정상적으로 레포지토리가 호출된다")
+	public void createUserActivity() throws Exception {
+		//given
+		UserDto userDto = new UserDto(
+			1L,
+			"asd@asd.asd",
+			"asd",
+			Instant.now()
+		);
+		UserActivity userActivity = UserActivity.builder()
+			.userId(userDto.id())
+			.email(userDto.email())
+			.nickname(userDto.nickname())
+			.userCreatedAt(userDto.createdAt())
+			.build();
+		when(userActivityMapper.fromUserDto(eq(userDto))).thenReturn(userActivity);
+		when(userRepository.existsByIdAndIsDeletedFalse(anyLong())).thenReturn(true);
+		when(userActivityRepository.save(eq(userActivity))).thenReturn(userActivity);
+
+		//when
+		userActivityService.createUserActivity(userDto);
+
+		//then
+		verify(userActivityRepository, times(1)).save(eq(userActivity));
+	}
+
+	@Test
+	@DisplayName("createUserActivity 호출 시 user 가 존재하지 않는다면 UserActivityDomainException 발생")
+	public void throwUserActivityDomainExceptionWhenUserNonExistWhileCreateUserActivity() throws Exception {
+		//given
+		Long userId = 1L;
+		CommentHistoryDto historyDto = new CommentHistoryDto(
+			1L,
+			"title",
+			1L,
+			"nickName",
+			"content",
+			3L,
+			Instant.now()
+		);
+		when(userRepository.existsByIdAndIsDeletedFalse(eq(userId))).thenReturn(false);
+
+		//when & then
+		assertThatThrownBy(() ->
+			userActivityService.addCommentFromEvent(userId, historyDto)
+		).isInstanceOf(UserActivityDomainException.class);
 	}
 }
