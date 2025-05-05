@@ -10,7 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/articles/{articleId}/article-views")
+@RequestMapping({
+    "/api/articles/{articleId}/article-views",
+    "/articles/{articleId}/article-views",
+    "/articles/articles/{articleId}/article-views"
+})
 @RequiredArgsConstructor
 public class ArticleViewController {
 

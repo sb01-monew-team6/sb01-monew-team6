@@ -12,6 +12,7 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Value;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -21,7 +22,8 @@ public class ArticleBackupTasklet implements Tasklet {
   private final NewsArticleRepository newsArticleRepository;
   private final S3Client s3Client;
   private final ObjectMapper objectMapper;
-  private final String bucketName;
+  @Value("${storage.s3.backup-bucket}")
+  private String bucketName;
 
   @Override
   public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {

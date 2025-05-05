@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -48,9 +49,9 @@ public class ArticleServiceImpl implements ArticleService {
   private final CommentRepository commentRepository;
   private final PageResponseMapper pageResponseMapper;
   private final S3Client s3Client;
-//  @Value("${cloud.aws.s3.bucket}")
-  private final String bucketName = "monew";
   private final ObjectMapper objectMapper;
+  @Value("${storage.s3.backup-bucket}")
+  private String bucketName;
 
   //목록 조회 : 페이지네이션
   @Transactional(readOnly=true)

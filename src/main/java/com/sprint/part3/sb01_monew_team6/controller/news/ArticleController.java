@@ -12,7 +12,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -25,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/articles")
+@RequestMapping({ "/api/articles", "/articles", "/articles/articles" })
 @Validated
 @RequiredArgsConstructor
 public class ArticleController {
@@ -33,7 +32,7 @@ public class ArticleController {
   private final ArticleService articleService;
 
   @GetMapping
-  public ResponseEntity<PageResponse<ArticleDto>> archArticles(
+  public ResponseEntity<PageResponse<ArticleDto>> searchArticles(
       @RequestHeader("Monew-Request-User-ID")
       Long userId,
       @RequestParam(name = "keyword", required = false)
