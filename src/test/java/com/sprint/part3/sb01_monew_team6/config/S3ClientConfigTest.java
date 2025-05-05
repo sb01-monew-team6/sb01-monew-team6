@@ -14,37 +14,37 @@ import software.amazon.awssdk.core.SdkServiceClientConfiguration;
 import software.amazon.awssdk.services.s3.S3Client;
 
 class S3ClientConfigTest {
-	private S3ClientConfig config;
+  private S3ClientConfig config;
 
-	@BeforeEach
-	void setUp() {
-		config = new S3ClientConfig();
+  @BeforeEach
+  void setUp() {
+    config = new S3ClientConfig();
 
-		ReflectionTestUtils.setField(config, "accessKey", "access-key");
-		ReflectionTestUtils.setField(config, "secretKey", "secret-key");
-		ReflectionTestUtils.setField(config, "region", "region");
-	}
+    ReflectionTestUtils.setField(config, "accessKey", "access-key");
+    ReflectionTestUtils.setField(config, "secretKey", "secret-key");
+    ReflectionTestUtils.setField(config, "region", "region");
+  }
 
-	@Test
-	@DisplayName("")
-	void whenInvoking_s3Client_thenItBuildsNonNullClient() {
-		//when & then
-		S3Client client = config.s3Client();
-		assertThat(client).isNotNull();
+  @Test
+  @DisplayName("")
+  void whenInvoking_s3Client_thenItBuildsNonNullClient() {
+    //when & then
+    S3Client client = config.s3Client();
+    assertThat(client).isNotNull();
 
-		SdkServiceClientConfiguration sdkConfig =
-			ReflectionTestUtils.invokeMethod(client, "serviceClientConfiguration");
-		assertThat(sdkConfig).isNotNull();
+    SdkServiceClientConfiguration sdkConfig =
+        ReflectionTestUtils.invokeMethod(client, "serviceClientConfiguration");
+    assertThat(sdkConfig).isNotNull();
 
-		AwsServiceClientConfiguration awsConfig = (AwsServiceClientConfiguration)sdkConfig;
-		assertThat(awsConfig).isNotNull();
+    AwsServiceClientConfiguration awsConfig = (AwsServiceClientConfiguration)sdkConfig;
+    assertThat(awsConfig).isNotNull();
 
-		AwsCredentialsProvider provider = (AwsCredentialsProvider)awsConfig.credentialsProvider();
-		assertThat(provider).isNotNull();
+    AwsCredentialsProvider provider = (AwsCredentialsProvider)awsConfig.credentialsProvider();
+    assertThat(provider).isNotNull();
 
-		AwsBasicCredentials credentials = (AwsBasicCredentials)provider.resolveCredentials();
-		assertThat(credentials.accessKeyId()).isEqualTo("access-key");
-		assertThat(credentials.secretAccessKey()).isEqualTo("secret-key");
-		assertThat(awsConfig.region().toString()).isEqualTo("region");
-	}
+    AwsBasicCredentials credentials = (AwsBasicCredentials)provider.resolveCredentials();
+    assertThat(credentials.accessKeyId()).isEqualTo("access-key");
+    assertThat(credentials.secretAccessKey()).isEqualTo("secret-key");
+    assertThat(awsConfig.region().toString()).isEqualTo("region");
+  }
 }
