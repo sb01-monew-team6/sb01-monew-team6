@@ -2,10 +2,13 @@ package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
+import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
+import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotFoundException;
+import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotSoftDeletedException;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
 import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
@@ -22,6 +25,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -157,5 +161,39 @@ public class CommentServiceImpl implements CommentService {
                     return CommentDto.fromEntity(comment, likeCount, likedByMe);
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void softDeleteComment(Long id){
+        log.info("[CommentServiceImpl] 댓글 논리 삭제 시작: id:{}", id);
+        Comment comment = commentRepository.findById(id)
+            .orElseThrow(() -> new CommentNotFoundException());
+
+        comment.softDelete();
+        commentRepository.save(comment);
+        log.info("[CommentServiceImpl] 댓글 논리 삭제 성공: id:{}", id);
+    }
+
+    @Transactional
+    @Override
+    public CommentDto updateComment(Long commentId, Long userId, CommentUpdateRequest request) {
+        Comment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new CommentNotFoundException());
+
+        comment.updateContent(request.content()); // 이 메서드 Comment 엔티티에 있어야 함
+
+        return CommentDto.fromEntity(comment, 0L, false); // likeCount, likedByMe는 기본값으로 처리
+    }
+
+    @Override
+    @Transactional
+    public void hardDelete(Long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new CommentNotFoundException());
+
+        if (!comment.isDeleted()) {
+            throw new CommentNotSoftDeletedException();
+        }
+        commentRepository.delete(comment);
     }
 }
