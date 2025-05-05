@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/user-activities")
+@RequestMapping("/api/v1/user-activities")
 @Validated(UserActivityValidationGroup.class)
 @RequiredArgsConstructor
 public class UserActivityController {

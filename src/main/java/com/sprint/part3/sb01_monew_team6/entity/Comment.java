@@ -40,4 +40,12 @@ public class Comment extends BaseUpdatableEntity {
 
   @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CommentLike> commentLikes = new ArrayList<>();
+
+  public void softDelete(){
+    this.isDeleted = true;
+  }
+
+  public void updateContent(String content) {
+    this.content = content;
+  }
 }

@@ -31,89 +31,89 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 @Testcontainers
 class S3LogStorageTest {
 
-	@TempDir
-	private Path tempDir;
+  @TempDir
+  private Path tempDir;
 
-	private static final String BUCKET = "monew";
+  private static final String BUCKET = "monew";
 
-	@Container
-	static final S3MockContainer S3_MOCK = new S3MockContainer("4.1.1")
-		.withInitialBuckets(BUCKET);
+  @Container
+  static final S3MockContainer S3_MOCK = new S3MockContainer("4.1.1")
+      .withInitialBuckets(BUCKET);
 
-	private S3Client s3Client;
+  private S3Client s3Client;
 
-	private S3LogStorage storage;
+  private S3LogStorage storage;
 
-	@BeforeEach
-	void setUp() {
+  @BeforeEach
+  void setUp() {
 
-		S3Configuration config = S3Configuration.builder()
-			.pathStyleAccessEnabled(true)
-			.build();
+    S3Configuration config = S3Configuration.builder()
+        .pathStyleAccessEnabled(true)
+        .build();
 
-		s3Client = S3Client.builder()
-			.endpointOverride(URI.create(S3_MOCK.getHttpEndpoint()))
-			.serviceConfiguration(config)
-			.region(Region.AP_NORTHEAST_2)
-			.credentialsProvider(
-				StaticCredentialsProvider.create(
-					AwsBasicCredentials.create("accessKey", "secretKey")
-				)
-			)
-			.build();
+    s3Client = S3Client.builder()
+        .endpointOverride(URI.create(S3_MOCK.getHttpEndpoint()))
+        .serviceConfiguration(config)
+        .region(Region.AP_NORTHEAST_2)
+        .credentialsProvider(
+            StaticCredentialsProvider.create(
+                AwsBasicCredentials.create("accessKey", "secretKey")
+            )
+        )
+        .build();
 
-		storage = new S3LogStorage(
-			s3Client,
-			BUCKET
-		);
-	}
+    storage = new S3LogStorage(
+        s3Client,
+        BUCKET
+    );
+  }
 
-	@Test
-	@DisplayName("S3에 로그를 정상적으로 적재한다")
-	void uploadLogSuccessfully() {
-		//given
-		String content = "25-04-29 18:27:16.421 [Thread-5] INFO  S3Test [ | ] - {}";
+  @Test
+  @DisplayName("S3에 로그를 정상적으로 적재한다")
+  void uploadLogSuccessfully() {
+    //given
+    String content = "25-04-29 18:27:16.421 [Thread-5] INFO  S3Test [ | ] - {}";
 
-		//when
-		s3Client.putObject(
-			PutObjectRequest.builder()
-				.bucket(BUCKET)
-				.key("application-2025-04-29.log")
-				.build(),
-			RequestBody.fromString(content, UTF_8)
-		);
+    //when
+    s3Client.putObject(
+        PutObjectRequest.builder()
+            .bucket(BUCKET)
+            .key("application-2025-04-29.log")
+            .build(),
+        RequestBody.fromString(content, UTF_8)
+    );
 
-		//then
-		ResponseBytes<GetObjectResponse> response = s3Client.getObject(GetObjectRequest.builder()
-				.bucket(BUCKET)
-				.key("application-2025-04-29.log")
-				.build(),
-			ResponseTransformer.toBytes()
-		);
+    //then
+    ResponseBytes<GetObjectResponse> response = s3Client.getObject(GetObjectRequest.builder()
+            .bucket(BUCKET)
+            .key("application-2025-04-29.log")
+            .build(),
+        ResponseTransformer.toBytes()
+    );
 
-		assertThat(response.asUtf8String()).isEqualTo(content);
-	}
+    assertThat(response.asUtf8String()).isEqualTo(content);
+  }
 
-	@Test
-	@DisplayName("uploadZip 정상 호출 시 정상 동작한다")
-	void uploadZipSuccessfully() throws Exception {
-		//given
-		Path zip = tempDir.resolve("test.zip");
-		Files.write(zip, "data".getBytes());
+  @Test
+  @DisplayName("uploadZip 정상 호출 시 정상 동작한다")
+  void uploadZipSuccessfully() throws Exception {
+    //given
+    Path zip = tempDir.resolve("test.zip");
+    Files.write(zip, "data".getBytes());
 
-		//when
-		storage.uploadZip(zip);
+    //when
+    storage.uploadZip(zip);
 
-		//then
-		ResponseBytes<GetObjectResponse> response = s3Client.getObject(
-			GetObjectRequest.builder()
-				.bucket(BUCKET)
-				.key("test.zip")
-				.build(),
-			ResponseTransformer.toBytes()
-		);
+    //then
+    ResponseBytes<GetObjectResponse> response = s3Client.getObject(
+        GetObjectRequest.builder()
+            .bucket(BUCKET)
+            .key("test.zip")
+            .build(),
+        ResponseTransformer.toBytes()
+    );
 
-		assertThat(response.asUtf8String())
-			.isEqualTo("data");
-	}
+    assertThat(response.asUtf8String())
+        .isEqualTo("data");
+  }
 }

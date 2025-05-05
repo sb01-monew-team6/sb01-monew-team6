@@ -2,9 +2,11 @@ package com.sprint.part3.sb01_monew_team6.controller;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
+import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/comments")
 @RequiredArgsConstructor
@@ -56,5 +59,29 @@ public class CommentController {
         // 응답 형태를 content라는 키에 담아서 반환
         return ResponseEntity.ok()
                 .body(Map.of("content", commentList));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> softDelete(@PathVariable Long id){
+        log.info("[CommentController] 사용자 논리 삭제 요청: CommentId : {}",id);
+        commentService.softDeleteComment(id);
+        log.info("[CommentController] 사용자 논리 삭제 요청 성공: CommentId : {}",id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PatchMapping("/{commentId}")
+    public ResponseEntity<CommentDto> updateComment(
+        @PathVariable Long commentId,
+        @RequestHeader("Monew-Request-User-ID") Long userId,
+        @RequestBody @Valid CommentUpdateRequest request
+    ) {
+        CommentDto updatedComment = commentService.updateComment(commentId, userId, request);
+        return ResponseEntity.ok(updatedComment);
+    }
+
+    @DeleteMapping("/{commentId}/hard")
+    public ResponseEntity<Void> hardDelete(@PathVariable Long commentId) {
+        commentService.hardDelete(commentId);
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 }
