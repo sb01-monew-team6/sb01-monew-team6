@@ -22,5 +22,4 @@ public interface UserActivityRepositoryCustom {
 
 	void removeArticleView(Long userId, Long viewedBy);
 
-	// Optional<UserActivity> findByUserId(Long userId);
 }
