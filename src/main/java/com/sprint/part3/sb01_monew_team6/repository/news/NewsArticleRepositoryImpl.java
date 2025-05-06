@@ -17,54 +17,46 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class NewsArticleRepositoryImpl implements NewsArticleRepositoryCustom {
+
   private final JPAQueryFactory jpaQueryFactory;
 
-  //검색(데이터 조회) 쿼리
   @Override
-  public List<NewsArticle> searchArticles(CursorPageRequestArticleDto request,
-      OrderSpecifier<?> orderSpec, Long cursor, Instant after, int limit) {
-    //정렬 스펙 결정
-    Order dir = request.direction().equalsIgnoreCase("ASC") ? Order.ASC : Order.DESC; // 요청된 방향에 따라 정렬 순서 결정
+  public List<NewsArticle> searchArticles(
+      CursorPageRequestArticleDto request,
+      OrderSpecifier<?> orderSpec,
+      Long cursor,
+      Instant after,
+      int limit) {
 
-    OrderSpecifier<?> realOrder;
-    if (orderSpec != null) {
-      realOrder = orderSpec; //외부 정렬 스펙이 있으면 우선 적용
-    } else {
-      if ("publishDate".equals(request.orderBy())) {
-        // 발행일 기준 정렬
-        realOrder = new OrderSpecifier<Instant>(
-            dir,
+    // 정렬 방향 ASC/DESC 판별
+    boolean isDesc = request.direction().equalsIgnoreCase("DESC");
+
+    // 발행일 기준(primary) 정렬 스펙 결정 - 컨트롤러에서 이미 넘겨준 orderSpec이 있으면 그것을 사용하고,
+    //  없으면 publishDate로 기본 OrderSpecifier 생성
+    OrderSpecifier<?> dateOrder = orderSpec != null
+        ? orderSpec
+        : new OrderSpecifier<>(
+            isDesc ? Order.DESC : Order.ASC,
             newsArticle.articlePublishedDate
         );
-      } else if ("title".equals(request.orderBy())) {
-        // 제목 기준 정렬
-        realOrder = new OrderSpecifier<String>(
-            dir,
-            newsArticle.articleTitle
-        );
-      } else {
-        // 그 외 (기본) ID 기준 정렬
-        realOrder = new OrderSpecifier<Long>(
-            dir,
-            newsArticle.id
-        );
-      }
-    }
-    //동적 WHERE 절(조건은 삭제되지 않은)
-    //BooleanExpression : .and() 또는 .or()를 통해 누적
+
+    // ID 기준(secondary) 정렬 스펙 결정, 같은 publishDate 내에서 ID로 순서를 보장하기 위함
+    OrderSpecifier<?> idOrder = isDesc
+        ? newsArticle.id.desc()
+        : newsArticle.id.asc();
+
+    // 공통 WHERE 절: 삭제되지 않은 기사만 조회
     BooleanExpression where = newsArticle.isDeleted.eq(false);
 
-    // 제목 또는 요약에 키워드 포함 여부
+    // 키워드 검색 조건 (제목 또는 요약에 포함)
     if (request.keyword() != null) {
       where = where.and(
           newsArticle.articleTitle.containsIgnoreCase(request.keyword())
               .or(newsArticle.articleSummary.containsIgnoreCase(request.keyword()))
       );
     }
-
-    //조인 테이블에서 해당 interestId를 가진 articleId만 조회
+    // 관심사(interestId) 필터 (조인 테이블 서브쿼리)
     if (request.interestId() != null) {
-      // QNewsArticleInterest 로 조인 테이블 검색
       where = where.and(
           newsArticle.id.in(
               jpaQueryFactory
@@ -74,42 +66,69 @@ public class NewsArticleRepositoryImpl implements NewsArticleRepositoryCustom {
           )
       );
     }
-
-    //허용된 출처 목록에 속하는지 검사
+    // 출처(source) 필터
     if (request.sourceIn() != null && !request.sourceIn().isEmpty()) {
       where = where.and(newsArticle.source.in(request.sourceIn()));
     }
-    // from/to 기간 내의 기사
+    // 발행일 from/to 기간 필터
     if (request.publishDateFrom() != null) {
       where = where.and(newsArticle.articlePublishedDate.goe(request.publishDateFrom()));
     }
     if (request.publishDateTo() != null) {
       where = where.and(newsArticle.articlePublishedDate.loe(request.publishDateTo()));
     }
-    // 커서 기반 페이징: ID가 cursor 값보다 작은 데이터만
-    if (cursor != null) {
-      where = where.and(newsArticle.id.lt(cursor));
+
+    // 멀티컬럼 커서 조건 (publishDate + id)
+    BooleanExpression cursorCond = null;
+    if (after != null && cursor != null) {
+      if (isDesc) {
+        cursorCond = newsArticle.articlePublishedDate.lt(after)
+            .or(
+                newsArticle.articlePublishedDate.eq(after)
+                    .and(newsArticle.id.lt(cursor))
+            );
+      } else {
+        cursorCond = newsArticle.articlePublishedDate.gt(after)
+            .or(
+                newsArticle.articlePublishedDate.eq(after)
+                    .and(newsArticle.id.gt(cursor))
+            );
+      }
+    } else if (after != null) {
+      // after만 있을 때
+      cursorCond = isDesc
+          ? newsArticle.articlePublishedDate.lt(after)
+          : newsArticle.articlePublishedDate.gt(after);
+    } else if (cursor != null) {
+      // cursor(id)만 있을 때
+      cursorCond = isDesc
+          ? newsArticle.id.lt(cursor)
+          : newsArticle.id.gt(cursor);
     }
-    // 특정 시간 이전(createdAt < after) 필터
-    if (after != null) {
-      where = where.and(newsArticle.createdAt.goe(after));
+    //커서 조건이 설정되었다면 WHERE 절에 추가
+    if (cursorCond != null) {
+      where = where.and(cursorCond);
     }
 
-
-    // 쿼리 실행
-    return jpaQueryFactory.selectFrom(newsArticle)
+    // 최종 쿼리 실행: where + orderBy(발행일, ID) + limit
+    return jpaQueryFactory
+        .selectFrom(newsArticle)
         .where(where)
-        .orderBy(realOrder)
+        .orderBy(dateOrder, idOrder)
         .limit(limit)
         .fetch();
   }
+
+
 
   //카운트 쿼리
   // cursor/after 는 전체 count 에 포함하지 않음
   @Override
   public long countArticles(CursorPageRequestArticleDto req) {
+    //삭제되지 않은 기사만 포함
     BooleanExpression where = newsArticle.isDeleted.eq(false);
 
+    // 키워드, 관심사, 출처, 기간 필터는 searchArticles와 동일하게 적용
     if (req.keyword() != null) {
       where = where.and(
           newsArticle.articleTitle.containsIgnoreCase(req.keyword())
@@ -135,6 +154,7 @@ public class NewsArticleRepositoryImpl implements NewsArticleRepositoryCustom {
       where = where.and(newsArticle.articlePublishedDate.loe(req.publishDateTo()));
     }
 
+    // count 쿼리 실행
     Long totalWrapper = jpaQueryFactory
         .select(newsArticle.count())
         .from(newsArticle)
