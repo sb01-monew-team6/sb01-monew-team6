@@ -1,4 +1,12 @@
 package com.sprint.part3.sb01_monew_team6.repository;
 
-public interface InterestRepository {
+import com.sprint.part3.sb01_monew_team6.entity.Interest;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface InterestRepository extends JpaRepository<Interest, Long>, InterestRepositoryCustom {
+
+  Optional<Interest> findByName(String name);
+
+  boolean existsByName(String name);
+
 }

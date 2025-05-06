@@ -13,7 +13,12 @@ public enum ErrorCode {
 
 	// Interest 관련
 	INTEREST_INVALID_EXCEPTION("유효하지 않은 요청입니다."),
-	// INTEREST_NOT_FOUND("관심사를 찾을 수 없습니다."), // 필요하다면 나중에 추가
+	INTEREST_ALREADY_EXISTS("이미 존재하는 관심사 이름입니다."),
+	INTEREST_NOT_FOUND("관심사를 찾을 수 없습니다."),
+	INTEREST_NAME_TOO_SIMILAR("기존 관심사와 이름이 너무 유사합니다."),
+
+	SUBSCRIPTION_ALREADY_EXISTS("이미 구독 중인 관심사입니다."),
+	SUBSCRIPTION_NOT_FOUND("구독 정보를 찾을 수 없습니다."),
 
 	// News 관련
 	NEWS_INVALID_EXCEPTION("유효하지 않은 요청입니다."),
