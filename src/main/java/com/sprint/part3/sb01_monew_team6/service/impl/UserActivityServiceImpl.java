@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.sprint.part3.sb01_monew_team6.dto.UserDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.ArticleViewHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto;
@@ -101,6 +102,13 @@ public class UserActivityServiceImpl implements UserActivityService {
 		return userActivityRepository.findByUserId(userId)
 			.map(userActivityMapper::toDto)
 			.orElse(null);
+	}
+
+	@Override
+	public void createUserActivity(UserDto user) {
+		validateUserIdOrThrowDomainException(user.id());
+
+		userActivityRepository.save(userActivityMapper.fromUserDto(user));
 	}
 
 	private void validateUserIdOrThrowDomainException(Long userId) {

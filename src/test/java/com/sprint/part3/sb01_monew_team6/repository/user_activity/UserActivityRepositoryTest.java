@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.sprint.part3.sb01_monew_team6.config.TestDataMongoConfig;
+import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 
 @DataMongoTest
@@ -446,6 +447,34 @@ class UserActivityRepositoryTest {
 		assertThat(found.get().getArticleViews()).hasSize(10);
 		assertThat(found.get().getArticleViews().get(0).getViewedBy()).isEqualTo(12);
 		assertThat(found.get().getArticleViews().get(9).getViewedBy()).isEqualTo(3);
+	}
+
+	@Test
+	@DisplayName("save 정상 호출 시 userActivity 가 정상적으로 저장된다")
+	public void saveUserActivitySuccessfully() throws Exception {
+	    //given
+		User user = User.builder()
+			.email("asd@asd.asd")
+			.nickname("asd")
+			.password("1234")
+			.build();
+
+		UserActivity userActivity = UserActivity.builder()
+			.userId(user.getId())
+			.email(user.getEmail())
+			.nickname(user.getNickname())
+			.userCreatedAt(user.getCreatedAt())
+			.build();
+
+	    //when
+		userActivityRepository.save(userActivity);
+
+	    //then
+		Optional<UserActivity> found = userActivityRepository.findByUserId(user.getId());
+		assertThat(found).isPresent();
+		assertThat(found.get().getUserId()).isEqualTo(user.getId());
+		assertThat(found.get().getEmail()).isEqualTo(user.getEmail());
+		assertThat(found.get().getNickname()).isEqualTo(user.getNickname());
 	}
 
 }

@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/user-activities")
+@RequestMapping("/api/user-activities")
 @Validated(UserActivityValidationGroup.class)
 @RequiredArgsConstructor
 public class UserActivityController {
@@ -28,7 +28,7 @@ public class UserActivityController {
 	 */
 	@GetMapping("/{userId}")
 	public ResponseEntity<UserActivityDto> findByUserId(
-		@RequestHeader("Monew-Request-User-Id")
+		@RequestHeader("Monew-Request-User-ID")
 		@Min(value = 1, groups = UserActivityValidationGroup.class) Long requestUserId,
 
 		@PathVariable
