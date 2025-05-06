@@ -48,21 +48,21 @@ public class SecurityConfig {
 
         // --- 경로별 인가 설정 ---
         .authorizeHttpRequests(authz -> authz
-                .requestMatchers(
-                    "/",
-                    "/index.html",
-                    "/favicon.ico",
-                    "/css/**",
-                    "/js/**",
-                    "/images/**",
-                    "/assets/**",
-                    "/static/**",
-                    "/sb/monew/login",
-                    "/api/v1/test/**",
-                    "/actuator/health"
-                ).permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
+            .requestMatchers(
+                "/",
+                "/index.html",
+                "/favicon.ico",
+                "/css/**",
+                "/js/**",
+                "/images/**",
+                "/assets/**",
+                "/static/**",
+                "/sb/monew/login",
+                "/api/v1/test/**",
+                "/actuator/health"
+            ).permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
 //            .anyRequest().authenticated()
                 .anyRequest().permitAll()
         );
