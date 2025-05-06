@@ -26,7 +26,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/notifications")
+@RequestMapping("/api/notifications")
 @Validated(NotificationValidationGroup.class)
 @RequiredArgsConstructor
 public class NotificationController {
