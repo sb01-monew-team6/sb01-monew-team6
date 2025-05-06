@@ -15,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 @Configuration
 @EnableWebSecurity
@@ -37,10 +39,8 @@ public class SecurityConfig {
 
         // --- 명시적 예외 처리 핸들러 설정 ---
         .exceptionHandling(ex -> ex
-            // 인증 실패 시 → 401 뿜지 말고 "/sb/monew/login"으로 리다이렉트
-            .authenticationEntryPoint((request, response, authException) ->
-                response.sendRedirect("/sb/monew/login")
-            )
+            // 인증 실패 시 401 Unauthorized 상태 코드 반환
+            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             .accessDeniedHandler((request, response, accessDeniedException) ->
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN)
             )
@@ -48,21 +48,23 @@ public class SecurityConfig {
 
         // --- 경로별 인가 설정 ---
         .authorizeHttpRequests(authz -> authz
-            .requestMatchers(
-                "/",
-                "/index.html",
-                "/favicon.ico",
-                "/css/**",
-                "/js/**",
-                "/images/**",
-                "/assets/**",
-                "/static/**",
-                "/sb/monew/login",
-                "/api/v1/test/**"
-            ).permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
-            .anyRequest().authenticated()
+                .requestMatchers(
+                    "/",
+                    "/index.html",
+                    "/favicon.ico",
+                    "/css/**",
+                    "/js/**",
+                    "/images/**",
+                    "/assets/**",
+                    "/static/**",
+                    "/sb/monew/login",
+                    "/api/v1/test/**",
+                    "/actuator/health"
+                ).permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
+//            .anyRequest().authenticated()
+                .anyRequest().permitAll()
         );
 
     return http.build();

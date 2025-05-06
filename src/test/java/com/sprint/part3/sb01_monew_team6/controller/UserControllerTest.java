@@ -1,5 +1,30 @@
 package com.sprint.part3.sb01_monew_team6.controller;
 
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.time.Instant;
+import java.util.Arrays;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.MockMvc;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.config.SecurityConfig;
 import com.sprint.part3.sb01_monew_team6.dto.UserDto;
@@ -12,46 +37,6 @@ import com.sprint.part3.sb01_monew_team6.exception.user.LoginFailedException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserNotFoundException;
 import com.sprint.part3.sb01_monew_team6.service.UserService;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.test.context.support.WithAnonymousUser;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.Optional;
-
-import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.assertj.core.api.Assertions.*;
-
-
 @WebMvcTest(UserController.class)
 @ActiveProfiles("test")
 @Import(SecurityConfig.class)
@@ -60,7 +45,7 @@ class UserControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
-  @MockBean
+  @MockitoBean
   private UserService userService;
 
   @Autowired
@@ -72,7 +57,8 @@ class UserControllerTest {
 
   @BeforeEach
   void printActiveProfiles() {
-    System.out.println("[DEBUG] Active profiles in UserControllerTest: " + Arrays.toString(environment.getActiveProfiles()));
+    System.out.println(
+        "[DEBUG] Active profiles in UserControllerTest: " + Arrays.toString(environment.getActiveProfiles()));
   }
 
   // --- 회원가입 테스트 ---
@@ -163,7 +149,11 @@ class UserControllerTest {
     // given
     UserLoginRequest loginRequest = new UserLoginRequest("test@example.com", "password123");
     String requestJson = objectMapper.writeValueAsString(loginRequest);
-    User loggedInUser = User.builder().email(loginRequest.email()).nickname("tester").password("encodedPassword").build();
+    User loggedInUser = User.builder()
+        .email(loginRequest.email())
+        .nickname("tester")
+        .password("encodedPassword")
+        .build();
     ReflectionTestUtils.setField(loggedInUser, "id", 1L);
     ReflectionTestUtils.setField(loggedInUser, "createdAt", Instant.now());
     UserDto expectedDto = UserDto.fromEntity(loggedInUser);
@@ -253,14 +243,19 @@ class UserControllerTest {
   // --- 닉네임 수정 테스트 ---
   @Test
   @DisplayName("성공: PATCH /api/users/{userId} - 유효한 요청 시 200 OK 와 UserDto 반환")
-  @WithMockUser // 수정 권한 필요 가정
+  @WithMockUser
+  // 수정 권한 필요 가정
   void updateNickname_withValidRequest_shouldReturnOkAndUserDto() throws Exception {
     // given
     Long userId = 1L;
     String newNickname = "newNickname";
     UserNicknameUpdateRequest requestDto = new UserNicknameUpdateRequest(newNickname);
     String requestJson = objectMapper.writeValueAsString(requestDto);
-    User updatedUser = User.builder().email("test@example.com").nickname(newNickname).password("encodedPassword").build();
+    User updatedUser = User.builder()
+        .email("test@example.com")
+        .nickname(newNickname)
+        .password("encodedPassword")
+        .build();
     ReflectionTestUtils.setField(updatedUser, "id", userId);
     ReflectionTestUtils.setField(updatedUser, "createdAt", Instant.now());
     UserDto expectedResponseDto = UserDto.fromEntity(updatedUser);
@@ -284,7 +279,8 @@ class UserControllerTest {
 
   @Test
   @DisplayName("실패: PATCH /api/users/{userId} - 존재하지 않는 사용자의 닉네임 수정 시 404 Not Found 반환")
-  @WithMockUser // 인증 필요
+  @WithMockUser
+    // 인증 필요
   void updateNickname_whenUserNotFound_shouldReturnNotFound() throws Exception {
     // given
     Long nonExistentUserId = 999L;
@@ -309,7 +305,8 @@ class UserControllerTest {
 
   @Test
   @DisplayName("실패: PATCH /api/users/{userId} - 유효하지 않은 닉네임 요청 시 400 Bad Request 반환")
-  @WithMockUser // 인증 필요
+  @WithMockUser
+    // 인증 필요
   void updateNickname_withInvalidNickname_shouldReturnBadRequest() throws Exception {
     // given
     Long userId = 1L;
@@ -330,7 +327,8 @@ class UserControllerTest {
   // --- 논리 삭제 테스트 ---
   @Test
   @DisplayName("성공: DELETE /api/users/{userId} - 존재하는 사용자 논리 삭제 성공 시 204 No Content 반환")
-  @WithMockUser // 삭제 권한 필요 가정
+  @WithMockUser
+  // 삭제 권한 필요 가정
   void deleteUser_whenUserExists_shouldReturnNoContent() throws Exception {
     // given
     Long userId = 1L;
@@ -348,7 +346,8 @@ class UserControllerTest {
 
   @Test
   @DisplayName("실패: DELETE /api/users/{userId} - 존재하지 않는 사용자 논리 삭제 시 404 Not Found 반환")
-  @WithMockUser // 인증 필요
+  @WithMockUser
+    // 인증 필요
   void deleteUser_whenUserNotFound_shouldReturnNotFound() throws Exception {
     // given
     Long nonExistentUserId = 999L;
@@ -366,7 +365,8 @@ class UserControllerTest {
 
   @Test
   @DisplayName("DELETE /api/users/{userId}/hard - 관리자가 사용자 물리 삭제 성공 시 204 No Content 반환")
-  @WithMockUser(roles = "ADMIN") // <<<--- 관리자 권한으로 테스트 실행
+  @WithMockUser(roles = "ADMIN")
+    // <<<--- 관리자 권한으로 테스트 실행
   void hardDeleteUser_whenAdminAndUserExists_shouldReturnNoContent() throws Exception {
     // given: 삭제할 사용자 ID
     Long userId = 1L;
@@ -407,7 +407,8 @@ class UserControllerTest {
 
   @Test
   @DisplayName("실패: DELETE /api/users/{userId}/hard - 관리자가 아닌 사용자가 물리 삭제 시 403 Forbidden 반환")
-  @WithMockUser(roles = "USER") // <<<--- 'ADMIN'이 아닌 다른 역할 (예: 'USER') 또는 역할 없이 호출
+  @WithMockUser(roles = "USER")
+    // <<<--- 'ADMIN'이 아닌 다른 역할 (예: 'USER') 또는 역할 없이 호출
     // 또는 @WithMockUser // 역할 없이 호출해도 ADMIN이 아니므로 403 예상
   void hardDeleteUser_whenUserIsNotAdmin_shouldReturnForbidden() throws Exception {
     // given: 삭제할 사용자 ID (실제 삭제 로직은 호출되지 않음)
