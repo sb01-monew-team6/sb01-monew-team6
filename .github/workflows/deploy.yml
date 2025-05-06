@@ -63,6 +63,10 @@ jobs:
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD_DEV }}" >> $GITHUB_ENV
           echo "SPRING_PROFILES_ACTIVE=dev" >> $GITHUB_ENV
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> $GITHUB_ENV
+          echo "AWS_S3_ACCESS_KEY_ID=${{secrets.AWS_S3_ACCESS_KEY_ID}}" >> $GITHUB_ENV
+          echo "AWS_S3_SECRET_ACCESS_KEY=${{secrets.AWS_S3_SECRET_ACCESS_KEY}}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{secrets.AWS_REGION}}" >> $GITHUB_ENV
+          echo "AWS_BUCKET=${{secrets.AWS_BUCKET}}" >> $GITHUB_ENV
 
       # main 브랜치의 시크릿을 env에 설정
       - name: Set DB Secrets for PROD
@@ -73,6 +77,10 @@ jobs:
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }}" >> $GITHUB_ENV
           echo "SPRING_PROFILES_ACTIVE=prod" >> $GITHUB_ENV
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> $GITHUB_ENV
+          echo "AWS_S3_ACCESS_KEY_ID=${{secrets.AWS_S3_ACCESS_KEY_ID}}" >> $GITHUB_ENV
+          echo "AWS_S3_SECRET_ACCESS_KEY=${{secrets.AWS_S3_SECRET_ACCESS_KEY}}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{secrets.AWS_REGION}}" >> $GITHUB_ENV
+          echo "AWS_BUCKET=${{secrets.AWS_BUCKET}}" >> $GITHUB_ENV
 
       # 6-1. AWS 인증 (운영)
       - name: Configure AWS credentials (PROD)
@@ -119,6 +127,10 @@ jobs:
             DB_PASSWORD=${{ env.DB_PASSWORD }}
             SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
             MONGO_URI=${{ env.MONGO_URI }}
+            AWS_S3_ACCESS_KEY_ID=${{ env.AWS_S3_ACCESS_KEY_ID }}
+            AWS_S3_SECRET_ACCESS_KEY=${{ env.AWS_S3_SECRET_ACCESS_KEY }}
+            AWS_REGION=${{ env.AWS_REGION }}
+            AWS_BUCKET=${{ env.AWS_BUCKET }}
 
       # 10. ECS 서비스에 새 Task 적용
       - name: Deploy to ECS
