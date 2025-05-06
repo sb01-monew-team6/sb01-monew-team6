@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -108,7 +109,7 @@ public class NewsCollectionImplService {
   private List<ExternalNewsItem> fetchExternalNews(List<Interest> interests) {
     List<ExternalNewsItem> items = new ArrayList<>();
 
-    // 네이버 뉴스
+    // 1) 네이버 뉴스 (키워드별)
     for (Interest interest : interests) {
       for (String keyword : interest.getKeywords()) {
         try {
@@ -117,25 +118,41 @@ public class NewsCollectionImplService {
           items.addAll(newsItems);
         } catch (Exception e) {
           log.error("네이버 API 호출 실패 : 키워드='{}'", keyword, e);
-          throw new NewsException(ErrorCode.NEWS_NAVERCLIENT_EXCEPTION, Instant.now(),
-              HttpStatus.BAD_GATEWAY);
-        }
-      }
-
-      // RSS 뉴스
-      for (RssNewsClient rssClient : rssClients) {
-        try {
-          List<ExternalNewsItem> newsItems = rssClient.fetchNews();
-          log.debug("RSS 클라이언트 '{}'에서 {}건 수집", rssClient.getClass().getSimpleName(),
-              newsItems.size());
-          items.addAll(newsItems);
-        } catch (Exception e) {
-          log.error("RSS API 호출 실패", e);
-          throw new NewsException(ErrorCode.NEWS_RSSCLIENT_EXCEPTION, Instant.now(),
-              HttpStatus.BAD_GATEWAY);
+          throw new NewsException(
+              ErrorCode.NEWS_NAVERCLIENT_EXCEPTION,
+              Instant.now(),
+              HttpStatus.BAD_GATEWAY
+          );
         }
       }
     }
+
+    // 2) RSS 뉴스 (전체 피드 한 번만 가져온 뒤, 관심사 키워드로 필터링)
+    //    -- 관심사 루프 밖에서 단 한번만 실행
+    List<ExternalNewsItem> allRssFeeds = new ArrayList<>();
+    for (RssNewsClient rssClient : rssClients) {
+      try {
+        List<ExternalNewsItem> feeds = rssClient.fetchNews();
+        log.debug("RSS 클라이언트 '{}'에서 전체 {}건 반환",
+            rssClient.getClass().getSimpleName(), feeds.size());
+        allRssFeeds.addAll(feeds);
+      } catch (Exception e) {
+        log.error("RSS API 호출 실패 : 클라이언트='{}'",
+            rssClient.getClass().getSimpleName(), e);
+        throw new NewsException(
+            ErrorCode.NEWS_RSSCLIENT_EXCEPTION,
+            Instant.now(),
+            HttpStatus.BAD_GATEWAY
+        );
+      }
+    }
+    // 모든 RSS 피드에서 관심사 키워드 매칭된 기사만 필터링
+    List<ExternalNewsItem> filteredRss = allRssFeeds.stream()
+        .filter(item -> containsKeyword(item, interests))
+        .collect(Collectors.toList());
+    log.debug("RSS 필터링 후 {}건 저장 대상 선정", filteredRss.size());
+    items.addAll(filteredRss);
+
     return items;
   }
 

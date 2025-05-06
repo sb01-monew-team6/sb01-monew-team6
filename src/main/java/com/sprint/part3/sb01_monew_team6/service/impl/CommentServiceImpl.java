@@ -13,7 +13,7 @@ import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
 import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
-import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
+import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import lombok.RequiredArgsConstructor;

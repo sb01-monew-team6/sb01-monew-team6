@@ -39,6 +39,16 @@ management:
     mongo:
       enabled: false
 
+rss:
+  feeds:
+    - name: HANKYUNG
+      url: https://www.hankyung.com/feed/all-news
+    - name: YEONHAP
+      url: https://www.yna.co.kr/rss/news.xml
+    - name: YEONHAP_POLITICS
+      url: https://www.yna.co.kr/rss/politics.xml
+    - name: JTBC
+      url: https://news-ex.jtbc.co.kr/v1/get/rss/issue
 #naver:
 #  api:
 #    url: ${naver.api.url}  # 네이버 뉴스 API
