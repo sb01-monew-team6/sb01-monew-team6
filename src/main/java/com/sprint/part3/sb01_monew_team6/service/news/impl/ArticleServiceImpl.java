@@ -20,6 +20,7 @@ import com.sprint.part3.sb01_monew_team6.service.news.ArticleService;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +37,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
@@ -132,7 +135,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
   }
 
-  //백업 복구
+  //복구
   @Override
   public List<ArticleRestoreResultDto> restore(LocalDate from, LocalDate to) throws IOException {
     log.info("백업 복구 시작 : from={}, to={}", from, to);
@@ -197,6 +200,41 @@ public class ArticleServiceImpl implements ArticleService {
     }
     log.info("백업 복구 완료: totalDays={} 결과건수={}", ChronoUnit.DAYS.between(from, to) + 1, restoreArticles.size());
     return restoreArticles;
+  }
+
+  //백업
+  @Transactional(readOnly = true)
+  public void backup(LocalDate date) {
+    log.info("백업 시작: date={}", date);
+    try {
+      Instant start = date.atStartOfDay().toInstant(ZoneOffset.UTC);
+      Instant end   = date.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+
+      // 이 시점부터 세션이 열려 있어, Jackson 직렬화 시 lazy 필드도 초기화 가능
+      List<NewsArticle> list = newsArticleRepository.findAllByCreatedAtBetween(start, end);
+      log.debug("조회된 기사 수: {}", list.size());
+
+      String json = objectMapper.writeValueAsString(list);
+      String key  = String.format("backup/%s.json", date);
+      log.debug("S3 업로드 키: {}", key);
+
+      PutObjectRequest req = PutObjectRequest.builder()
+          .bucket(bucketName)
+          .key(key)
+          .build();
+      s3Client.putObject(req, RequestBody.fromString(json));
+
+      log.info("백업 완료: bucket={}, key={}, count={}", bucketName, key, list.size());
+    } catch (IOException e) {
+      log.error("JSON 직렬화 오류: date={}, error={}", date, e.getMessage(), e);
+      throw new NewsException(ErrorCode.NESW_BACKUP_SERIALIZATION_FAILED_EXCEPTION, Instant.now(), HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch (S3Exception e) {
+      log.error("S3 업로드 실패: bucket={}, date={}, error={}", bucketName, date, e.getMessage(), e);
+      throw new NewsException(ErrorCode.NEWS_BACKUP_S3_UPLOAD_FAILED_EXCEPTION, Instant.now(), HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch (Exception e) {
+      log.error("알 수 없는 백업 오류: date={}, error={}", date, e.getMessage(), e);
+      throw new NewsException(ErrorCode.INTERNAL_SERVER_ERROR, Instant.now(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   //논리삭제

@@ -9,6 +9,7 @@ import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageRequestArticleDto;
 import com.sprint.part3.sb01_monew_team6.service.news.ArticleService;
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -66,16 +67,31 @@ public class ArticleController {
 
   //백업 복구
   @GetMapping("/restore")
-  public List<ArticleRestoreResultDto> restore(
-      @RequestParam("from")
-      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-      LocalDateTime from,
+  public ResponseEntity<?> backupOrRestore(
+      @RequestParam(value = "date", required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 
-      @RequestParam("to")
-      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-      LocalDateTime to
+      @RequestParam(value = "from", required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+      @RequestParam(value = "to",   required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
   ) throws IOException {
-    return articleService.restore(from.toLocalDate(), to.toLocalDate());
+
+    if (date != null && from == null && to == null) {
+      // date 파라미터만 있으면 → 백업 실행
+      articleService.backup(date);
+      return ResponseEntity.ok("백업 완료: " + date);
+    }
+
+    if (from != null && to != null) {
+      // from/to 둘 다 있으면 → 복구 실행 (기존 코드 그대로)
+      List<ArticleRestoreResultDto> result =
+          articleService.restore(from.toLocalDate(), to.toLocalDate());
+      return ResponseEntity.ok(result);
+    }
+
+    return ResponseEntity.badRequest()
+        .body("파라미터 오류: `date` 또는 `from` & `to` 를 정확히 보내주세요.");
   }
 
   //논리 삭제

@@ -15,6 +15,9 @@ de:
     mongodb:
       embedded:
         version: 8.0.5
+cron:
+  news : "0 0 * * * *" #매시간
+  backup : "*/10 * * * * *"   # 매 10초마다 실행
 
     #logging:
     #level:

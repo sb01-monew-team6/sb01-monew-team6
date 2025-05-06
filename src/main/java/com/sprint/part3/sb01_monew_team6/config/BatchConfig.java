@@ -1,7 +1,10 @@
 package com.sprint.part3.sb01_monew_team6.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.part3.sb01_monew_team6.batch.ArticleBackupTasklet;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
+import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.news.impl.NewsCollectionImplService;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +18,7 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -24,6 +28,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
+import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
 @EnableBatchProcessing
@@ -82,6 +87,36 @@ public class BatchConfig {
         .skip(Exception.class)                         // 모든 Exception 스킵
         .retryLimit(3)                                 // 최대 3회 재시도
         .retry(IOException.class)                      // IOException 에 한해 재시도
+        .build();
+  }
+
+  /**
+   * Tasklet 빈 정의
+   */
+  @Bean
+  public Tasklet articleBackupTasklet(
+      NewsArticleRepository repo,
+      S3Client s3Client,
+      ObjectMapper objectMapper
+  ) {
+    return new ArticleBackupTasklet(repo, s3Client, objectMapper);
+  }
+
+  @Bean
+  public Step backupStep(
+      JobRepository jobRepository,
+      PlatformTransactionManager transactionManager,
+      Tasklet articleBackupTasklet
+  ) {
+    return new StepBuilder("backupStep", jobRepository)
+        .tasklet(articleBackupTasklet, transactionManager)  // ← 신규 오버로드
+        .build();
+  }
+
+  @Bean @Qualifier(value = "backupJob")
+  public Job backupJob(JobRepository jobRepository, Step backupStep) {
+    return new JobBuilder("backupJob", jobRepository)
+        .start(backupStep)
         .build();
   }
 }

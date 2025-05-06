@@ -11,6 +11,7 @@ import java.util.List;
 public interface ArticleService {
   PageResponse<ArticleDto> searchArticles(CursorPageRequestArticleDto request);
   List<ArticleRestoreResultDto> restore(LocalDate from, LocalDate to) throws IOException;
+  void backup(LocalDate date) throws IOException;
   void deleteArticle(Long articleId);
   void hardDeleteArticle(Long articleId);
 }
