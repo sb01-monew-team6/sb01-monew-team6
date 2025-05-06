@@ -8,3 +8,12 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
+      auto-index-creation: true
+
+decorator:
+  datasource:
+    enabled: false
