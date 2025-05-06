@@ -3,13 +3,16 @@ package com.sprint.part3.sb01_monew_team6.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.config.SecurityConfig;
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
+import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
+import com.sprint.part3.sb01_monew_team6.service.CommentLikeService;
 import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -25,6 +28,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -47,6 +51,9 @@ class CommentControllerTest {
 
     @MockitoBean
     private CommentService commentService;
+
+    @MockBean
+    private CommentLikeService commentLikeService;
 
     @Test
     @DisplayName("댓글 등록 실패 - content가 비어있을 경우 400 반환")
@@ -224,6 +231,33 @@ class CommentControllerTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    @DisplayName("댓글 좋아요 등록 - 성공 응답 반환")
+    void likeComment_shouldReturn200() throws Exception {
+        // given
+        CommentLikeDto response = CommentLikeDto.builder()
+                .id(1L)
+                .likedBy(100L)
+                .createdAt(Instant.now())
+                .commentId(1L)
+                .articleId(2L)
+                .commentUserId(100L)
+                .commentUserNickname("사용자")
+                .commentContent("좋은 기사네요")
+                .commentLikeCount(1L)
+                .commentCreatedAt(Instant.now())
+                .build();
+
+        Mockito.when(commentService.likeComment(anyLong(), anyLong())).thenReturn(response);
+
+        // when & then
+        mockMvc.perform(post("/api/comments/1/comment-likes")
+                        .header("Monew-Request-User-ID", 100L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.commentId").value(1L))
+                .andExpect(jsonPath("$.likedBy").value(100L));
+    }
 //----------------------------------------------------------------------------------------------------------------------
     @DisplayName("DELETE /api/comments/{id} - 요청시 정상응답 204 반환")
     @Test

@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.controller;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
+import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
@@ -69,6 +70,14 @@ public class CommentController {
         // 응답 형태를 content라는 키에 담아서 반환
         return ResponseEntity.ok()
                 .body(Map.of("content", commentList));
+    }
+
+    @PostMapping("/{commentId}/comment-likes")
+    public ResponseEntity<CommentLikeDto> likeComment(@PathVariable Long commentId,
+                                                      @RequestHeader("Monew-Request-User-ID") Long userId
+    ) {
+        CommentLikeDto dto = commentService.likeComment(commentId, userId);
+        return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/{id}")

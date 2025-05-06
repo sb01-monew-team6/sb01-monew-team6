@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
+import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
@@ -16,6 +17,7 @@ import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
+import com.sprint.part3.sb01_monew_team6.service.CommentLikeService;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,7 @@ public class CommentServiceImpl implements CommentService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final CommentLikeService commentLikeService;
 
     @Override
     public CommentDto register(CommentRegisterRequest request) {
@@ -169,6 +172,11 @@ public class CommentServiceImpl implements CommentService {
                     return CommentDto.fromEntity(comment, likeCount, likedByMe);
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public CommentLikeDto likeComment(Long commentId, Long userId) {
+        return commentLikeService.likeComment(commentId, userId); // 위임
     }
 
     @Transactional

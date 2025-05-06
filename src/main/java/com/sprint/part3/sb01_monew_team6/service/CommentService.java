@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.service;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
+import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
@@ -21,6 +22,8 @@ public interface CommentService {
     );
 
     List<CommentDto> getComments(Long articleId);
+
+    CommentLikeDto likeComment(Long commentId, Long userId);
 
     void softDeleteComment(Long id);
 

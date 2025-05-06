@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
+import com.sprint.part3.sb01_monew_team6.entity.CommentLike;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
@@ -38,16 +39,15 @@ public class CommentLikeServiceImpl implements CommentLikeService {
             throw new CommentException(ErrorCode.ALREADY_LIKED_COMMENT, Instant.now(), HttpStatus.BAD_REQUEST);
         }
 
-        // 좋아요 등록(save 생략 -> 테스트에서는 mocking 처리)
-        // commentLikeRepository.save(...);
+        CommentLike commentLike = commentLikeRepository.save(CommentLike.of(comment, user));
 
         // 좋아요 수 갱신
         long likeCount = commentLikeRepository.countByCommentId(commentId);
 
         return CommentLikeDto.builder()
-                .id(1L) // 가짜 ID (mocked)
+                .id(commentLike.getId())
                 .likedBy(userId)
-                .createdAt(comment.getCreatedAt()) // 임시
+                .createdAt(commentLike.getCreatedAt())
                 .commentId(commentId)
                 .articleId(comment.getArticle() != null ? comment.getArticle().getId() : null)
                 .commentUserId(comment.getUser() != null ? comment.getUser().getId() : null)
