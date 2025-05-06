@@ -24,7 +24,7 @@ public class Interest extends BaseUpdatableEntity {
   private String name;
 
   @Type(ListArrayType.class)
-  @Column(name = "keywords", columnDefinition = "text[]")
+  @Column(name = "keyword", columnDefinition = "text[]")
   private List<String> keywords = new ArrayList<>();
 
   @Column(nullable = false)

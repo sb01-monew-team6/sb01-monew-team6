@@ -9,6 +9,7 @@ import static org.mockito.Mockito.atLeast;
 import com.sprint.part3.sb01_monew_team6.config.SchedulingConfig;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
@@ -51,7 +52,8 @@ class ArticleBackupSchedulerTest {
   }
 
   @Test
-  void 스케줄러가_jobLauncher를_주기적으로_호출한다() {
+  @DisplayName("스케줄러가_jobLauncher를_주기적으로_호출한다")
+  void scheduler_callJobLauncher() {
     Awaitility.await()
         .atMost(Duration.ofSeconds(15))
         .untilAsserted(() ->

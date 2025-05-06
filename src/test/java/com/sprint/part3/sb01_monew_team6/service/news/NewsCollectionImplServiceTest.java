@@ -212,17 +212,23 @@ public class NewsCollectionImplServiceTest {
 
   //fetchCandidates()
   @Test
-  @DisplayName("관심사가 있을 떄 naver,rss 호출 결과 반환")
-  void whenInterests_returnsItems(){
-    //given
+  @DisplayName("관심사가 있을 때 naver, rss 호출 결과를 합쳐 반환한다")
+  void whenInterests_returnsItems() {
+    // given
     Interest i = Interest.builder()
         .name("k")
         .keywords(List.of("key"))
         .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
 
-    ExternalNewsItem e1 = new ExternalNewsItem("NAVER","u1","u1","key 제목", Instant.now(),"");
-    ExternalNewsItem e2 = new ExternalNewsItem("RSS","u2","u2","제목", Instant.now(),"");
+    ExternalNewsItem e1 = new ExternalNewsItem(
+        "NAVER", "u1", "u1", "key 제목", Instant.now(), ""
+    );
+    // RSS 아이템에도 키워드를 포함시킵니다!
+    ExternalNewsItem e2 = new ExternalNewsItem(
+        "RSS", "u2", "u2", "제목", Instant.now(), "key description"
+    );
+
     given(naverClient.fetchNews("key")).willReturn(List.of(e1));
     given(rssClient.fetchNews()).willReturn(List.of(e2));
 
@@ -230,7 +236,8 @@ public class NewsCollectionImplServiceTest {
     List<ExternalNewsItem> result = service.fetchCandidates();
 
     // then
-    assertThat(result).hasSize(2)
+    assertThat(result)
+        .hasSize(2)
         .containsExactlyInAnyOrder(e1, e2);
   }
 

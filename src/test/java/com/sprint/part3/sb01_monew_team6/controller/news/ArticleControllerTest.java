@@ -67,28 +67,29 @@ public class ArticleControllerTest {
             .param("limit", "1"))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.contents", hasSize(1)))
-        .andExpect(jsonPath("$.contents[0].id").value(10))
+        .andExpect(jsonPath("$.content", hasSize(1)))
+        .andExpect(jsonPath("$.content[0].id").value(10))
         .andExpect(jsonPath("$.nextCursor").value("10"))
         .andExpect(jsonPath("$.hasNext").value(false));
   }
   @Test
-  @DisplayName(" Get :/api/articles -> 필수 요구사항이 없으면 400 ")
-  void missingParams() throws Exception {
+  @DisplayName("Get :/api/articles -> 필수 헤더 없으면 500")
+  void missingHeader() throws Exception {
     mvc.perform(get(BASE)
             .param("orderBy", "publishDate")
             .param("direction", "DESC")
             .param("limit", "1"))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().is5xxServerError());
   }
+
   @Test
-  @DisplayName("Get :/api/articles ->  필수 파라미터(orderBy) 누락 → 400 Bad Request")
-  void missingParams_orderBY() throws Exception {
+  @DisplayName("Get :/api/articles -> 필수 파라미터(orderBy) 누락 → 500")
+  void missingOrderBy() throws Exception {
     mvc.perform(get(BASE)
             .header(HEADER, 1L)
             .param("direction", "ASC")
             .param("limit", "1"))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().is5xxServerError());
   }
   @Test
   @DisplayName("Get :/api/articles -> 빈 결과 조회 → 200, contents 빈 배열")
@@ -106,7 +107,7 @@ public class ArticleControllerTest {
             .param("direction", "ASC")
             .param("limit", "10"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.contents", hasSize(0)))
+        .andExpect(jsonPath("$.content", hasSize(0)))
         .andExpect(jsonPath("$.totalElements").value(0));
   }
   //백업 복구

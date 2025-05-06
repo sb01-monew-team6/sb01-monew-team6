@@ -96,8 +96,8 @@ class NotificationControllerTest {
 
 		//then
 		perform.andExpect(status().isOk())
-			.andExpect(jsonPath("$.contents.length()").value(equalTo(1)))
-			.andExpect(jsonPath("$.contents[0].userId").value(equalTo(1)))
+			.andExpect(jsonPath("$.content.length()").value(equalTo(1)))
+			.andExpect(jsonPath("$.content[0].userId").value(equalTo(1)))
 			.andExpect(jsonPath("$.nextCursor").value(equalTo(createdAt.toString())))
 			.andExpect(jsonPath("$.hasNext").value(equalTo(false)))
 			.andExpect(jsonPath("$.size").value(equalTo(50)))
