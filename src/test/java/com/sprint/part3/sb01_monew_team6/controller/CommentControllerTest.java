@@ -32,12 +32,12 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @WebMvcTest(CommentController.class)
 @Import(SecurityConfig.class)
@@ -327,4 +327,16 @@ class CommentControllerTest {
 
 
 
+    @Test
+    @DisplayName("댓글 좋아요를 취소할 수 있다")
+    void cancelCommentLike() throws Exception {
+        // given
+        Long commentId = 1L;
+        Long userId = 2L;
+
+        // when & then
+        mockMvc.perform(delete("/api/comments/{commentId}/comment-likes", commentId)
+                        .header("Monew-Request-User-ID", userId))
+                .andExpect(status().isOk());
+    }
 }
