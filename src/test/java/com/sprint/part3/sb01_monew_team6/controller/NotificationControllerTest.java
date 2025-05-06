@@ -46,7 +46,7 @@ class NotificationControllerTest {
 
 		//given & when
 		ResultActions perform = mockMvc.perform(
-			MockMvcRequestBuilders.get("/api/v1/notifications")
+			MockMvcRequestBuilders.get("/api/notifications")
 				.header("Monew-Request-User-Id", 0L)
 				.with(csrf())
 		);
@@ -89,7 +89,7 @@ class NotificationControllerTest {
 
 		//when
 		ResultActions perform = mockMvc.perform(
-			MockMvcRequestBuilders.get("/api/v1/notifications")
+			MockMvcRequestBuilders.get("/api/notifications")
 				.header("Monew-Request-User-Id", 1L)
 				.with(csrf())
 		);
@@ -110,7 +110,7 @@ class NotificationControllerTest {
 
 		//given & when
 		ResultActions perform = mockMvc.perform(
-			MockMvcRequestBuilders.patch("/api/v1/notifications")
+			MockMvcRequestBuilders.patch("/api/notifications")
 				.header("Monew-Request-User-Id", 1L)
 				.with(csrf())
 		);
@@ -128,7 +128,7 @@ class NotificationControllerTest {
 
 		//given & when
 		ResultActions perform = mockMvc.perform(
-			MockMvcRequestBuilders.patch("/api/v1/notifications/{notificationId}", notificationId)
+			MockMvcRequestBuilders.patch("/api/notifications/{notificationId}", notificationId)
 				.header("Monew-Request-User-Id", 1L)
 				.with(csrf())
 		);
@@ -146,7 +146,7 @@ class NotificationControllerTest {
 
 		//given & when
 		ResultActions perform = mockMvc.perform(
-			MockMvcRequestBuilders.patch("/api/v1/notifications/{notificationId}", notificationId)
+			MockMvcRequestBuilders.patch("/api/notifications/{notificationId}", notificationId)
 				.header("Monew-Request-User-Id", 1L)
 				.with(csrf())
 		);
