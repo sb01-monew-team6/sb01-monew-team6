@@ -75,7 +75,7 @@ public class CommentController {
     }
 
     @DeleteMapping("/{commentId}/comment-likes")
-    public ResponseEntity<?> cancelCommentLike(@PathVariable Long commentId, @RequestHeader("Monew-Request-User-ID") Long userId) {
+    public ResponseEntity<Void> cancelCommentLike(@PathVariable Long commentId, @RequestHeader("Monew-Request-User-ID") Long userId) {
         log.info("[cancelCommentLike] 댓글 좋아요 취소 요청: commentId={}, userId={}", commentId, userId);
         commentLikeService.cancelLike(commentId, userId);
         return ResponseEntity.ok().build();
