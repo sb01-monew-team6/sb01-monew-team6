@@ -8,6 +8,7 @@ import static org.springframework.http.HttpStatus.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.sprint.part3.sb01_monew_team6.config.MonewRequestUserInterceptor;
 import java.time.Instant;
 import java.util.List;
 
@@ -39,6 +40,9 @@ class NotificationControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@MockitoBean
+	private MonewRequestUserInterceptor monewRequestUserInterceptor;
 
 	@Test
 	@DisplayName("findAllByUserId 호출 시 userId 가 0 이하면 NotificationInvalidException 에러 반환")
