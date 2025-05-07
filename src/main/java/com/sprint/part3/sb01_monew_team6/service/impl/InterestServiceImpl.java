@@ -1,5 +1,9 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
+import com.sprint.part3.sb01_monew_team6.dto.CursorPageResponseInterestDto;
+import com.sprint.part3.sb01_monew_team6.dto.InterestDto;
+import com.sprint.part3.sb01_monew_team6.dto.InterestUpdateRequestDto;
+import com.sprint.part3.sb01_monew_team6.repository.SubscriptionRepository;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestAlreadyExistsException;
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestNameTooSimilarException;
@@ -7,104 +11,175 @@ import com.sprint.part3.sb01_monew_team6.exception.interest.InterestNotFoundExce
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
 import com.sprint.part3.sb01_monew_team6.service.InterestService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.text.similarity.LevenshteinDistance;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.apache.commons.text.similarity.LevenshteinDistance;
-
-import java.util.List;
-import java.util.stream.Collectors; // Collectors 임포트
 import org.springframework.util.StringUtils;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class InterestServiceImpl implements InterestService {
 
   private final InterestRepository interestRepository;
+  private final SubscriptionRepository subscriptionRepository;
+  private boolean isSubscribed(Long userId, Long interestId) {
+    return subscriptionRepository.existsByUserIdAndInterestId(userId, interestId);
+  }
+  private static final LevenshteinDistance LEVENSHTEIN = new LevenshteinDistance();
+  private static final double SIMILARITY_THRESHOLD = 0.6;
+  private static final String KEYWORD_DELIMITER = ",";
 
-  private static final LevenshteinDistance LEVENSHTEIN_DISTANCE = new LevenshteinDistance();
-  private static final double SIMILARITY_THRESHOLD = 0.8;
-  private static final String KEYWORD_DELIMITER = ","; // 키워드 구분자 정의
 
   @Override
   @Transactional
   public Interest createInterest(String name, List<String> keywords) {
-    // 1. 이름 유사도 검사
-    checkNameSimilarity(name);
-
-    // 2. 이름 중복 검사
     if (interestRepository.existsByName(name)) {
       throw new InterestAlreadyExistsException(name);
     }
-
-    // --- vvv 키워드 목록을 문자열로 변환 vvv ---
-    String keywordsString = convertKeywordsToString(keywords);
-    // --- ^^^ 키워드 목록을 문자열로 변환 ^^^ ---
-
-    // 3. Interest 객체 생성
-    Interest newInterest = Interest.builder()
+    checkNameSimilarity(name, null);
+    String kw = convertKeywordsToString(keywords);
+    Interest entity = Interest.builder()
         .name(name)
-        .keywords(keywordsString) // 변환된 문자열 사용
+        .keywords(kw)
         .build();
-
-    // 4. 저장 및 반환
-    return interestRepository.save(newInterest);
-  }
-
-  private void checkNameSimilarity(String newName) {
-    // TODO: Refactor - 성능 개선 필요
-    List<Interest> existingInterests = interestRepository.findAll();
-    for (Interest existingInterest : existingInterests) {
-      String existingName = existingInterest.getName();
-      if (newName.equals(existingName)) continue;
-      int distance = LEVENSHTEIN_DISTANCE.apply(newName, existingName);
-      int maxLength = Math.max(newName.length(), existingName.length());
-      if (maxLength == 0) continue;
-      double similarity = 1.0 - (double) distance / maxLength;
-      if (similarity >= SIMILARITY_THRESHOLD) {
-        throw new InterestNameTooSimilarException(newName, existingName, similarity);
-      }
-    }
+    return interestRepository.save(entity);
   }
 
   @Override
   @Transactional
-  public Interest updateInterestKeywords(Long interestId, List<String> newKeywords) {
-    Interest interest = findInterestByIdOrThrow(interestId);
+  public Interest updateInterest(Long interestId, InterestUpdateRequestDto requestDto) {
+    Interest entity = findByIdOrThrow(interestId);
+    boolean changed = false;
 
-    // --- vvv 키워드 목록을 문자열로 변환 vvv ---
-    String newKeywordsString = convertKeywordsToString(newKeywords);
-    // --- ^^^ 키워드 목록을 문자열로 변환 ^^^ ---
+    // 이름
+    if (requestDto.name() != null &&
+        !requestDto.name().isBlank() &&
+        !Objects.equals(entity.getName(), requestDto.name())) {
+      String newName = requestDto.name();
+      Optional<Interest> existing = interestRepository.findByName(newName);
+      if (existing.isPresent() && !existing.get().getId().equals(interestId)) {
+        throw new InterestAlreadyExistsException(newName);
+      }
+      checkNameSimilarity(newName, interestId);
+      entity.setName(newName);
+      changed = true;
+    }
 
-    interest.updateKeywords(newKeywordsString); // 엔티티의 updateKeywords 호출 (String 파라미터)
+    // 키워드
+    if (requestDto.keywords() != null) {
+      String newKw = convertKeywordsToString(requestDto.keywords());
+      if (!Objects.equals(entity.getKeywords(), newKw)) {
+        entity.updateKeywords(newKw);
+        changed = true;
+      }
+    }
 
-    return interestRepository.save(interest); // 변경 감지 또는 명시적 저장
+    return changed ? interestRepository.save(entity) : entity;
   }
 
   @Override
-  @Transactional // 데이터 변경이 있으므로 트랜잭션 적용
+  @Transactional
   public void deleteInterest(Long interestId) {
-    // 1. 관심사 존재 여부 확인
     if (!interestRepository.existsById(interestId)) {
-      throw new InterestNotFoundException(interestId); // 없으면 예외 발생
+      throw new InterestNotFoundException(interestId);
     }
-    // 2. 존재하면 삭제 실행
-    interestRepository.deleteById(interestId);
+
+    subscriptionRepository.deleteByInterestId(interestId); //  관련 구독 먼저 삭제
+    interestRepository.deleteById(interestId); // 관심사 삭제
   }
 
-  private Interest findInterestByIdOrThrow(Long interestId) {
-    return interestRepository.findById(interestId)
-        .orElseThrow(() -> new InterestNotFoundException(interestId));
+
+  @Override
+  @Transactional(readOnly = true)
+  public CursorPageResponseInterestDto findAll(
+      Long userId,
+      String keyword,
+      Long cursorId,
+      String cursorValue,
+      String orderBy,
+      Sort.Direction direction,
+      int limit
+  ) {
+    Sort sort = Sort.by(direction, orderBy);
+    Pageable page = PageRequest.of(0, limit, sort);
+
+    // 1) cursorValue 변환
+    Object cursorVal = convertCursorValue(cursorValue, sort);
+
+    // 2) 레포지토리 직접 호출
+    var slice = interestRepository.searchWithCursor(keyword, page, cursorId, cursorVal);
+
+    // 3) 엔티티→DTO
+    List<InterestDto> dtos = slice.getContent().stream()
+        .map(interest -> InterestDto.fromEntity(interest, isSubscribed(userId, interest.getId())))
+        .collect(Collectors.toList());
+
+    // 4) nextCursor 계산
+    String nextCursor = null, nextAfter = null;
+    if (slice.hasNext() && !dtos.isEmpty()) {
+      var last = slice.getContent().get(slice.getContent().size() - 1);
+      nextCursor = switch (orderBy) {
+        case "name"            -> last.getName();
+        case "subscriberCount" -> last.getSubscriberCount().toString();
+        case "createdAt"       -> last.getCreatedAt().toString();
+        default                -> last.getId().toString();
+      };
+      nextAfter = last.getCreatedAt().toString();
+    }
+
+    return new CursorPageResponseInterestDto(
+        dtos,
+        nextCursor,
+        nextAfter,
+        slice.getSize(),
+        slice.getContent().stream().mapToLong(Interest::getId).count(),
+        slice.hasNext()
+    );
   }
 
-  // --- vvv 키워드 List -> String 변환 헬퍼 메서드 vvv ---
-  private String convertKeywordsToString(List<String> keywords) {
-    if (keywords == null || keywords.isEmpty()) {
-      return null; // 또는 빈 문자열 ""
-    }
-    // 쉼표(,)를 구분자로 사용하여 문자열로 합침
-    return keywords.stream()
-        .filter(StringUtils::hasText) // 비거나 null인 키워드 제외
-        .collect(Collectors.joining(KEYWORD_DELIMITER));
+  // ——— helpers ———
+
+  private Interest findByIdOrThrow(Long id) {
+    return interestRepository.findById(id)
+        .orElseThrow(() -> new InterestNotFoundException(id));
   }
-  // --- ^^^ 키워드 List -> String 변환 헬퍼 메서드 ^^^ ---
+
+  private void checkNameSimilarity(String name, Long selfId) {
+    for (Interest e : interestRepository.findAll()) {
+      if (selfId != null && e.getId().equals(selfId)) continue;
+      String other = e.getName();
+      if (name.equals(other)) continue;
+      int dist = LEVENSHTEIN.apply(name, other);
+      int max = Math.max(name.length(), other.length());
+      if (max > 0 && 1.0 - (double) dist / max >= SIMILARITY_THRESHOLD) {
+        throw new InterestNameTooSimilarException(name, other, 1.0 - (double) dist / max);
+      }
+    }
+  }
+
+  private String convertKeywordsToString(List<String> kws) {
+    if (kws == null || kws.isEmpty()) return "";
+    return kws.stream().filter(StringUtils::hasText).collect(Collectors.joining(KEYWORD_DELIMITER));
+  }
+
+  private Object convertCursorValue(String val, Sort sort) {
+    if (val == null || sort.isUnsorted()) return null;
+    Sort.Order o = sort.iterator().next();
+    return switch (o.getProperty()) {
+      case "name" -> val;
+      case "subscriberCount" -> Long.parseLong(val);
+      case "createdAt" -> Instant.parse(val);
+      case "id" -> Long.parseLong(val);
+      default -> val;
+    };
+  }
 }

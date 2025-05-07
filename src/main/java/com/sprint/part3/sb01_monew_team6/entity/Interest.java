@@ -1,18 +1,17 @@
 package com.sprint.part3.sb01_monew_team6.entity;
 
-import com.sprint.part3.sb01_monew_team6.entity.base.BaseUpdatableEntity;
+import com.sprint.part3.sb01_monew_team6.entity.base.BaseUpdatableEntity; // BaseUpdatableEntity 임포트
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.Instant;
-import java.util.List;
+// import java.time.Instant; // BaseUpdatableEntity 에서 상속받으므로 제거
 
 @Entity
 @Table(name = "interests")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
-@Builder // <<<--- 클래스 레벨로 이동
-@AllArgsConstructor // <<<--- 모든 필드를 받는 생성자 자동 생성 (Builder가 사용)
+@Builder
+@AllArgsConstructor
 public class Interest extends BaseUpdatableEntity {
 
   @Column(nullable = false, unique = true)
@@ -21,23 +20,28 @@ public class Interest extends BaseUpdatableEntity {
   @Column(name = "keyword", columnDefinition = "TEXT")
   private String keywords;
 
-  @Builder.Default // Lombok 빌더에 subscriberCount 필드 포함 및 기본값 설정
+  @Builder.Default
   @Column(nullable = false)
   private Long subscriberCount = 0L;
 
-  // --- 생성자에 붙어있던 @Builder 제거됨 ---
-  // @Builder // 제거됨
-  // public Interest(String name, String keywords, Long subscriberCount) { ... } // @AllArgsConstructor가 대체
-
   /**
    * 키워드 문자열을 업데이트합니다.
+   * updatedAt은 BaseUpdatableEntity의 @LastModifiedDate에 의해 자동으로 처리됩니다.
    * @param newKeywordsString 새로운 키워드 문자열 (예: "키워드1,키워드2")
    */
   public void updateKeywords(String newKeywordsString) {
     this.keywords = newKeywordsString;
   }
 
-  // 구독자 수 증가/감소 메서드는 그대로 유지
+  /**
+   * 이름을 업데이트합니다.
+   * updatedAt은 BaseUpdatableEntity의 @LastModifiedDate에 의해 자동으로 처리됩니다.
+   * @param newName 새로운 이름
+   */
+  public void setName(String newName) {
+    this.name = newName;
+  }
+
   public void incrementSubscriberCount() {
     this.subscriberCount++;
   }

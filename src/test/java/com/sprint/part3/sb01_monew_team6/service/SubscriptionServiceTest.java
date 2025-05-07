@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.service;
 
+import com.sprint.part3.sb01_monew_team6.dto.InterestUpdateRequestDto;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.entity.Subscription;
 import com.sprint.part3.sb01_monew_team6.entity.User;
@@ -112,17 +113,17 @@ class SubscriptionServiceTest {
     String existingName = "기존 관심사";
     List<String> keywordsList = List.of("키워드1", "키워드2");
 
+    // existsByName만 true로 모킹
     when(interestRepository.existsByName(existingName)).thenReturn(true);
-    // 유사도 검사 로직 때문에 findAll()도 Mocking 필요
-    when(interestRepository.findAll()).thenReturn(List.of(Interest.builder().name(existingName).build()));
 
     // when & then
     assertThatThrownBy(() -> interestService.createInterest(existingName, keywordsList))
         .isInstanceOf(InterestAlreadyExistsException.class)
         .hasMessage(INTEREST_ALREADY_EXISTS.getMessage());
 
-    verify(interestRepository).findAll(); // 유사도 검사 호출 확인
-    verify(interestRepository).existsByName(existingName); // 이름 중복 검사 호출 확인
+    // verify: existsByName만 호출되고, findAll/save는 호출되지 않음
+    verify(interestRepository).existsByName(existingName);
+    verify(interestRepository, never()).findAll();
     verify(interestRepository, never()).save(any(Interest.class));
   }
 
@@ -141,7 +142,8 @@ class SubscriptionServiceTest {
     when(interestRepository.save(any(Interest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // when: 키워드 수정 서비스 메소드 호출
-    Interest updatedInterest = interestService.updateInterestKeywords(interestId, newKeywordsList);
+    InterestUpdateRequestDto requestDto = new InterestUpdateRequestDto(null, newKeywordsList);
+    Interest updatedInterest = interestService.updateInterest(interestId, requestDto);
 
     // then: Mock 상호작용 검증
     verify(interestRepository).findById(eq(interestId));

@@ -3,8 +3,6 @@ package com.sprint.part3.sb01_monew_team6.repository;
 import com.sprint.part3.sb01_monew_team6.config.JpaConfig;
 import com.sprint.part3.sb01_monew_team6.config.QueryDslConfig;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
-// import org.junit.jupiter.api.BeforeEach; // 필요시 사용
-import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +21,15 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.time.Instant; // Instant 임포트
 import java.util.List;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 
 @Testcontainers
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("test")
 @Import({JpaConfig.class, QueryDslConfig.class})
 class InterestRepositoryTest {
 
@@ -51,9 +52,8 @@ class InterestRepositoryTest {
   @Autowired
   private InterestRepository interestRepository;
 
-  private static final String KEYWORD_DELIMITER = ","; // 구분자 정의
+  private static final String KEYWORD_DELIMITER = ",";
 
-  // --- 기존 테스트 메서드들 (변경 없음) ---
   @Test
   @DisplayName("성공: 관심사를 저장하고 ID로 조회하면 해당 관심사가 반환된다.")
   void saveAndFindById_returnsSavedInterest() {
@@ -61,7 +61,7 @@ class InterestRepositoryTest {
     String keywordsString = "IT" + KEYWORD_DELIMITER + "개발" + KEYWORD_DELIMITER + "스타트업";
     Interest interest = Interest.builder()
         .name("테크")
-        .keywords(keywordsString)
+        .keywords(keywordsString) // 문자열로 전달
         .build();
     // when
     Interest savedInterest = interestRepository.save(interest);
@@ -72,7 +72,7 @@ class InterestRepositoryTest {
     foundInterestOpt.ifPresent(foundInterest -> {
       assertThat(foundInterest.getId()).isNotNull();
       assertThat(foundInterest.getName()).isEqualTo(interest.getName());
-      assertThat(foundInterest.getKeywords()).isEqualTo(keywordsString);
+      assertThat(foundInterest.getKeywords()).isEqualTo(keywordsString); // 문자열 비교
       assertThat(foundInterest.getSubscriberCount()).isZero();
       assertThat(foundInterest.getCreatedAt()).isNotNull();
     });
@@ -83,7 +83,7 @@ class InterestRepositoryTest {
   void findByName_whenNameExists_returnsInterest() {
     // given
     String targetName = "정치";
-    Interest interest = Interest.builder().name(targetName).keywords("국회,선거").build();
+    Interest interest = Interest.builder().name(targetName).keywords("국회,선거").build(); // 문자열로 전달
     interestRepository.save(interest);
 
     // when
@@ -92,7 +92,7 @@ class InterestRepositoryTest {
     // then
     assertThat(foundInterestOpt).isPresent();
     assertThat(foundInterestOpt.get().getName()).isEqualTo(targetName);
-    assertThat(foundInterestOpt.get().getKeywords()).isEqualTo("국회,선거");
+    assertThat(foundInterestOpt.get().getKeywords()).isEqualTo("국회,선거"); // 문자열 비교
   }
 
   @Test
@@ -100,7 +100,7 @@ class InterestRepositoryTest {
   void findByName_whenNameDoesNotExist_returnsEmpty() {
     // given
     String nonExistentName = "외계인";
-    interestRepository.save(Interest.builder().name("경제").keywords("주식").build());
+    interestRepository.save(Interest.builder().name("경제").keywords("주식").build()); // 문자열로 전달
 
     // when
     Optional<Interest> foundInterestOpt = interestRepository.findByName(nonExistentName);
@@ -114,7 +114,7 @@ class InterestRepositoryTest {
   void existsByName_whenNameExists_returnsTrue() {
     // given
     String targetName = "사회";
-    Interest interest = Interest.builder().name(targetName).build();
+    Interest interest = Interest.builder().name(targetName).build(); // keywords는 null로 설정됨
     interestRepository.save(interest);
 
     // when
@@ -129,7 +129,7 @@ class InterestRepositoryTest {
   void existsByName_whenNameDoesNotExist_returnsFalse() {
     // given
     String nonExistentName = "UFO";
-    interestRepository.save(Interest.builder().name("국제").build());
+    interestRepository.save(Interest.builder().name("국제").build()); // keywords는 null로 설정됨
 
     // when
     boolean exists = interestRepository.existsByName(nonExistentName);
@@ -143,13 +143,13 @@ class InterestRepositoryTest {
   void searchWithCursor_whenSortedByIdAsc_returnsCorrectSlice() {
     // given: 여러 개의 Interest 저장
     Interest interest1 = interestRepository.save(
-        Interest.builder().name("A_Interest").keywords("a").build());
+        Interest.builder().name("A_Interest").keywords("a").build()); // 문자열
     Interest interest2 = interestRepository.save(
-        Interest.builder().name("C_Interest").keywords("c").build());
+        Interest.builder().name("C_Interest").keywords("c").build()); // 문자열
     Interest interest3 = interestRepository.save(
-        Interest.builder().name("B_Interest").keywords("b").build());
+        Interest.builder().name("B_Interest").keywords("b").build()); // 문자열
     Interest interest4 = interestRepository.save(
-        Interest.builder().name("D_Interest").keywords("d").build());
+        Interest.builder().name("D_Interest").keywords("d").build()); // 문자열
 
     int pageSize = 2;
     Pageable pageableIdAsc = PageRequest.of(0, pageSize, Sort.by("id").ascending());
@@ -166,7 +166,7 @@ class InterestRepositoryTest {
 
     // when 2: 두 번째 페이지 조회 (ID 정렬이므로 cursorValue는 ID 값)
     Slice<Interest> secondSlice = interestRepository.searchWithCursor(null, pageableIdAsc,
-        lastIdFromFirstSlice, lastIdFromFirstSlice); // ID 정렬 시 cursorValue는 ID
+        lastIdFromFirstSlice, lastIdFromFirstSlice);
 
     // then 2: 두 번째 페이지 결과 검증
     assertThat(secondSlice.getNumberOfElements()).isEqualTo(pageSize);
@@ -180,33 +180,33 @@ class InterestRepositoryTest {
   void searchWithCursor_keywordFilteringByNameOrKeywordsString() {
     // given
     Interest tech = interestRepository.save(
-        Interest.builder().name("Tech News").keywords("IT,스타트업,개발").build());
+        Interest.builder().name("Tech News").keywords("IT,스타트업,개발").build()); // 문자열
     Interest health = interestRepository.save(
-        Interest.builder().name("Health").keywords("의료,건강").build());
+        Interest.builder().name("Health").keywords("의료,건강").build()); // 문자열
     Interest startup = interestRepository.save(
-        Interest.builder().name("Startup Stories").keywords("기업,투자,스타트업").build());
+        Interest.builder().name("Startup Stories").keywords("기업,투자,스타트업").build()); // 문자열
     Interest global = interestRepository.save(
-        Interest.builder().name("Global Tech").keywords("해외,기술").build());
+        Interest.builder().name("Global Tech").keywords("해외,기술").build()); // 문자열
 
     Pageable pageable = PageRequest.of(0, 10, Sort.by("name").ascending());
 
-    // when 1: '스타트업' 키워드로 검색 (Tech News, Startup Stories 둘 다 keywords 문자열에 포함)
+    // when 1: '스타트업' 키워드로 검색
     Slice<Interest> startupResults = interestRepository.searchWithCursor("스타트업", pageable, null, null);
 
-    // then 1: '스타트업' 키워드를 가진 관심사들이 조회되어야 함 (QueryDSL 정렬 적용)
+    // then 1: '스타트업' 키워드를 가진 관심사들이 조회되어야 함
     assertThat(startupResults.getContent())
         .extracting(Interest::getName)
-        .containsExactly("Startup Stories", "Tech News"); // 이름 오름차순
+        .containsExactly("Startup Stories", "Tech News");
 
-    // when 2: 'Tech' 키워드로 검색 (Tech News, Global Tech 둘 다 name 또는 keywords에 포함)
+    // when 2: 'Tech' 키워드로 검색
     Slice<Interest> techResults = interestRepository.searchWithCursor("Tech", pageable, null, null);
 
     // then 2: 'Tech' 키워드를 가진 관심사들이 조회되어야 함
     assertThat(techResults.getContent())
         .extracting(Interest::getName)
-        .containsExactly("Global Tech", "Tech News"); // 이름 오름차순
+        .containsExactly("Global Tech", "Tech News");
 
-    // when 3: '건강' 키워드로 검색 (Health만 keywords 문자열에 포함)
+    // when 3: '건강' 키워드로 검색
     Slice<Interest> healthResults = interestRepository.searchWithCursor("건강", pageable, null, null);
 
     // then 3: '건강' 키워드를 가진 관심사가 조회되어야 함
@@ -225,34 +225,33 @@ class InterestRepositoryTest {
   @DisplayName("성공(GREEN): 이름(name) 기준 오름차순 정렬 시 커서 페이지네이션")
   void searchWithCursor_whenSortedByNameAsc_returnsCorrectSlice() {
     // given: 이름 순서가 ID 순서와 다른 데이터 저장
-    Interest interestB = interestRepository.save(Interest.builder().name("B_Interest").keywords("b").build()); // ID 1
-    Interest interestA = interestRepository.save(Interest.builder().name("A_Interest").keywords("a").build()); // ID 2
-    Interest interestD = interestRepository.save(Interest.builder().name("D_Interest").keywords("d").build()); // ID 3
-    Interest interestC = interestRepository.save(Interest.builder().name("C_Interest").keywords("c").build()); // ID 4
+    Interest interestB = interestRepository.save(Interest.builder().name("B_Interest").keywords("b").build());
+    Interest interestA = interestRepository.save(Interest.builder().name("A_Interest").keywords("a").build());
+    Interest interestD = interestRepository.save(Interest.builder().name("D_Interest").keywords("d").build());
+    Interest interestC = interestRepository.save(Interest.builder().name("C_Interest").keywords("c").build());
 
     int pageSize = 2;
     Pageable pageableNameAsc = PageRequest.of(0, pageSize, Sort.by("name").ascending().and(Sort.by("id").ascending()));
 
-    // when 1: 첫 페이지 조회 (cursorId = null, cursorValue = null)
+    // when 1: 첫 페이지 조회
     Slice<Interest> firstSlice = interestRepository.searchWithCursor(null, pageableNameAsc, null, null);
 
-    // then 1: 첫 페이지 결과 검증 (이름 순: A, B 예상)
+    // then 1: 첫 페이지 결과 검증
     assertThat(firstSlice.getNumberOfElements()).isEqualTo(pageSize);
     assertThat(firstSlice.hasNext()).isTrue();
     assertThat(firstSlice.getContent()).extracting(Interest::getName)
         .containsExactly("A_Interest", "B_Interest");
 
-    // 다음 페이지 조회를 위한 커서 값
     Long lastIdFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getId();
-    String lastNameFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getName(); // 이름 값 사용
+    String lastNameFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getName();
 
-    // when 2: 두 번째 페이지 조회 (cursorId와 cursorValue(name) 사용)
+    // when 2: 두 번째 페이지 조회
     Slice<Interest> secondSlice = interestRepository.searchWithCursor(null, pageableNameAsc,
-        lastIdFromFirstSlice, lastNameFromFirstSlice); // 이름 커서 값 전달
+        lastIdFromFirstSlice, lastNameFromFirstSlice);
 
-    // then 2: 두 번째 페이지 결과 검증 (이름 순: C, D 예상)
+    // then 2: 두 번째 페이지 결과 검증
     assertThat(secondSlice.getNumberOfElements()).isEqualTo(pageSize);
-    assertThat(secondSlice.hasNext()).isFalse(); // 마지막 페이지
+    assertThat(secondSlice.hasNext()).isFalse();
     assertThat(secondSlice.getContent()).extracting(Interest::getName)
         .as("이름 오름차순 정렬 시 두 번째 페이지 결과 검증")
         .containsExactly("C_Interest", "D_Interest");
@@ -261,36 +260,34 @@ class InterestRepositoryTest {
   @Test
   @DisplayName("성공(GREEN): 이름(name) 기준 내림차순 정렬 시 커서 페이지네이션")
   void searchWithCursor_whenSortedByNameDesc_returnsCorrectSlice() {
-    // given: 이름 순서가 ID 순서와 다른 데이터 저장 (A, B, C, D 순으로 이름 정렬)
-    Interest interestB = interestRepository.save(Interest.builder().name("B_Interest").keywords("b").build()); // ID 1
-    Interest interestA = interestRepository.save(Interest.builder().name("A_Interest").keywords("a").build()); // ID 2
-    Interest interestD = interestRepository.save(Interest.builder().name("D_Interest").keywords("d").build()); // ID 3
-    Interest interestC = interestRepository.save(Interest.builder().name("C_Interest").keywords("c").build()); // ID 4
+    // given
+    Interest interestB = interestRepository.save(Interest.builder().name("B_Interest").keywords("b").build());
+    Interest interestA = interestRepository.save(Interest.builder().name("A_Interest").keywords("a").build());
+    Interest interestD = interestRepository.save(Interest.builder().name("D_Interest").keywords("d").build());
+    Interest interestC = interestRepository.save(Interest.builder().name("C_Interest").keywords("c").build());
 
     int pageSize = 2;
-    // 이름 내림차순 정렬 (ID는 보조 정렬 - 오름차순 유지)
     Pageable pageableNameDesc = PageRequest.of(0, pageSize, Sort.by("name").descending().and(Sort.by("id").ascending()));
 
-    // when 1: 첫 페이지 조회 (cursorId = null, cursorValue = null)
+    // when 1: 첫 페이지 조회
     Slice<Interest> firstSlice = interestRepository.searchWithCursor(null, pageableNameDesc, null, null);
 
-    // then 1: 첫 페이지 결과 검증 (이름 내림차순: D, C 예상)
+    // then 1: 첫 페이지 결과 검증
     assertThat(firstSlice.getNumberOfElements()).isEqualTo(pageSize);
     assertThat(firstSlice.hasNext()).isTrue();
     assertThat(firstSlice.getContent()).extracting(Interest::getName)
-        .containsExactly("D_Interest", "C_Interest"); // 이름 내림차순 확인
+        .containsExactly("D_Interest", "C_Interest");
 
-    // 다음 페이지 조회를 위한 커서 값
     Long lastIdFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getId();
-    String lastNameFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getName(); // 이름 값 사용
+    String lastNameFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getName();
 
-    // when 2: 두 번째 페이지 조회 (cursorId와 cursorValue(name) 사용)
+    // when 2: 두 번째 페이지 조회
     Slice<Interest> secondSlice = interestRepository.searchWithCursor(null, pageableNameDesc,
         lastIdFromFirstSlice, lastNameFromFirstSlice);
 
-    // then 2: 두 번째 페이지 결과 검증 (이름 내림차순: B, A 예상)
+    // then 2: 두 번째 페이지 결과 검증
     assertThat(secondSlice.getNumberOfElements()).isEqualTo(pageSize);
-    assertThat(secondSlice.hasNext()).isFalse(); // 마지막 페이지
+    assertThat(secondSlice.hasNext()).isFalse();
     assertThat(secondSlice.getContent()).extracting(Interest::getName)
         .as("이름 내림차순 정렬 시 두 번째 페이지 결과 검증")
         .containsExactly("B_Interest", "A_Interest");
@@ -299,155 +296,112 @@ class InterestRepositoryTest {
   @Test
   @DisplayName("성공(GREEN): 구독자 수(subscriberCount) 기준 오름차순 정렬 시 커서 페이지네이션")
   void searchWithCursor_whenSortedBySubscriberCountAsc_returnsCorrectSlice() {
-    // given: 구독자 수와 ID 순서가 다른 데이터 저장
-    Interest interest10 = interestRepository.save(Interest.builder().name("Interest_10").keywords("").subscriberCount(10L).build()); // ID 1
-    Interest interest5_1 = interestRepository.save(Interest.builder().name("Interest_5_1").keywords("").subscriberCount(5L).build()); // ID 2
-    Interest interest20 = interestRepository.save(Interest.builder().name("Interest_20").keywords("").subscriberCount(20L).build()); // ID 3
-    Interest interest5_2 = interestRepository.save(Interest.builder().name("Interest_5_2").keywords("").subscriberCount(5L).build()); // ID 4
+    // given
+    Interest interest10 = interestRepository.save(Interest.builder().name("Interest_10").keywords("").subscriberCount(10L).build());
+    Interest interest5_1 = interestRepository.save(Interest.builder().name("Interest_5_1").keywords("").subscriberCount(5L).build());
+    Interest interest20 = interestRepository.save(Interest.builder().name("Interest_20").keywords("").subscriberCount(20L).build());
+    Interest interest5_2 = interestRepository.save(Interest.builder().name("Interest_5_2").keywords("").subscriberCount(5L).build());
 
     int pageSize = 2;
-    // 구독자 수 오름차순 정렬 (ID는 보조 정렬)
     Pageable pageableSubCntAsc = PageRequest.of(0, pageSize, Sort.by("subscriberCount").ascending().and(Sort.by("id").ascending()));
 
-    // when 1: 첫 페이지 조회 (cursorId = null, cursorValue = null)
+    // when 1: 첫 페이지 조회
     Slice<Interest> firstSlice = interestRepository.searchWithCursor(null, pageableSubCntAsc, null, null);
 
-    // then 1: 첫 페이지 결과 검증 (구독자 수 순: 5_1, 5_2 예상)
+    // then 1: 첫 페이지 결과 검증
     assertThat(firstSlice.getNumberOfElements()).isEqualTo(pageSize);
     assertThat(firstSlice.hasNext()).isTrue();
     assertThat(firstSlice.getContent()).extracting(Interest::getName)
-        .containsExactly("Interest_5_1", "Interest_5_2"); // 구독자 수 같으면 ID 오름차순
+        .containsExactly("Interest_5_1", "Interest_5_2");
 
-    // 다음 페이지 조회를 위한 커서 값
     Long lastIdFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getId();
-    Long lastSubCntFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getSubscriberCount(); // 구독자 수 값 사용
+    Long lastSubCntFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getSubscriberCount();
 
-    // when 2: 두 번째 페이지 조회 (cursorId와 cursorValue(subscriberCount) 사용)
+    // when 2: 두 번째 페이지 조회
     Slice<Interest> secondSlice = interestRepository.searchWithCursor(null, pageableSubCntAsc,
-        lastIdFromFirstSlice, lastSubCntFromFirstSlice); // 구독자 수 커서 값 전달
+        lastIdFromFirstSlice, lastSubCntFromFirstSlice);
 
-    // then 2: 두 번째 페이지 결과 검증 (구독자 수 순: 10, 20 예상)
+    // then 2: 두 번째 페이지 결과 검증
     assertThat(secondSlice.getNumberOfElements()).isEqualTo(pageSize);
-    assertThat(secondSlice.hasNext()).isFalse(); // 마지막 페이지
+    assertThat(secondSlice.hasNext()).isFalse();
     assertThat(secondSlice.getContent()).extracting(Interest::getName)
         .as("구독자 수 오름차순 정렬 시 두 번째 페이지 결과 검증")
         .containsExactly("Interest_10", "Interest_20");
   }
+
   @Test
-  @DisplayName("구독자 수(subscriberCount) 기준 내림차순 정렬 시 커서 페이지네이션")
-  void searchWithCursor_whenSortedBySubscriberCountDesc_returnsCorrectSlice() {
-    // given: 구독자 수와 ID 순서가 다른 데이터 저장
-    Interest interest10 = interestRepository.save(Interest.builder().name("Interest_10").keywords("").subscriberCount(10L).build()); // ID 1
-    Interest interest5_1 = interestRepository.save(Interest.builder().name("Interest_5_1").keywords("").subscriberCount(5L).build()); // ID 2
-    Interest interest20 = interestRepository.save(Interest.builder().name("Interest_20").keywords("").subscriberCount(20L).build()); // ID 3
-    Interest interest10_2 = interestRepository.save(Interest.builder().name("Interest_10_2").keywords("").subscriberCount(10L).build()); // ID 4
-
-    int pageSize = 2;
-    // 구독자 수 내림차순 정렬 (ID는 보조 정렬 - 오름차순 유지)
-    Pageable pageableSubCntDesc = PageRequest.of(0, pageSize, Sort.by("subscriberCount").descending().and(Sort.by("id").ascending()));
-
-    // when 1: 첫 페이지 조회 (cursorId = null, cursorValue = null)
-    Slice<Interest> firstSlice = interestRepository.searchWithCursor(null, pageableSubCntDesc, null, null);
-
-    // then 1: 첫 페이지 결과 검증 (구독자 수 내림차순: 20, 10_1 예상)
-    assertThat(firstSlice.getNumberOfElements()).isEqualTo(pageSize);
-    assertThat(firstSlice.hasNext()).isTrue();
-    assertThat(firstSlice.getContent()).extracting(Interest::getName)
-        .containsExactly("Interest_20", "Interest_10"); // 구독자 수 내림차순, 같으면 ID 오름차순인데 여기선 10L이 하나뿐
-
-    // 다음 페이지 조회를 위한 커서 값
-    Long lastIdFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getId();
-    Long lastSubCntFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getSubscriberCount(); // 구독자 수 값 사용
-
-    // when 2: 두 번째 페이지 조회 (cursorId와 cursorValue(subscriberCount) 사용)
-    Slice<Interest> secondSlice = interestRepository.searchWithCursor(null, pageableSubCntDesc,
-        lastIdFromFirstSlice, lastSubCntFromFirstSlice); // 구독자 수 커서 값 전달
-
-    // then 2: 두 번째 페이지 결과 검증 (구독자 수 내림차순: 10_2, 5_1 예상 - 현재 구현에서는 ID > cursorId 조건 때문에 실패 예상)
-    assertThat(secondSlice.getNumberOfElements()).isEqualTo(pageSize);
-    assertThat(secondSlice.hasNext()).isFalse(); // 마지막 페이지
-    // --- 이 부분이 현재 구현에서는 실패할 것으로 예상 (RED) ---
-    assertThat(secondSlice.getContent()).extracting(Interest::getName)
-        .as("구독자 수 내림차순 정렬 시 두 번째 페이지 결과 검증")
-        .containsExactly("Interest_10_2", "Interest_5_1");
-  }
-  @Test
-  @DisplayName("실패(RED): 생성 시각(createdAt) 기준 오름차순 정렬 시 커서 페이지네이션")
+  @DisplayName("성공(GREEN): 생성 시각(createdAt) 기준 오름차순 정렬 시 커서 페이지네이션")
   void searchWithCursor_whenSortedByCreatedAtAsc_returnsCorrectSlice() throws InterruptedException {
     // given: 생성 시각 순서가 ID 순서와 다르게 데이터 저장
-    Interest interest2 = interestRepository.save(Interest.builder().name("Interest_2").build()); // 가장 먼저 생성
+    Interest interest2 = interestRepository.save(Interest.builder().name("Interest_2").build());
     Thread.sleep(10); // 시간차
     Interest interest4 = interestRepository.save(Interest.builder().name("Interest_4").build());
     Thread.sleep(10);
     Interest interest1 = interestRepository.save(Interest.builder().name("Interest_1").build());
     Thread.sleep(10);
-    Interest interest3 = interestRepository.save(Interest.builder().name("Interest_3").build()); // 가장 나중에 생성
+    Interest interest3 = interestRepository.save(Interest.builder().name("Interest_3").build());
 
     int pageSize = 2;
-    // createdAt 오름차순 정렬 (ID는 보조 정렬)
     Pageable pageableCreatedAtAsc = PageRequest.of(0, pageSize, Sort.by("createdAt").ascending().and(Sort.by("id").ascending()));
 
-    // when 1: 첫 페이지 조회 (cursorId = null, cursorValue = null)
+    // when 1: 첫 페이지 조회
     Slice<Interest> firstSlice = interestRepository.searchWithCursor(null, pageableCreatedAtAsc, null, null);
 
-    // then 1: 첫 페이지 결과 검증 (createdAt 순: Interest_2, Interest_4 예상)
+    // then 1: 첫 페이지 결과 검증
     assertThat(firstSlice.getNumberOfElements()).isEqualTo(pageSize);
     assertThat(firstSlice.hasNext()).isTrue();
     assertThat(firstSlice.getContent()).extracting(Interest::getName)
-        .containsExactly("Interest_2", "Interest_4"); // createdAt 오름차순 확인
+        .containsExactly("Interest_2", "Interest_4");
 
-    // 다음 페이지 조회를 위한 커서 값
     Long lastIdFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getId();
-    Instant lastCreatedAtFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getCreatedAt(); // createdAt 값 사용
+    Instant lastCreatedAtFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getCreatedAt();
 
-    // when 2: 두 번째 페이지 조회 (cursorId와 cursorValue(createdAt) 사용)
+    // when 2: 두 번째 페이지 조회
     Slice<Interest> secondSlice = interestRepository.searchWithCursor(null, pageableCreatedAtAsc,
-        lastIdFromFirstSlice, lastCreatedAtFromFirstSlice); // createdAt 커서 값 전달
+        lastIdFromFirstSlice, lastCreatedAtFromFirstSlice);
 
-    // then 2: 두 번째 페이지 결과 검증 (createdAt 순: Interest_1, Interest_3 예상 - 현재 구현에서는 실패 예상)
+    // then 2: 두 번째 페이지 결과 검증
     assertThat(secondSlice.getNumberOfElements()).isEqualTo(pageSize);
     assertThat(secondSlice.hasNext()).isFalse();
     assertThat(secondSlice.getContent()).extracting(Interest::getName)
         .as("createdAt 오름차순 정렬 시 두 번째 페이지 결과 검증")
         .containsExactly("Interest_1", "Interest_3");
   }
+
   @Test
-  @DisplayName("생성 시각(createdAt) 기준 내림차순 정렬 시 커서 페이지네이션")
+  @DisplayName("성공(GREEN): 생성 시각(createdAt) 기준 내림차순 정렬 시 커서 페이지네이션")
   void searchWithCursor_whenSortedByCreatedAtDesc_returnsCorrectSlice() throws InterruptedException {
-    // given: 생성 시각 순서가 ID 순서와 다르게 데이터 저장
-    Interest interest2 = interestRepository.save(Interest.builder().name("Interest_2").build()); // 가장 먼저 생성
+    // given
+    Interest interest2 = interestRepository.save(Interest.builder().name("Interest_2").build());
     Thread.sleep(10);
     Interest interest4 = interestRepository.save(Interest.builder().name("Interest_4").build());
     Thread.sleep(10);
     Interest interest1 = interestRepository.save(Interest.builder().name("Interest_1").build());
     Thread.sleep(10);
-    Interest interest3 = interestRepository.save(Interest.builder().name("Interest_3").build()); // 가장 나중에 생성
+    Interest interest3 = interestRepository.save(Interest.builder().name("Interest_3").build());
 
     int pageSize = 2;
-    // createdAt 내림차순 정렬 (ID는 보조 정렬 - 오름차순 유지)
     Pageable pageableCreatedAtDesc = PageRequest.of(0, pageSize, Sort.by("createdAt").descending().and(Sort.by("id").ascending()));
 
-    // when 1: 첫 페이지 조회 (cursorId = null, cursorValue = null)
+    // when 1: 첫 페이지 조회
     Slice<Interest> firstSlice = interestRepository.searchWithCursor(null, pageableCreatedAtDesc, null, null);
 
-    // then 1: 첫 페이지 결과 검증 (createdAt 내림차순: Interest_3, Interest_1 예상)
+    // then 1: 첫 페이지 결과 검증
     assertThat(firstSlice.getNumberOfElements()).isEqualTo(pageSize);
     assertThat(firstSlice.hasNext()).isTrue();
     assertThat(firstSlice.getContent()).extracting(Interest::getName)
-        .containsExactly("Interest_3", "Interest_1"); // createdAt 내림차순 확인
+        .containsExactly("Interest_3", "Interest_1");
 
-    // 다음 페이지 조회를 위한 커서 값
     Long lastIdFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getId();
-    Instant lastCreatedAtFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getCreatedAt(); // createdAt 값 사용
+    Instant lastCreatedAtFromFirstSlice = firstSlice.getContent().get(pageSize - 1).getCreatedAt();
 
-    // when 2: 두 번째 페이지 조회 (cursorId와 cursorValue(createdAt) 사용)
+    // when 2: 두 번째 페이지 조회
     Slice<Interest> secondSlice = interestRepository.searchWithCursor(null, pageableCreatedAtDesc,
-        lastIdFromFirstSlice, lastCreatedAtFromFirstSlice); // createdAt 커서 값 전달
+        lastIdFromFirstSlice, lastCreatedAtFromFirstSlice);
 
-    // then 2: 두 번째 페이지 결과 검증 (createdAt 내림차순: Interest_4, Interest_2 예상 - 현재 구현에서는 ID > cursorId 조건 때문에 실패 예상)
+    // then 2: 두 번째 페이지 결과 검증
     assertThat(secondSlice.getNumberOfElements()).isEqualTo(pageSize);
-    assertThat(secondSlice.hasNext()).isFalse(); // 마지막 페이지
-    // --- 이 부분이 현재 구현에서는 실패할 것으로 예상 (RED) ---
+    assertThat(secondSlice.hasNext()).isFalse();
     assertThat(secondSlice.getContent()).extracting(Interest::getName)
         .as("createdAt 내림차순 정렬 시 두 번째 페이지 결과 검증")
         .containsExactly("Interest_4", "Interest_2");

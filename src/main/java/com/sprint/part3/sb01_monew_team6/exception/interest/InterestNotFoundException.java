@@ -13,10 +13,4 @@ public class InterestNotFoundException extends InterestException {
     super(ErrorCode.INTEREST_NOT_FOUND, Instant.now(), HttpStatus.NOT_FOUND);
     // log.warn("Interest not found with ID: {}", interestId); // 필요시 로깅
   }
-
-  // 필요시 다른 생성자 추가 가능
-  public InterestNotFoundException(String message) {
-    super(ErrorCode.INTEREST_NOT_FOUND, Instant.now(), HttpStatus.NOT_FOUND);
-    // log.warn("Interest not found: {}", message);
-  }
 }

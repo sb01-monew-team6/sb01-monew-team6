@@ -23,7 +23,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
    */
   boolean existsByUserIdAndInterestId(Long userId, Long interestId);
 
-  // 필요에 따라 특정 사용자의 모든 구독 목록 조회, 특정 관심사의 모든 구독자 수 조회 등의 메서드 추가 가능
-  // List<Subscription> findByUser(User user);
-  // long countByInterest(Interest interest);
+
+  void deleteByInterestId(Long interestId);
 }
