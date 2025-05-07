@@ -45,5 +45,5 @@ lifecycle-policy.json
 .logs/
 
 # --- 민감 정보(Secret) ---
-src/main/resources/secret.yml
+src/main/resources/application-secret.yml
 secret.yml
