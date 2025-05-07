@@ -1,16 +1,14 @@
 package com.sprint.part3.sb01_monew_team6.service;
 
-import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
-import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
+import com.sprint.part3.sb01_monew_team6.dto.*;
 
-import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import java.util.List;
 
 public interface CommentService {
 
     CommentDto register(CommentRegisterRequest request);
 
-    List<CommentDto> findAll(
+    PageResponse<CommentDto> findAll(
             Long articleId,
             String orderBy,
             String direction,
@@ -20,7 +18,7 @@ public interface CommentService {
             Long requestUserId
     );
 
-    List<CommentDto> getComments(Long articleId);
+    CommentLikeDto likeComment(Long commentId, Long userId);
 
     void softDeleteComment(Long id);
 
