@@ -56,6 +56,11 @@ public class ArticleServiceImpl implements ArticleService {
   @Value("${storage.s3.backup-bucket}")
   private String bucketName;
 
+  /** 테스트 전용으로만 여는 세터 */
+  public void setBucketName(String bucketName) {
+    this.bucketName = bucketName;
+  }
+
   //목록 조회 : 페이지네이션
   @Transactional(readOnly=true)
   @Override
@@ -124,14 +129,17 @@ public class ArticleServiceImpl implements ArticleService {
     return response;
   }
 
-  private OrderSpecifier<?> buildOrder(CursorPageRequestArticleDto request) {
-    Order dir = request.direction().equalsIgnoreCase("ASC") ? Order.ASC : Order.DESC;
-    if ("publishDate".equals(request.orderBy())) {
-      return new OrderSpecifier<>(dir, newsArticle.articlePublishedDate);
-    } else if ("title".equals(request.orderBy())) {
-      return new OrderSpecifier<>(dir, newsArticle.articleTitle);
-    } else {
-      return new OrderSpecifier<>(dir, newsArticle.id);
+  private OrderSpecifier<?> buildOrder(CursorPageRequestArticleDto req) {
+    Order dir = "ASC".equalsIgnoreCase(req.direction()) ? Order.ASC : Order.DESC;
+    switch (req.orderBy()) {
+      case "publishDate":
+        return new OrderSpecifier<>(dir, newsArticle.articlePublishedDate);
+      case "title":
+        return new OrderSpecifier<>(dir, newsArticle.articleTitle);
+      case "id":
+        return new OrderSpecifier<>(dir, newsArticle.id);
+      default:
+        throw new NewsException(ErrorCode.NEWS_ORDERBY_IS_NOT_SUPPORT_EXCEPTION,Instant.now(),HttpStatus.BAD_REQUEST);
     }
   }
 

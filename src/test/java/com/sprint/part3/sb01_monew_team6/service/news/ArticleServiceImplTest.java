@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.service.news;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
@@ -21,6 +23,7 @@ import com.sprint.part3.sb01_monew_team6.dto.news.ArticleRestoreResultDto;
 import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageRequestArticleDto;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
+import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
@@ -28,20 +31,25 @@ import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.news.impl.ArticleServiceImpl;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Slice;
 import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @ExtendWith(MockitoExtension.class)
 public class ArticleServiceImplTest {
@@ -58,7 +66,11 @@ public class ArticleServiceImplTest {
   @InjectMocks
   ArticleServiceImpl articleService;
 
-  private final String bucketName = "my-test-bucket";
+  @BeforeEach
+  void init() {
+    // 세터로 버킷 이름을 지정
+    articleService.setBucketName("test-bucket");
+  }
 
   //목록 조회 : 페이지네이션
   @Test
@@ -282,6 +294,41 @@ public class ArticleServiceImplTest {
     verify(s3Client, times(2)).getObjectAsBytes(any(GetObjectRequest.class));
     verify(newsArticleRepository, times(2)).save(any(NewsArticle.class));
   }
+  @Test
+  @DisplayName("backup 정상 업로드")
+  void backup_thenNormal() throws Exception {
+    //given
+    LocalDate date = LocalDate.of(2025, 5, 2);
+    Instant start = date.atStartOfDay().toInstant(ZoneOffset.UTC);
+    Instant end = date.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+
+    List<NewsArticle> dummyList = List.of(
+        NewsArticle.builder().source("NAVER").sourceUrl("u").articleTitle("t").articlePublishedDate(Instant.now()).articleSummary("s").build()
+    );
+    when(newsArticleRepository.findAllByCreatedAtBetween(start, end))
+        .thenReturn(dummyList);
+    when(objectMapper.writeValueAsString(dummyList))
+        .thenReturn("[{}]");
+
+    // when
+    articleService.backup(date);
+
+    // then
+    ArgumentCaptor<PutObjectRequest> reqCap = ArgumentCaptor.forClass(PutObjectRequest.class);
+    verify(s3Client).putObject(reqCap.capture(), any(RequestBody.class));
+    assertThat(reqCap.getValue().bucket()).isEqualTo("test-bucket");
+    assertThat(reqCap.getValue().key()).isEqualTo("backup/2025-05-02.json");
+  }
+
+  @Test
+  @DisplayName("backup JSON 직렬화 실패하면 예외 발생")
+  void backup_jsonWriteFail_thenException() throws Exception {
+    when(objectMapper.writeValueAsString(any()))
+        .thenThrow(new JsonProcessingException("fail"){});
+    assertThatThrownBy(() -> articleService.backup(LocalDate.now()))
+        .isInstanceOf(NewsException.class)
+        .hasMessageContaining("직렬화 오류");
+  }
   //논리삭제
   @Test
   @DisplayName("ID가 없으면 예외 발생")
@@ -337,5 +384,113 @@ public class ArticleServiceImplTest {
 
     //then
     verify(newsArticleRepository).deleteById(1L);
+  }
+
+  //searchArticles
+  @Test
+  @DisplayName("limit 0 이하면 BadRequest")
+  void searchArticles_limit0_thenBadRequest(){
+    //given
+    CursorPageRequestArticleDto req = new CursorPageRequestArticleDto(
+        1L, null, null, null, null, null,
+        "id", "ASC", null, null, 0
+    );
+    //when,then
+    assertThatThrownBy(() -> articleService.searchArticles(req))
+        .isInstanceOf(NewsException.class)
+        .matches(e -> ((NewsException)e).getCode() == ErrorCode.NEWS_LIMIT_MORE_THAN_ONE_EXCEPTION);
+  }
+
+  @Test
+  @DisplayName("searchArticles: 허용되지 않은 orderBy 이면 BAD_REQUEST")
+  void searchArticles_invalidOrderBy_thenBadRequest(){
+    //given
+    CursorPageRequestArticleDto req = new CursorPageRequestArticleDto(
+        1L, null, null, null, null, null,
+        "foo", "DESC", null, null, 5
+    );
+    //when,then
+    assertThatThrownBy(() -> articleService.searchArticles(req))
+        .isInstanceOf(NewsException.class)
+        .matches(e -> ((NewsException)e).getCode() == ErrorCode.NEWS_ORDERBY_IS_NOT_SUPPORT_EXCEPTION);
+  }
+
+  @Test
+  @DisplayName("searchArticles: repository 예외 시 INTERNAL_SERVER_ERROR")
+  void searchArticles_repoException_thenInternalError() {
+    //given
+    CursorPageRequestArticleDto req = new CursorPageRequestArticleDto(
+        1L, null, null, null, null, null,
+        "publishDate", "ASC", null, null, 3
+    );
+    when(newsArticleRepository.searchArticles(any(), any(), any(), any(), anyInt()))
+        .thenThrow(new RuntimeException("fail"));
+
+    //when,then
+    assertThatThrownBy(() -> articleService.searchArticles(req))
+        .isInstanceOf(NewsException.class)
+        .matches(e -> ((NewsException)e).getCode() == ErrorCode.NEWS_CALL_NEWSARTICLEREPOSITORY_EXCEPTION);
+  }
+
+  @Test
+  @DisplayName("searchArticles: cursor 숫자 문자열 파싱 정상")
+  void searchArticles_cursorParsing() {
+    //given
+    CursorPageRequestArticleDto req = new CursorPageRequestArticleDto(
+        1L, null, null, null, null, null,
+        "id", "DESC", "42", Instant.EPOCH, 2
+    );
+
+    when(newsArticleRepository.searchArticles(any(), any(), eq(42L), any(), anyInt()))
+        .thenReturn(List.of());
+    when(newsArticleRepository.countArticles(any())).thenReturn(0L);
+    when(pageResponseMapper.fromSlice(any(), any(), any(), anyLong()))
+        .thenReturn(new PageResponse<>(List.of(), null, null, 2, false, 0L));
+
+    //when
+    articleService.searchArticles(req);
+
+    //then
+    // cursor=42L 인자로 정확히 전달됐는지 검증
+    verify(newsArticleRepository)
+        .searchArticles(any(), any(), eq(42L), any(), anyInt());
+  }
+
+  @Test
+  @DisplayName("searchArticles: buildOrder 분기(publishDate/title/id) 정상")
+  void searchArticles_buildOrderBranches() {
+    //given
+    when(newsArticleRepository.searchArticles(any(), any(), any(), any(), anyInt()))
+        .thenReturn(List.of());
+    when(newsArticleRepository.countArticles(any())).thenReturn(0L);
+    when(pageResponseMapper.fromSlice(any(), any(), any(), anyLong()))
+        .thenReturn(new PageResponse<>(List.of(), null, null, 1, false, 0L));
+
+    // publishDate
+    CursorPageRequestArticleDto req1 = new CursorPageRequestArticleDto(
+        1L, null, null, null, null, null,
+        "publishDate", "ASC", null, null, 1
+    );
+    articleService.searchArticles(req1);
+
+    // title
+    CursorPageRequestArticleDto req2 = new CursorPageRequestArticleDto(
+        1L, null, null, null, null, null,
+        "title", "DESC", null, null, 1
+    );
+    articleService.searchArticles(req2);
+
+    // id(default)
+    CursorPageRequestArticleDto req3 = new CursorPageRequestArticleDto(
+        1L, null, null, null, null, null,
+        "id", "DESC", null, null, 1
+    );
+
+    //when
+    articleService.searchArticles(req3);
+
+    //then
+    verify(newsArticleRepository, times(3))
+        .searchArticles(any(), any(), any(), any(), anyInt());
   }
 }
