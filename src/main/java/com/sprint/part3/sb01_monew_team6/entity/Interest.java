@@ -1,47 +1,54 @@
 package com.sprint.part3.sb01_monew_team6.entity;
 
-import com.sprint.part3.sb01_monew_team6.entity.base.BaseUpdatableEntity;
-import io.hypersistence.utils.hibernate.type.array.ListArrayType;
+import com.sprint.part3.sb01_monew_team6.entity.base.BaseUpdatableEntity; // BaseUpdatableEntity 임포트
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
+import lombok.*;
+// import java.time.Instant; // BaseUpdatableEntity 에서 상속받으므로 제거
 
-import java.util.ArrayList;
-import java.util.List;
-
+@Entity
+@Table(name = "interests")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Entity
-@Table(name = "interests", indexes = {
-    @Index(name = "uq_interests_name", columnList = "name", unique = true)
-})
+@ToString
+@Builder
+@AllArgsConstructor
 public class Interest extends BaseUpdatableEntity {
 
   @Column(nullable = false, unique = true)
   private String name;
 
-  @Type(ListArrayType.class)
-  @Column(name = "keyword", columnDefinition = "text[]")
-  private List<String> keywords = new ArrayList<>();
+  @Column(name = "keyword", columnDefinition = "TEXT")
+  private String keywords;
 
+  @Builder.Default
   @Column(nullable = false)
-  private long subscriberCount = 0L;
+  private Long subscriberCount = 0L;
 
-  @Builder
-  public Interest(String name, List<String> keywords) {
-    if (name == null || name.isBlank()) {
-      throw new IllegalArgumentException("관심사 이름은 비워둘 수 없습니다.");
-    }
-    this.name = name;
-    if (keywords != null) {
-      this.keywords = new ArrayList<>(keywords);
-    }
+  /**
+   * 키워드 문자열을 업데이트합니다.
+   * updatedAt은 BaseUpdatableEntity의 @LastModifiedDate에 의해 자동으로 처리됩니다.
+   * @param newKeywordsString 새로운 키워드 문자열 (예: "키워드1,키워드2")
+   */
+  public void updateKeywords(String newKeywordsString) {
+    this.keywords = newKeywordsString;
   }
 
-  public void updateKeywords(List<String> newKeywords) {
-    this.keywords = (newKeywords == null) ? new ArrayList<>() : new ArrayList<>(newKeywords);
+  /**
+   * 이름을 업데이트합니다.
+   * updatedAt은 BaseUpdatableEntity의 @LastModifiedDate에 의해 자동으로 처리됩니다.
+   * @param newName 새로운 이름
+   */
+  public void setName(String newName) {
+    this.name = newName;
+  }
+
+  public void incrementSubscriberCount() {
+    this.subscriberCount++;
+  }
+
+  public void decrementSubscriberCount() {
+    if (this.subscriberCount > 0) {
+      this.subscriberCount--;
+    }
   }
 }

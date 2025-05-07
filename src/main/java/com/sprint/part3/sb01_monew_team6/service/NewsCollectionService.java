@@ -11,6 +11,7 @@ import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -108,15 +109,27 @@ public class NewsCollectionService {
 
     // 네이버 뉴스
     for (Interest interest : interests) {
-      for (String keyword : interest.getKeywords()) {
+      String raw = interest.getKeywords();  // "java,spring,hibernate" 같은 형태
+      if (raw == null || raw.isBlank()) {
+        continue;
+      }
+
+      // 1) 간단한 for-each
+      for (String kw : raw.split(",")) {
+        String keyword = kw.trim();
+        if (keyword.isEmpty()) continue;
+
         try {
           List<ExternalNewsItem> newsItems = naver.fetchNews(keyword);
           log.debug("네이버에서 '{}' 키워드로 {}건 수집", keyword, newsItems.size());
           items.addAll(newsItems);
         } catch (Exception e) {
           log.error("네이버 API 호출 실패 : 키워드='{}'", keyword, e);
-          throw new NewsException(ErrorCode.NEWS_NAVERCLIENT_EXCEPTION, Instant.now(),
-              HttpStatus.BAD_GATEWAY);
+          throw new NewsException(
+              ErrorCode.NEWS_NAVERCLIENT_EXCEPTION,
+              Instant.now(),
+              HttpStatus.BAD_GATEWAY
+          );
         }
       }
 
@@ -155,9 +168,18 @@ public class NewsCollectionService {
   // 제목 또는 설명에 관심사 키워드가 포함되어 있는지 확인
   private boolean containsKeyword(ExternalNewsItem item, List<Interest> interests) {
     return interests.stream()
-          .anyMatch(interest ->
-              interest.getKeywords().stream()
-                  .anyMatch(keyword -> item.title().contains(keyword)|| item.description().contains(keyword))
-          );
+        .anyMatch(interest -> {
+          String raw = interest.getKeywords();
+          if (raw == null || raw.isBlank()) {
+            return false;
+          }
+          return Arrays.stream(raw.split(","))
+              .map(String::trim)
+              .filter(s -> !s.isEmpty())
+              .anyMatch(keyword ->
+                  item.title().contains(keyword) ||
+                      item.description().contains(keyword)
+              );
+        });
   }
 }

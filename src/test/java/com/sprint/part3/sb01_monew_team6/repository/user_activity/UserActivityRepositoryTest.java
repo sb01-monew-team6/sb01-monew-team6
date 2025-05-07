@@ -163,7 +163,7 @@ class UserActivityRepositoryTest {
 				.commentUserNickname("nickname" + i)
 				.commentContent("hello" + i)
 				.commentLikeCount(1000L + i)
-				.createdAt(Instant.now())
+				.createdAt(Instant.now().plusSeconds(i))
 				.build();
 
 			userActivityRepository.addCommentLike(userId, commentLike);
@@ -245,7 +245,7 @@ class UserActivityRepositoryTest {
 				.userNickname("nickname" + i)
 				.content("content" + i)
 				.likeCount(100L + i)
-				.createdAt(Instant.now())
+				.createdAt(Instant.now().plusSeconds(i))
 				.build();
 
 			userActivityRepository.addComment(userId, comment);
@@ -321,7 +321,7 @@ class UserActivityRepositoryTest {
 		for (int i = 0; i < 12; ++i) {
 			UserActivity.ArticleViewHistory articleView = UserActivity.ArticleViewHistory.builder()
 				.viewedBy(1L + i)
-				.createdAt(Instant.now())
+				.createdAt(Instant.now().plusSeconds(i))
 				.build();
 
 			userActivityRepository.addArticleView(userId, articleView);
@@ -389,7 +389,7 @@ class UserActivityRepositoryTest {
 		userActivityRepository.save(userActivity);
 
 		for (int i = 0; i < 12; ++i) {
-			Instant now = Instant.now();
+			Instant now = Instant.now().plusSeconds(i);
 			UserActivity.CommentHistory comment = UserActivity.CommentHistory.builder()
 				.articleId(1L + i)
 				.userId(10L + i)

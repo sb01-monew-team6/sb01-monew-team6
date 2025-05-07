@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.sprint.part3.sb01_monew_team6.config.MonewRequestUserInterceptor;
 import com.sprint.part3.sb01_monew_team6.exception.GlobalExceptionHandler;
 import com.sprint.part3.sb01_monew_team6.service.NewsCollectionService;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +29,8 @@ public class NewsCollectionControllerTest {
   MockMvc mvc;
   @MockitoBean
   NewsCollectionService service;
+  @MockitoBean
+  private MonewRequestUserInterceptor monewRequestUserInterceptor;
 
   @Test
   @DisplayName("정상 서비스 → When GET /collect-news → Then 200 OK")

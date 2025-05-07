@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.part3.sb01_monew_team6.config.MonewRequestUserInterceptor;
 import com.sprint.part3.sb01_monew_team6.config.SecurityConfig;
 import com.sprint.part3.sb01_monew_team6.dto.*;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
@@ -37,9 +38,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
+
+
 @WebMvcTest(CommentController.class)
 @Import(SecurityConfig.class)
 class CommentControllerTest {
+
+
+    @MockitoBean
+    private MonewRequestUserInterceptor monewRequestUserInterceptor;
 
     @Autowired
     private MockMvc mockMvc;
@@ -218,10 +225,10 @@ class CommentControllerTest {
                         .header("Monew-Request-User-ID", "1")
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.contents").isArray())
-                .andExpect(jsonPath("$.contents.length()").value(commentList.size()))
-                .andExpect(jsonPath("$.contents[0].content").value(comment1.content()))
-                .andExpect(jsonPath("$.contents[1].content").value(comment2.content()))
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(commentList.size()))
+                .andExpect(jsonPath("$.content[0].content").value(comment1.content()))
+                .andExpect(jsonPath("$.content[1].content").value(comment2.content()))
                 .andExpect(jsonPath("$.hasNext").value(true))
                 .andExpect(jsonPath("$.nextCursor").exists());
     }
