@@ -39,10 +39,14 @@ public class NewsCollectionImplService implements NewsCollectionService {
     List<Interest> interests = interestRepository.findAll();
     log.debug("조회된 관심사 개수: {}", interests.size());
 
-    // 관심사 x
-    if (interests.isEmpty() || interests.get(0).getKeywords() == null || interests.get(0).getKeywords().isEmpty()) {
-      log.info("등록된 관심사가 없어 뉴스 수집을 건너뜁니다");
-      return Optional.empty(); // 예외 대신 조용히 리턴
+    // 관심사가 하나도 없거나, 모든 관심사에 키워드가 하나도 없으면 조용히 종료
+    boolean hasAnyKeyword = interests.stream()
+        .map(Interest::getKeywordList)
+        .anyMatch(list -> !list.isEmpty());
+
+    if (!hasAnyKeyword) {
+      log.info("모든 관심사에 키워드가 없어 뉴스 수집을 건너뜁니다");
+      return Optional.empty();
     }
     // 외부 뉴스 수집
     List<ExternalNewsItem> externalNewsItems = fetchExternalNews(interests);

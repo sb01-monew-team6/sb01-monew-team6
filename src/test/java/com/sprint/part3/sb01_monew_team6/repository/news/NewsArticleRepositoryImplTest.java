@@ -73,7 +73,7 @@ public class NewsArticleRepositoryImplTest {
     iSport = interestRepository.save(
         Interest.builder()
             .name("sports")
-            .keywords(List.of("ball"))
+            .keywords("ball")
             .build()
     );
 

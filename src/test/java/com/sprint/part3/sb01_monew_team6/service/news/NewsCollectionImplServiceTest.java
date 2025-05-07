@@ -55,7 +55,7 @@ public class NewsCollectionImplServiceTest {
     //given
     Interest i = Interest.builder()
         .name("스포츠")
-        .keywords(List.of("축구","야구"))
+        .keywords("축구,야구")
         .build();
 
     given(interestRepository.findAll()).willReturn(List.of(i));
@@ -84,7 +84,7 @@ public class NewsCollectionImplServiceTest {
     //given
     Interest i = Interest.builder()
         .name("k")
-        .keywords(List.of("축구","야구","농구"))
+        .keywords("축구,야구,농구")
         .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
 
@@ -115,7 +115,7 @@ public class NewsCollectionImplServiceTest {
     //given
     Interest i = Interest.builder()
         .name("스포츠")
-        .keywords(List.of("축구", "야구"))
+        .keywords("축구,야구")
         .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
 
@@ -141,7 +141,7 @@ public class NewsCollectionImplServiceTest {
     // given
     Interest it = Interest.builder()
         .name("k")
-        .keywords(List.of("x"))
+        .keywords("x")
         .build();
     given(interestRepository.findAll()).willReturn(List.of(it));
     ExternalNewsItem e = new ExternalNewsItem("NAVER","x","x","x",Instant.now(),"");
@@ -175,7 +175,7 @@ public class NewsCollectionImplServiceTest {
     //given
     Interest i = Interest.builder()
         .name("k")
-        .keywords(List.of("x"))
+        .keywords("x")
         .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
     given(naverClient.fetchNews("x")).willThrow(new NewsException(ErrorCode.NEWS_NAVERCLIENT_EXCEPTION,Instant.now(),
@@ -192,7 +192,7 @@ public class NewsCollectionImplServiceTest {
     //given
     Interest i = Interest.builder()
         .name("k")
-        .keywords(List.of("x"))
+        .keywords("x")
         .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
     // 네이버는 빈 리스트 반환 → RSS 로직으로 넘어가게
@@ -217,7 +217,7 @@ public class NewsCollectionImplServiceTest {
     // given
     Interest i = Interest.builder()
         .name("k")
-        .keywords(List.of("key"))
+        .keywords("key")
         .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
 
