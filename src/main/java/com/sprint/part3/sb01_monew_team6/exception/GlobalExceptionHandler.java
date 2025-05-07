@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
+import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
 import javax.security.sasl.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -127,6 +128,19 @@ public class GlobalExceptionHandler {
 					status.value()
 				)
 			);
+	}
+
+	@ExceptionHandler(CommentException.class)
+	public ResponseEntity<ErrorResponse> handleCommentException(CommentException e) {
+		ErrorCode code = e.getCode();
+		return ResponseEntity.status(e.getStatus())
+				.body(new ErrorResponse(
+						e.getTimestamp(),
+						code.toString(),
+						code.getMessage(),
+						CommentException.class.getSimpleName(),
+						e.getStatus().value()
+				));
 	}
 
 	@ExceptionHandler(MonewException.class)

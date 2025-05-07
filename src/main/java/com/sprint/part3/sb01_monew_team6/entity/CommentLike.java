@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@Builder
 public class CommentLike extends BaseEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -26,5 +27,10 @@ public class CommentLike extends BaseEntity {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-
+  public static CommentLike of(Comment comment, User user) {
+    return CommentLike.builder()
+            .comment(comment)
+            .user(user)
+            .build();
+  }
 }

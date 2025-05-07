@@ -2,15 +2,19 @@ package com.sprint.part3.sb01_monew_team6.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.config.SecurityConfig;
-import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
-import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
-import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
+import com.sprint.part3.sb01_monew_team6.dto.*;
+import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
+import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
+import com.sprint.part3.sb01_monew_team6.service.CommentLikeService;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -22,15 +26,16 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @WebMvcTest(CommentController.class)
 @Import(SecurityConfig.class)
@@ -44,6 +49,9 @@ class CommentControllerTest {
 
     @MockitoBean
     private CommentService commentService;
+
+    @MockBean
+    private CommentLikeService commentLikeService;
 
     @Test
     @DisplayName("댓글 등록 실패 - content가 비어있을 경우 400 반환")
@@ -126,6 +134,48 @@ class CommentControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @DisplayName("댓글 목록 조회 실패 - 잘못된 articleId일 경우 400 반환")
+    @Test
+    @WithMockUser
+    void getComments_withInvalidArticleId_shouldReturnBadRequest() throws Exception {
+        // given
+        when(commentService.findAll(any(), any(), any(), any(), any(), any(), any()))
+                .thenThrow(new CommentException(ErrorCode.COMMENT_NOT_FOUND, Instant.now(), HttpStatus.BAD_REQUEST));
+
+        mockMvc.perform(get("/api/comments")
+                .param("articleId", "99999")
+                .param("orderBy", "createdAt")
+                .param("direction", "DESC")
+                .param("limit", "10")
+                .header("Monew-Request-User-ID", "1")
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @DisplayName("댓글 목록 조회 실패 - 잘못된 limit 값일 경우 400 반환")
+    @Test
+    @WithMockUser
+    void getComments_withInvalidLimit_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/api/comments")
+                .param("orderBy", "createdAt")
+                .param("direction", "DESC")
+                .param("limit", "-10") // 잘못된 limit 값
+                .header("Monew-Request-User-ID", "1")
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @DisplayName("댓글 목록 조회 실패 - 헤더 값 누락 시 400 반환")
+    @Test
+    @WithMockUser
+    void getComment_withMissingUserId_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/api/comments")
+                .param("orderBy", "createdAt")
+                .param("direction", "DESC")
+                .param("limit", "10")
+                .with(csrf())) // 헤더 값
+                .andExpect(status().isBadRequest());
+    }
 
     @DisplayName("댓글 목록 조회 성공 - 필수 파라미터를 모두 제공할 경우 200 OK 반환")
     @Test
@@ -148,9 +198,17 @@ class CommentControllerTest {
         CommentDto comment1 = new CommentDto(1L, 1L, 1L, "작성자1", "댓글 내용1", 5L, false, Instant.now());
         CommentDto comment2 = new CommentDto(2L, 1L, 2L, "작성자2", "댓글 내용2", 3L, false, Instant.now());
         List<CommentDto> commentList = List.of(comment1, comment2);
+        PageResponse<CommentDto> mockPage = new PageResponse<>(
+                commentList,         // contents
+                "2024-05-01T12:00:00Z", // nextCursor
+                true,                // nextAfter
+                commentList.size(),  // size
+                true,                // hasNext
+                null                 // totalElements
+        );
 
         when(commentService.findAll(any(), any(), any(), any(), any(), any(), any()))
-                .thenReturn(commentList);
+                .thenReturn(mockPage);
 
         // when & then
         mockMvc.perform(get("/api/comments")
@@ -160,12 +218,54 @@ class CommentControllerTest {
                         .header("Monew-Request-User-ID", "1")
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content.length()").value(commentList.size()))
-                .andExpect(jsonPath("$.content[0].content").value(comment1.content()))
-                .andExpect(jsonPath("$.content[1].content").value(comment2.content()));
+                .andExpect(jsonPath("$.contents").isArray())
+                .andExpect(jsonPath("$.contents.length()").value(commentList.size()))
+                .andExpect(jsonPath("$.contents[0].content").value(comment1.content()))
+                .andExpect(jsonPath("$.contents[1].content").value(comment2.content()))
+                .andExpect(jsonPath("$.hasNext").value(true))
+                .andExpect(jsonPath("$.nextCursor").exists());
     }
 
+    @DisplayName("댓글 목록 조회 - 최대 limit 값일 경우")
+    @Test
+    @WithMockUser
+    void getComments_withMaxLimit_shouldReturnPagedComments() throws Exception {
+        mockMvc.perform(get("/api/comments")
+                .param("orderBy", "createdAt")
+                .param("direction", "DESC")
+                .param("limit", "1000") // 최대값
+                .header("Monew-Request-User-ID", "1")
+                .with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("댓글 좋아요 등록 - 성공 응답 반환")
+    void likeComment_shouldReturn200() throws Exception {
+        // given
+        CommentLikeDto response = CommentLikeDto.builder()
+                .id(1L)
+                .likedBy(100L)
+                .createdAt(Instant.now())
+                .commentId(1L)
+                .articleId(2L)
+                .commentUserId(100L)
+                .commentUserNickname("사용자")
+                .commentContent("좋은 기사네요")
+                .commentLikeCount(1L)
+                .commentCreatedAt(Instant.now())
+                .build();
+
+        Mockito.when(commentService.likeComment(anyLong(), anyLong())).thenReturn(response);
+
+        // when & then
+        mockMvc.perform(post("/api/comments/1/comment-likes")
+                        .header("Monew-Request-User-ID", 100L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.commentId").value(1L))
+                .andExpect(jsonPath("$.likedBy").value(100L));
+    }
 //----------------------------------------------------------------------------------------------------------------------
     @DisplayName("DELETE /api/comments/{id} - 요청시 정상응답 204 반환")
     @Test
@@ -235,4 +335,16 @@ class CommentControllerTest {
 
 
 
+    @Test
+    @DisplayName("댓글 좋아요를 취소할 수 있다")
+    void cancelCommentLike() throws Exception {
+        // given
+        Long commentId = 1L;
+        Long userId = 2L;
+
+        // when & then
+        mockMvc.perform(delete("/api/comments/{commentId}/comment-likes", commentId)
+                        .header("Monew-Request-User-ID", userId))
+                .andExpect(status().isOk());
+    }
 }
