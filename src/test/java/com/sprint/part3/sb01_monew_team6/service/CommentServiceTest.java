@@ -3,11 +3,13 @@ package com.sprint.part3.sb01_monew_team6.service;
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
+import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotSoftDeletedException;
+import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
 import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.NewsArticleRepository;
@@ -104,17 +106,18 @@ class CommentServiceTest {
                 .build();
 
         // mock
+        given(newsArticleRepository.findById(1L)).willReturn(Optional.of(createTestArticle()));
         given(userRepository.findById(999L)).willReturn(Optional.empty());
 
         // when & then
-        assertThrows(NewsException.class, () -> commentService.register(request));
+        assertThrows(UserException.class, () -> commentService.register(request));
     }
 
     @DisplayName("댓글 등록 실패 - content가 비어있을 경우 예외 발생")
     @Test
     void registerComment_withBlankContent_shouldThrowException() {
         CommentRegisterRequest request = new CommentRegisterRequest(1L, 1L, " ");
-        given(commentRepository.save(any(Comment.class))).willThrow(new IllegalArgumentException("Content cannot be empty"));
+//        given(commentRepository.save(any(Comment.class))).willThrow(new IllegalArgumentException("Content cannot be empty"));
 
         assertThrows(NewsException.class, () -> commentService.register(request));
     }
@@ -156,41 +159,6 @@ class CommentServiceTest {
         });
     }
 
-    @DisplayName("댓글 목록 조회 실패 - 존재하지 않는 articleId일 경우 예외 발생")
-    @Test
-    void getComments_withInvalidArticleId_shouldThrowNewsException() {
-        // given
-        Long invalidArticleId = 999L;
-        given(newsArticleRepository.existsById(invalidArticleId)).willReturn(false);
-
-        // when & then
-        assertThrows(NewsException.class, () -> commentService.getComments(invalidArticleId));
-    }
-
-
-    @DisplayName("댓글 목록 조회 - 정상 조회 시 댓글 리스트 반환")
-    @Test
-    void getComments_shouldReturnCommentList() {
-        //  given
-        NewsArticle article = createTestArticle();
-        User user = createTestUser();
-        List<Comment> commentList = List.of(
-                createTestComment(user, article, "댓글 1"),
-                createTestComment(user, article, "댓글 2")
-        );
-
-        given(newsArticleRepository.existsById(1L)).willReturn(true);
-        given(commentRepository.findAllByArticleId(1L)).willReturn(commentList);
-
-        //  when
-        List<CommentDto> result = commentService.getComments(1L);
-
-        //  then
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).content()).isEqualTo("댓글 1");
-    }
-
     @DisplayName("댓글 목록 조회 - 페이지네이션 적용 시 댓글 리스트 반환")
     @Test
     void findAll_withPagination_shouldReturnPagedComments() {
@@ -218,28 +186,14 @@ class CommentServiceTest {
         given(commentLikeRepository.existsByCommentIdAndUserId(comment3.getId(), requestUserId)).willReturn(true);
 
         // when
-        List<CommentDto> result = commentService.findAll(articleId, orderBy, direction, null, null, limit, requestUserId);
+        PageResponse<CommentDto> result = commentService.findAll(articleId, orderBy, direction, null, null, limit, requestUserId);
+        List<CommentDto> contents = result.contents();
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(2);  // 페이지당 2개의 댓글이 반환되어야 함
-        assertThat(result.get(0).content()).isEqualTo("댓글 1");  // 첫 번째 댓글
-        assertThat(result.get(1).content()).isEqualTo("댓글 2");  // 두 번째 댓글
-    }
-
-    @DisplayName("댓글 목록 조회 - articleId가 null일 경우 전체 댓글 조회")
-    @Test
-    void getComments_withNullArticleId_shouldReturnAllComments() {
-        // given
-        List<Comment> commentList = List.of(createTestComment(createTestUser(), createTestArticle(), "댓글 1"));
-        given(commentRepository.findAll()).willReturn(commentList);
-
-        // when
-        List<CommentDto> result = commentService.getComments(null);
-
-        // then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).content()).isEqualTo("댓글 1");
+        assertThat(contents).isNotNull();
+        assertThat(contents).hasSize(2);
+        assertThat(contents.get(0).content()).isEqualTo("댓글 1");
+        assertThat(contents.get(1).content()).isEqualTo("댓글 2");  // 두 번째 댓글
     }
 
     @DisplayName("댓글 목록 조회 - createdAt이 null인 댓글 포함 시 ASC 정렬 정상 처리")
@@ -249,11 +203,12 @@ class CommentServiceTest {
         Comment validCreated = commentWithCreatedAt(Instant.now());
 
         given(newsArticleRepository.existsById(1L)).willReturn(true);
-        given(commentRepository.findAllByArticleId(1L)).willReturn(List.of(validCreated, nullCreated));
+        given(commentRepository.findAllByArticleId(1L)).willReturn(new ArrayList<>(List.of(validCreated, nullCreated)));
         given(commentLikeRepository.countByCommentId(any())).willReturn(0L);
         given(commentLikeRepository.existsByCommentIdAndUserId(any(), any())).willReturn(false);
 
-        List<CommentDto> result = commentService.findAll(1L, "createdAt", "ASC", null, null, 10, 1L);
+        PageResponse<CommentDto> response = commentService.findAll(1L, "createdAt", "ASC", null, null, 10, 1L);
+        List<CommentDto> result = response.contents();
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).createdAt()).isNull(); // null createdAt이 먼저 나와야 ASC 정렬 성공
@@ -281,7 +236,8 @@ class CommentServiceTest {
         given(commentLikeRepository.existsByCommentIdAndUserId(any(), any())).willReturn(false);
 
         // when
-        List<CommentDto> result = commentService.findAll(articleId, orderBy, direction, null, null, null, requestUserId);
+        PageResponse<CommentDto> response = commentService.findAll(articleId, orderBy, direction, null, null, null, requestUserId);
+        List<CommentDto> result = response.contents();
 
         // then
         assertThat(result).hasSize(10); // 기본 limit = 10
@@ -309,14 +265,16 @@ class CommentServiceTest {
         given(newsArticleRepository.existsById(1L)).willReturn(true);
 
         given(commentRepository.findAllByArticleId(1L))
-                .willReturn(List.of(commentHigh, commentMid, commentLow));
+                .willReturn(new ArrayList<>(List.of(commentHigh, commentMid, commentLow)));
 
-        given(commentLikeRepository.countByCommentId(anyLong()))
-                .willReturn(10L, 5L, 0L);
+        given(commentLikeRepository.countByCommentId(3L)).willReturn(10L);
+        given(commentLikeRepository.countByCommentId(2L)).willReturn(5L);
+        given(commentLikeRepository.countByCommentId(1L)).willReturn(0L);
 
         given(commentLikeRepository.existsByCommentIdAndUserId(any(), any())).willReturn(false);
 
-        List<CommentDto> result = commentService.findAll(1L, "likeCount", "DESC", null, null, 10, 1L);
+        PageResponse<CommentDto> response = commentService.findAll(1L, "likeCount", "DESC", null, null, 10, 1L);
+        List<CommentDto> result = response.contents();
 
         assertThat(result).hasSize(3);
         assertThat(result.get(0).likeCount()).isEqualTo(10L); // commentHigh
@@ -341,11 +299,12 @@ class CommentServiceTest {
         forceSetCreatedAt(c3, Instant.parse("2024-05-01T11:00:00Z"));
 
         given(newsArticleRepository.existsById(1L)).willReturn(true);
-        given(commentRepository.findAllByArticleId(1L)).willReturn(List.of(c1, c2, c3));
+        given(commentRepository.findAllByArticleId(1L)).willReturn(new ArrayList<>(List.of(c1, c2, c3)));
         given(commentLikeRepository.countByCommentId(anyLong())).willReturn(0L, 0L, 0L);
         given(commentLikeRepository.existsByCommentIdAndUserId(any(), any())).willReturn(false);
 
-        List<CommentDto> result = commentService.findAll(1L, "createdAt", "DESC", null, null, 10, 1L);
+        PageResponse<CommentDto> response = commentService.findAll(1L, "createdAt", "DESC", null, null, 10, 1L);
+        List<CommentDto> result = response.contents();
 
         assertThat(result).hasSize(3);
         assertThat(result.get(0).content()).isEqualTo("두 번째 댓글");
@@ -359,10 +318,11 @@ class CommentServiceTest {
         // given
         Long articleId = 1L;
         given(newsArticleRepository.existsById(1L)).willReturn(true);
-        given(commentRepository.findAllByArticleId(1L)).willReturn(List.of());
+        given(commentRepository.findAllByArticleId(1L)).willReturn(new ArrayList<>());
 
         // when
-        List<CommentDto> result = commentService.findAll(articleId, "createdAt", "ASC", null, null, 10, 1L);
+        PageResponse<CommentDto> response = commentService.findAll(articleId, "createdAt", "ASC", null, null, 10, 1L);
+        List<CommentDto> result = response.contents();
 
         // then
         assertThat(result).isNotNull();
@@ -384,7 +344,7 @@ class CommentServiceTest {
         forceSetCreatedAt(c1, Instant.parse("2024-05-01T10:00:00Z"));
         forceSetCreatedAt(c2, Instant.parse("2024-05-01T11:00:00Z"));
 
-        List<Comment> comments = List.of(c1, c2);
+        List<Comment> comments = new ArrayList<>(List.of(c1, c2));
 
         given(newsArticleRepository.existsById(1L)).willReturn(true);
         given(commentRepository.findAllByArticleId(1L)).willReturn(comments);
@@ -392,7 +352,8 @@ class CommentServiceTest {
         given(commentLikeRepository.existsByCommentIdAndUserId(any(), any())).willReturn(false);
 
         // when
-        List<CommentDto> result = commentService.findAll(articleId, "createdAt", "ASC", null, null, limit, 1L);
+        PageResponse<CommentDto> response = commentService.findAll(articleId, "createdAt", "ASC", null, null, limit, 1L);
+        List<CommentDto> result = response.contents();
 
         // then
         assertThat(result).hasSize(2); // limit = 10이지만 댓글은 2개

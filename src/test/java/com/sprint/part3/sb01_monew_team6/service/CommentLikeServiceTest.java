@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 class CommentLikeServiceTest {
@@ -48,11 +49,13 @@ class CommentLikeServiceTest {
         Long userId = 100L;
 
         User testUser = createTestUser(userId);
-        Comment testComment = createTestComment(commentId, testUser, "댓글입니다");
-
-        given(commentRepository.findById(commentId)).willReturn(Optional.of(testComment));
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
+
+        Comment testComment = createTestComment(commentId, testUser, "댓글입니다");
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(testComment));
+
         given(commentLikeRepository.existsByCommentIdAndUserId(commentId, userId)).willReturn(false);
+        given(commentLikeRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
         given(commentLikeRepository.countByCommentId(commentId)).willReturn(1L);
 
         // when
@@ -98,6 +101,20 @@ class CommentLikeServiceTest {
         given(commentLikeRepository.existsByCommentIdAndUserId(1L, 1L)).willReturn(true);
 
         assertThrows(CommentException.class, () -> commentLikeService.likeComment(1L, 1L));
+    }
+
+    @DisplayName("댓글 좋아요 취소 실패 - 좋아요한 적 없을 경우 예외 발생")
+    @Test
+    void cancelLike_shouldThrowException_whenLikeNotExists() {
+        // given
+        Long commentId = 1L;
+        Long userId = 2L;
+
+        given(commentLikeRepository.findByCommentIdAndUserId(userId, commentId))
+                .willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(CommentException.class, () -> commentLikeService.cancelLike(commentId, userId));
     }
 
     private User createTestUser(Long id) {

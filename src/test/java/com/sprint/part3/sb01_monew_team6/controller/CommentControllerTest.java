@@ -2,19 +2,17 @@ package com.sprint.part3.sb01_monew_team6.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.part3.sb01_monew_team6.config.SecurityConfig;
-import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
-import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
-import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
+import com.sprint.part3.sb01_monew_team6.dto.*;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
 import com.sprint.part3.sb01_monew_team6.service.CommentLikeService;
-import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -200,9 +198,17 @@ class CommentControllerTest {
         CommentDto comment1 = new CommentDto(1L, 1L, 1L, "작성자1", "댓글 내용1", 5L, false, Instant.now());
         CommentDto comment2 = new CommentDto(2L, 1L, 2L, "작성자2", "댓글 내용2", 3L, false, Instant.now());
         List<CommentDto> commentList = List.of(comment1, comment2);
+        PageResponse<CommentDto> mockPage = new PageResponse<>(
+                commentList,         // contents
+                "2024-05-01T12:00:00Z", // nextCursor
+                true,                // nextAfter
+                commentList.size(),  // size
+                true,                // hasNext
+                null                 // totalElements
+        );
 
         when(commentService.findAll(any(), any(), any(), any(), any(), any(), any()))
-                .thenReturn(commentList);
+                .thenReturn(mockPage);
 
         // when & then
         mockMvc.perform(get("/api/comments")
@@ -212,10 +218,12 @@ class CommentControllerTest {
                         .header("Monew-Request-User-ID", "1")
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content.length()").value(commentList.size()))
-                .andExpect(jsonPath("$.content[0].content").value(comment1.content()))
-                .andExpect(jsonPath("$.content[1].content").value(comment2.content()));
+                .andExpect(jsonPath("$.contents").isArray())
+                .andExpect(jsonPath("$.contents.length()").value(commentList.size()))
+                .andExpect(jsonPath("$.contents[0].content").value(comment1.content()))
+                .andExpect(jsonPath("$.contents[1].content").value(comment2.content()))
+                .andExpect(jsonPath("$.hasNext").value(true))
+                .andExpect(jsonPath("$.nextCursor").exists());
     }
 
     @DisplayName("댓글 목록 조회 - 최대 limit 값일 경우")

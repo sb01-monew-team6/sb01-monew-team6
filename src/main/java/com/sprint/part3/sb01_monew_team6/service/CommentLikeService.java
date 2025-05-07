@@ -5,4 +5,6 @@ import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
 public interface CommentLikeService {
 
     CommentLikeDto likeComment(Long commentId, Long userId);
+
+    void cancelLike(Long commentId, Long userId);
 }

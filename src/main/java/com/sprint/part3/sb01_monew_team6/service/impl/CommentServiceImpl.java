@@ -1,9 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
-import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
-import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
-import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
-import com.sprint.part3.sb01_monew_team6.dto.CommentUpdateRequest;
+import com.sprint.part3.sb01_monew_team6.dto.*;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
@@ -25,9 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -43,7 +38,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentDto register(CommentRegisterRequest request) {
-
+        log.info("[registerComment] 댓글 등록 요청: userId={}, articleId={}", request.userId(), request.articleId());
         //  1. Article 조회
         NewsArticle article = newsArticleRepository.findById(request.articleId())
                 .orElseThrow(() -> new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND));
@@ -61,6 +56,7 @@ public class CommentServiceImpl implements CommentService {
 
         //  4. 저장
         Comment savedComment = commentRepository.save(comment);
+        log.info("[register] 댓글 저장 완료: commentId={}", savedComment.getId());
 
         //  5. 저장된 데이터를 CommentDto로 변환 후 반환
         return CommentDto.builder()
@@ -76,7 +72,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentDto> findAll(
+    public PageResponse<CommentDto> findAll(
             Long articleId,
             String orderBy,
             String direction,
@@ -85,6 +81,8 @@ public class CommentServiceImpl implements CommentService {
             Integer limit,
             Long requestUserId
     ) {
+        log.info("[findAll] 댓글 목록 조회 요청: articleId={}, orderBy={}, direction={}, limit={}, userId={}",
+                articleId, orderBy, direction, limit, requestUserId);
         // 1. orderBy 값 검증
         if (!orderBy.equals("createdAt") && !orderBy.equals("likeCount")) {
             throw new IllegalArgumentException("Invalid orderBy value");
@@ -99,7 +97,7 @@ public class CommentServiceImpl implements CommentService {
         List<Comment> comments;
         if (articleId != null) {
             boolean exists = newsArticleRepository.existsById(articleId);
-            if(!exists) {
+            if (!exists) {
                 throw new CommentException(ErrorCode.COMMENT_NOT_FOUND, Instant.now(), HttpStatus.BAD_REQUEST);
             }
             comments = commentRepository.findAllByArticleId(articleId);
@@ -108,82 +106,78 @@ public class CommentServiceImpl implements CommentService {
         }
 
         // 4. 댓글 정렬
-        List<Comment> modifiableComments = new ArrayList<>(comments);
-        if (direction.equalsIgnoreCase("ASC")) {
-            modifiableComments.sort((c1, c2) -> {
-                if (c1.getCreatedAt() == null) {
-                    return -1;  // createdAt이 null이면 가장 먼저 오게 처리
-                }
-                return c1.getCreatedAt().compareTo(c2.getCreatedAt());
-            });
-        } else {
-            modifiableComments.sort((c1, c2) -> {
-                if(c1.getCreatedAt() == null) {
-                    return 1; // createdAt이 null이면 가장 뒤로 오게 처리
-                }
-                return c2.getCreatedAt().compareTo(c1.getCreatedAt());
-            });
-        }
-
-        // 5. 댓글 목록을 CommentDto로 변환
-        List<CommentDto> commentDtos = modifiableComments.stream()
-                .limit(limit != null ? limit : 10)  // limit이 null이면 기본 10개 반환
-                .map(comment -> {
-                    // 좋아요 수 가져오기
-                    long likeCount = commentLikeRepository.countByCommentId(comment.getId());
-
-                    // 내가 좋아요를 눌렀는지 여부 확인
-                    boolean likedByMe = commentLikeRepository.existsByCommentIdAndUserId(comment.getId(), requestUserId);
-
-                    // CommentDto로 변환
-                    return CommentDto.fromEntity(comment, likeCount, likedByMe);
-                })
-                .collect(Collectors.toList());
-
-        return commentDtos;
-    }
-
-    @Override
-    public List<CommentDto> getComments(Long articleId) {
-        log.info("댓글 목록 조회 요청: articleId={}", articleId);
-
-        // 게시글 ID가 null인 경우, 모든 댓글을 조회하도록 수정
-        List<Comment> comments;
-        if (articleId == null) {
-            comments = commentRepository.findAll();  // 모든 댓글 조회
-        } else {
-            // 게시글이 존재하는지 확인
-            if (!newsArticleRepository.existsById(articleId)) {
-                throw new NewsException(ErrorCode.NEWS_ARTICLE_NOT_FOUND_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND);
+        comments.sort((c1, c2) -> {
+            int result;
+            if (orderBy.equals("createdAt")) {
+                result = compareInstant(c1.getCreatedAt(), c2.getCreatedAt());
+            } else {
+                long l1 = commentLikeRepository.countByCommentId(c1.getId());
+                long l2 = commentLikeRepository.countByCommentId(c2.getId());
+                result = Long.compare(l1, l2);
             }
-            comments = commentRepository.findAllByArticleId(articleId);
+            return direction.equalsIgnoreCase("DESC") ? -result : result;
+        });
+
+        // 커서 필터링
+        if (cursor != null && after != null) {
+            boolean isAfter = Boolean.parseBoolean(after);
+            comments = comments.stream()
+                    .filter(c -> {
+                        if (orderBy.equals("createdAt")) {
+                            Instant created = c.getCreatedAt();
+                            Instant cur = Instant.parse(cursor);
+                            return isAfter ? created.isAfter(cur) : created.isBefore(cur);
+                        } else {
+                            long count = commentLikeRepository.countByCommentId(c.getId());
+                            long cur = Long.parseLong(cursor);
+                            return isAfter ? count > cur : count < cur;
+                        }
+                    })
+                    .toList();
         }
 
-        //  댓글 목록을 CommentDto로 변환하여 반환
-        return comments.stream()
-                .map(comment -> {
-                    // 좋아요 수
-                    long likeCount = commentLikeRepository.countByCommentId(comment.getId());
+        // 페이징 적용
+        int max = limit != null ? limit : 10;
+        List<Comment> paged = comments.stream().limit(max + 1).toList(); // hasNext 판별 위해 +1
 
-                    // 내가 좋아요를 눌렀는지 확인
-                    boolean likedByMe = commentLikeRepository.existsByCommentIdAndUserId(comment.getId(), 1L);
+        // DTO 변환
+        List<CommentDto> dtos = paged.stream()
+                .limit(max)
+                .map(c -> CommentDto.fromEntity(
+                        c,
+                        commentLikeRepository.countByCommentId(c.getId()),
+                        commentLikeRepository.existsByCommentIdAndUserId(c.getId(), requestUserId)
+                ))
+                .toList();
 
-                    // CommentDto로 변환
-                    return CommentDto.fromEntity(comment, likeCount, likedByMe);
-                })
-                .collect(Collectors.toList());
+        // nextCursor 계산
+        Object nextCursor = null;
+        if (dtos.size() == max) {
+            CommentDto last = dtos.get(dtos.size() - 1);
+            nextCursor = orderBy.equals("createdAt") ? last.createdAt() : last.likeCount();
+        }
+
+        return new PageResponse<>(
+                dtos,
+                nextCursor,
+                true,
+                dtos.size(),
+                paged.size() > max,
+                null
+        );
     }
 
     @Override
     public CommentLikeDto likeComment(Long commentId, Long userId) {
+        log.info("[likeComment] 댓글 좋아요 요청: commentId={}, userId={}", commentId, userId);
         return commentLikeService.likeComment(commentId, userId); // 위임
     }
 
     @Transactional
-    public void softDeleteComment(Long id){
+    public void softDeleteComment(Long id) {
         log.info("[CommentServiceImpl] 댓글 논리 삭제 시작: id:{}", id);
         Comment comment = commentRepository.findById(id)
-            .orElseThrow(() -> new CommentNotFoundException());
+                .orElseThrow(() -> new CommentNotFoundException());
 
         comment.softDelete();
         commentRepository.save(comment);
@@ -194,7 +188,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentDto updateComment(Long commentId, Long userId, CommentUpdateRequest request) {
         Comment comment = commentRepository.findById(commentId)
-            .orElseThrow(() -> new CommentNotFoundException());
+                .orElseThrow(() -> new CommentNotFoundException());
 
         comment.updateContent(request.content()); // 이 메서드 Comment 엔티티에 있어야 함
 
@@ -205,11 +199,18 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public void hardDelete(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
-            .orElseThrow(() -> new CommentNotFoundException());
+                .orElseThrow(() -> new CommentNotFoundException());
 
         if (!comment.isDeleted()) {
             throw new CommentNotSoftDeletedException();
         }
         commentRepository.delete(comment);
+    }
+
+    private int compareInstant(Instant a, Instant b) {
+        if (a == null && b == null) return 0;
+        if (a == null) return -1;
+        if (b == null) return 1;
+        return a.compareTo(b);
     }
 }
