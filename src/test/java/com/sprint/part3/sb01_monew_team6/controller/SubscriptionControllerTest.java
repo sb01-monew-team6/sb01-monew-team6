@@ -6,6 +6,7 @@ import com.sprint.part3.sb01_monew_team6.dto.SubscriptionDto;
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestNotFoundException;
 import com.sprint.part3.sb01_monew_team6.exception.subscription.SubscriptionNotFoundException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserNotFoundException;
+import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
 import com.sprint.part3.sb01_monew_team6.service.SubscriptionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,8 +34,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.sprint.part3.sb01_monew_team6.config.MonewRequestUserInterceptor;
+
 
 @WebMvcTest(SubscriptionController.class)
+@MockBean(InterestRepository.class)
+@MockBean(MonewRequestUserInterceptor.class)
 @ActiveProfiles("test")
 @Import(SecurityConfig.class)
 class SubscriptionControllerTest {

@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.part3.sb01_monew_team6.config.MonewRequestUserInterceptor;
 import com.sprint.part3.sb01_monew_team6.config.SecurityConfig;
 import com.sprint.part3.sb01_monew_team6.dto.UserDto;
 import com.sprint.part3.sb01_monew_team6.dto.UserLoginRequest;
@@ -10,6 +11,7 @@ import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.user.EmailAlreadyExistsException;
 import com.sprint.part3.sb01_monew_team6.exception.user.LoginFailedException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserNotFoundException;
+import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.UserService;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -52,6 +54,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @WebMvcTest(UserController.class)
+@MockBean(UserRepository.class)
+@MockBean(MonewRequestUserInterceptor.class)
 @ActiveProfiles("test")
 @Import(SecurityConfig.class)
 class UserControllerTest {
