@@ -7,10 +7,11 @@ import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.mapper.news.ArticleViewMapper;
-import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
-import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
+import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
+import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
+import com.sprint.part3.sb01_monew_team6.service.news.ArticleViewService;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ArticleViewImplService {
+public class ArticleViewImplService implements ArticleViewService {
   private final NewsArticleRepository newsArticleRepository;
   private final ArticleViewRepository articleViewRepository;
   private final CommentRepository commentRepository;

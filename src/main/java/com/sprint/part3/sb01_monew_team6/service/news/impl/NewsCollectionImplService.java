@@ -9,6 +9,7 @@ import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
+import com.sprint.part3.sb01_monew_team6.service.news.NewsCollectionService;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NewsCollectionImplService {
+public class NewsCollectionImplService implements NewsCollectionService {
   private final NaverNewsClient naver;
   private final List<RssNewsClient> rssClients;
   private final NewsArticleRepository newsArticleRepository;
