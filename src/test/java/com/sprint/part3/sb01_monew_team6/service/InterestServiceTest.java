@@ -7,6 +7,7 @@ import com.sprint.part3.sb01_monew_team6.exception.interest.InterestAlreadyExist
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestNameTooSimilarException;
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestNotFoundException;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
+import com.sprint.part3.sb01_monew_team6.repository.SubscriptionRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.InterestServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.StringUtils;
 
@@ -39,6 +41,9 @@ class InterestServiceTest {
 
   @Mock
   private InterestRepository interestRepository;
+
+  @Mock
+  private SubscriptionRepository subscriptionRepository;
 
   @InjectMocks
   private InterestServiceImpl interestService;
@@ -195,7 +200,7 @@ class InterestServiceTest {
 
 
   @Test
-  @DisplayName("성공(GREEN): 존재하는 관심사의 이름과 키워드 수정 성공")
+  @DisplayName("존재하는 관심사의 이름과 키워드 수정 성공")
   void updateInterest_whenInterestExists_updatesNameAndKeywords() {
     // given
     Long interestId = 1L;
@@ -267,6 +272,22 @@ class InterestServiceTest {
 
     verify(interestRepository).findById(nonExistentInterestId);
     verify(interestRepository, never()).save(any(Interest.class));
+  }
+
+  @Test
+  @DisplayName("성공: 존재하는 관심사 ID로 삭제 요청 시 관련 구독과 관심사 모두 삭제")
+  void deleteInterest_whenInterestExists_callsDeleteByInterestIdAndDeleteById() {
+    // given
+    Long existingInterestId = 1L;
+    when(interestRepository.existsById(existingInterestId)).thenReturn(true);
+
+    // when
+    interestService.deleteInterest(existingInterestId);
+
+    // then
+    verify(interestRepository).existsById(existingInterestId);
+    verify(subscriptionRepository).deleteByInterestId(existingInterestId); // 관련 구독 먼저 삭제
+    verify(interestRepository).deleteById(existingInterestId); // 관심사 삭제
   }
 
 }

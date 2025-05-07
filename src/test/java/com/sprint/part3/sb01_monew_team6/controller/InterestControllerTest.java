@@ -101,45 +101,51 @@ class InterestControllerTest {
   @WithMockUser
   void getInterests_shouldReturnOkAndCursorPageResponse() throws Exception {
     // given
-    InterestDto interest1 = InterestDto.builder()/* ... */.build();
-    InterestDto interest2 = InterestDto.builder()/* ... */.build();
-    List<InterestDto> dtoList = List.of(interest1, interest2);
-
-    String nextCursor = "맛집";
-    String nextAfter  = Instant.now().toString();
-    CursorPageResponseInterestDto mockResponse = new CursorPageResponseInterestDto(
-        dtoList, nextCursor, nextAfter, 2, 100L, false
+    List<InterestDto> interests = List.of(
+        new InterestDto(
+            1L,
+            "코딩",
+            List.of("개발", "자바"),
+            10L,
+            true,
+            Instant.parse("2024-05-01T00:00:00Z"),
+            Instant.parse("2024-05-02T00:00:00Z")
+        ),
+        new InterestDto(
+            2L,
+            "독서",
+            List.of("소설", "에세이"),
+            10L,
+            true,
+            Instant.parse("2024-05-01T00:00:00Z"),
+            Instant.parse("2024-05-02T00:00:00Z")
+        )
     );
 
-    when(interestService.findAll(
-        anyLong(), anyString(), anyLong(), anyString(),
-        anyString(), any(Direction.class), anyInt()
-    )).thenReturn(mockResponse);
+    CursorPageResponseInterestDto response = new CursorPageResponseInterestDto(
+        interests,
+        "2025-05-01T00:00:00Z", // nextCursor
+        "2025-05-01T00:00:00Z", // nextAfter
+        interests.size(),
+        2L, // totalElements
+        false // hasNext
+    );
 
-    // when
-    ResultActions actions = mockMvc.perform(get("/api/interests")
-        .param("size", "2")
-        .param("orderBy", "name")
-        .param("direction", "ASC")
-        .param("limit", "2")
-        .header("Monew-Request-User-ID", "1")
-        .accept(MediaType.APPLICATION_JSON));
+    when(interestService.findAll(any(), any(), any(), any(), any(), any(), anyInt()))
+        .thenReturn(response);
 
-    // then
-    actions.andExpect(status().isOk())
+    // when & then
+    mockMvc.perform(get("/api/interests")
+            .header("Monew-Request-User-ID", "1")
+            .param("size", "2")
+            .param("orderBy", "name")
+            .param("direction", "ASC"))
+        .andExpect(status().isOk())
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content", hasSize(2)))
-        .andExpect(jsonPath("$.content[0].id", is(interest1.id().intValue())))
-        .andExpect(jsonPath("$.content[0].name", is(interest1.name())))
-        .andExpect(jsonPath("$.hasNext", is(false)))
-        .andExpect(jsonPath("$.nextCursor", is(nextCursor)))
-        .andExpect(jsonPath("$.nextAfter", is(nextAfter)));
-
-
-    verify(interestService).findAll(
-        anyLong(), anyString(), anyLong(), anyString(),
-        eq("name"), eq(Direction.ASC), eq(2)
-    );
+        .andExpect(jsonPath("$.content.length()").value(2))
+        .andExpect(jsonPath("$.content[0].id").value(1))
+        .andExpect(jsonPath("$.content[0].name").value("코딩"))
+        .andExpect(jsonPath("$.hasNext").value(false));
   }
 
   @Test

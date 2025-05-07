@@ -6,7 +6,6 @@ import java.util.List;
 
 public record PageResponse<T>(
 		/**
-
 		 JSON 직렬화(serialization) 시엔 "content" 로,
 		 역직렬화(deserialization) 시엔 "content" 또는 "contents" 둘 다 허용*/@JsonProperty("content")@JsonAlias("contents")
 		List<T> contents,

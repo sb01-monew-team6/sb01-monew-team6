@@ -1,6 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.part3.sb01_monew_team6.config.MonewRequestUserInterceptor;
 import com.sprint.part3.sb01_monew_team6.config.SecurityConfig;
 import com.sprint.part3.sb01_monew_team6.dto.CommentDto;
 import com.sprint.part3.sb01_monew_team6.dto.CommentRegisterRequest;
@@ -32,9 +33,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
+
+
 @WebMvcTest(CommentController.class)
 @Import(SecurityConfig.class)
 class CommentControllerTest {
+
+
+    @MockitoBean
+    private MonewRequestUserInterceptor monewRequestUserInterceptor;
 
     @Autowired
     private MockMvc mockMvc;

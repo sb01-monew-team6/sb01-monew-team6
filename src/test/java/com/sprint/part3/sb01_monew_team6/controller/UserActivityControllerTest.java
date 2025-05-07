@@ -7,6 +7,7 @@ import static org.springframework.http.HttpStatus.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.sprint.part3.sb01_monew_team6.config.MonewRequestUserInterceptor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,9 @@ class UserActivityControllerTest {
 
 	@MockitoBean
 	private UserActivityService userActivityService;
+
+	@MockitoBean
+	private MonewRequestUserInterceptor monewRequestUserInterceptor;
 
 	@Autowired
 	private MockMvc mockMvc;
