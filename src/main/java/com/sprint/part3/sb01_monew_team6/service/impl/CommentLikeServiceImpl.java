@@ -1,9 +1,15 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentLikeHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.CommentLike;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
+import com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType;
+import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityRemoveEvent;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
@@ -13,6 +19,8 @@ import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.CommentLikeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
@@ -27,6 +35,7 @@ public class CommentLikeServiceImpl implements CommentLikeService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public CommentLikeDto likeComment(Long commentId, Long userId) {
@@ -50,6 +59,10 @@ public class CommentLikeServiceImpl implements CommentLikeService {
 
         log.info("[likeComment] 좋아요 완료: commentLikeId={}, commentId={}, userId={}", commentLike.getId(), commentId, userId);
 
+        publishNotification(commentId, userId);
+
+        publishUserActivityAddEvent(userId, comment, user, commentLike);
+
         return CommentLikeDto.builder()
                 .id(commentLike.getId())
                 .likedBy(userId)
@@ -64,6 +77,39 @@ public class CommentLikeServiceImpl implements CommentLikeService {
                 .build();
     }
 
+    private void publishUserActivityAddEvent(Long userId, Comment comment, User user, CommentLike commentLike) {
+        UserActivityAddEvent event = new UserActivityAddEvent(
+            userId,
+            UserActivityType.COMMENT_LIKE,
+            null,
+            null,
+            new CommentLikeHistoryDto(
+                comment.getId(),
+                comment.getArticle().getId(),
+                comment.getArticle().getArticleTitle(),
+                user.getId(),
+                user.getNickname(),
+                comment.getContent(),
+                (long)comment.getCommentLikes().size(),
+                comment.getCreatedAt(),
+                commentLike.getCreatedAt()
+            ),
+            null
+        );
+        eventPublisher.publishEvent(event);
+    }
+
+    private void publishNotification(Long commentId, Long userId) {
+        NotificationCreateEvent event = new NotificationCreateEvent(
+            userId,
+            commentId,
+            ResourceType.COMMENT,
+            null,
+            null
+        );
+        eventPublisher.publishEvent(event);
+    }
+
     @Override
     public void cancelLike(Long commentId, Long userId) {
         log.info("[cancelLike] 좋아요 취소 요청: commentId={}, userId={}", commentId, userId);
@@ -71,11 +117,23 @@ public class CommentLikeServiceImpl implements CommentLikeService {
         if (optional.isPresent()) {
             commentLikeRepository.delete(optional.get());
             log.info("[cancelLike] 좋아요 취소 완료: commentId={}, userId={}", commentId, userId);
+
+            publishUserActivityRemoveEvent(userId, optional.get().getComment().getArticle().getId());
         } else {
             log.warn("[cancelLike] 좋아요 기록 없음: commentId={}, userId={}", commentId, userId);
             throw new CommentException(ErrorCode.COMMENT_LIKE_NOT_FOUND, Instant.now(), HttpStatus.NOT_FOUND);
         }
+    }
 
-
+    private void publishUserActivityRemoveEvent(Long userId, Long articleId) {
+        UserActivityRemoveEvent event = new UserActivityRemoveEvent(
+            userId,
+            UserActivityType.COMMENT_LIKE,
+            null,
+            null,
+            articleId,
+            null
+        );
+        eventPublisher.publishEvent(event);
     }
 }

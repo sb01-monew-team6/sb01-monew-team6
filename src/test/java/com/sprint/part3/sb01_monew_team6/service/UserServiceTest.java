@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.service;
 
+import com.sprint.part3.sb01_monew_team6.dto.UserDto;
 import com.sprint.part3.sb01_monew_team6.dto.UserLoginRequest;
 import com.sprint.part3.sb01_monew_team6.dto.UserRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.entity.User;
@@ -18,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Instant;
 import java.util.Optional;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -35,6 +37,9 @@ class UserServiceTest {
 
   @Mock
   private PasswordEncoder passwordEncoder;
+
+  @Mock
+  private UserActivityService userActivityService;
 
   @InjectMocks
   private UserServiceImpl userService;
@@ -273,5 +278,30 @@ class UserServiceTest {
     // then: findById와 deleteById 호출 검증
     verify(userRepository).findById(eq(userId)); // 사용자 조회 확인
     verify(userRepository).deleteById(eq(userId)); // deleteById가 올바른 ID(1L)로 호출되었는지 확인
+  }
+
+  @Test
+  @DisplayName("유저 저장 성공 시 유저 활동 내역에 정상적으로 유저 프로필 저장")
+  void createUserActivity() {
+    // given
+    UserRegisterRequest request = new UserRegisterRequest("new@example.com", "newUser", "password123");
+    String encodedPassword = "encodedPassword";
+
+    User user = User.builder()
+        .email("email@email.com")
+        .nickname("nickname")
+        .password(encodedPassword)
+        .build();
+
+    when(userRepository.existsByEmail(request.email())).thenReturn(false);
+    when(passwordEncoder.encode(request.password())).thenReturn(encodedPassword);
+    doNothing().when(userActivityService).createUserActivity(any(UserDto.class));
+    when(userRepository.save(any(User.class))).thenReturn(user);
+
+    // when
+    userService.registerUser(request);
+
+    // then
+    verify(userActivityService, times(1)).createUserActivity(any(UserDto.class));
   }
 }

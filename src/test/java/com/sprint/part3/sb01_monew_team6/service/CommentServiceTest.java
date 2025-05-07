@@ -7,6 +7,8 @@ import com.sprint.part3.sb01_monew_team6.dto.PageResponse;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityRemoveEvent;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotSoftDeletedException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
@@ -18,15 +20,19 @@ import com.sprint.part3.sb01_monew_team6.service.impl.CommentServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +41,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
@@ -52,8 +58,17 @@ class CommentServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private CommentServiceImpl commentService;
+
+    @Captor
+    private ArgumentCaptor<UserActivityAddEvent> userActivityAddEventCaptor;
+
+    @Captor
+    private ArgumentCaptor<UserActivityRemoveEvent> userActivityRemoveEventCaptor;
 
     @DisplayName("댓글 등록 - 정상 등록 시 CommentDto 반환")
     @Test
@@ -558,5 +573,59 @@ void deleteComment_marksDeleted_true() {
         } catch (Exception e) {
             throw new RuntimeException("createdAt 설정 실패", e);
         }
+    }
+
+    @Test
+    @DisplayName("댓글 등록 성공 시 유저 활동 내역 댓글 추가")
+    void addComment() {
+        //  given
+        CommentRegisterRequest request = CommentRegisterRequest.builder()
+            .articleId(1L)
+            .userId(1L)
+            .content("테스트 댓글입니다.")
+            .build();
+
+        NewsArticle article = createTestArticle();
+        User user = createTestUser();
+        Comment comment = Comment.builder()
+            .user(user)
+            .article(article)
+            .content("테스트 댓글입니다.")
+            .commentLikes(Collections.emptyList())
+            .build();
+
+        given(newsArticleRepository.findById(1L)).willReturn(Optional.of(article));
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+        given(commentRepository.save(any(Comment.class))).willReturn(comment);
+
+        //  when
+        commentService.register(request);
+
+        //  then
+        verify(eventPublisher, times(1)).publishEvent(userActivityAddEventCaptor.capture());
+        UserActivityAddEvent published = userActivityAddEventCaptor.getValue();
+        assertThat(published.userId()).isEqualTo(user.getId());
+        assertThat(published.comment().articleTitle()).isEqualTo(article.getArticleTitle());
+    }
+
+    @Test
+    @DisplayName("댓글 논리 삭제 성공 시 유저 활동 내역 댓글 삭제")
+    void removeComment() {
+        //  given
+        Long commentId = 1L;
+        User user = createUser(2L);
+        NewsArticle article = createArticle(3L);
+        Comment comment = createComment(commentId, user, article, "삭제할 댓글", false);
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+        // when
+        commentService.softDeleteComment(commentId);
+
+        //  then
+        verify(eventPublisher, times(1)).publishEvent(userActivityRemoveEventCaptor.capture());
+        UserActivityRemoveEvent published = userActivityRemoveEventCaptor.getValue();
+        assertThat(published.userId()).isEqualTo(user.getId());
+        assertThat(published.commentId()).isEqualTo(commentId);
     }
 }

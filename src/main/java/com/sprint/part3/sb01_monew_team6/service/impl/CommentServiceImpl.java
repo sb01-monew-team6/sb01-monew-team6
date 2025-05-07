@@ -1,9 +1,13 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import com.sprint.part3.sb01_monew_team6.dto.*;
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityRemoveEvent;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotFoundException;
@@ -18,6 +22,8 @@ import com.sprint.part3.sb01_monew_team6.service.CommentLikeService;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +41,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final CommentLikeService commentLikeService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public CommentDto register(CommentRegisterRequest request) {
@@ -58,6 +65,8 @@ public class CommentServiceImpl implements CommentService {
         Comment savedComment = commentRepository.save(comment);
         log.info("[register] 댓글 저장 완료: commentId={}", savedComment.getId());
 
+        publishUserActivityAddEvent(article, user, savedComment);
+
         //  5. 저장된 데이터를 CommentDto로 변환 후 반환
         return CommentDto.builder()
                 .id(savedComment.getId())
@@ -69,6 +78,26 @@ public class CommentServiceImpl implements CommentService {
                 .likedByMe(false)
                 .createdAt(savedComment.getCreatedAt())
                 .build();
+    }
+
+    private void publishUserActivityAddEvent(NewsArticle article, User user, Comment savedComment) {
+        UserActivityAddEvent event = new UserActivityAddEvent(
+            user.getId(),
+            UserActivityType.COMMENT,
+            null,
+            new CommentHistoryDto(
+                article.getId(),
+                article.getArticleTitle(),
+                user.getId(),
+                user.getNickname(),
+                savedComment.getContent(),
+                (long)savedComment.getCommentLikes().size(),
+                savedComment.getCreatedAt()
+            ),
+            null,
+            null
+        );
+        eventPublisher.publishEvent(event);
     }
 
     @Override
@@ -182,6 +211,20 @@ public class CommentServiceImpl implements CommentService {
         comment.softDelete();
         commentRepository.save(comment);
         log.info("[CommentServiceImpl] 댓글 논리 삭제 성공: id:{}", id);
+
+        publishUserActivityRemoveEvent(comment.getUser().getId(), id);
+    }
+
+    private void publishUserActivityRemoveEvent(Long userId, Long commentId) {
+        UserActivityRemoveEvent event = new UserActivityRemoveEvent(
+            userId,
+            UserActivityType.COMMENT,
+            null,
+            commentId,
+            null,
+            null
+        );
+        eventPublisher.publishEvent(event);
     }
 
     @Transactional

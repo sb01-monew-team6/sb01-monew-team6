@@ -4,7 +4,7 @@ spring:
 
   application:
     name: sb01-monew-team6
-    version: 0.1.0
+    version: 1.0.0
 
   servlet:
     multipart:

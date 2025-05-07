@@ -1,8 +1,10 @@
 package com.sprint.part3.sb01_monew_team6.repository;
 
+import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.entity.Subscription;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional; // Optional 임포트
 
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
@@ -25,4 +27,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
 
   void deleteByInterestId(Long interestId);
+
+  Optional<Subscription> findByInterest(Interest interest);
 }
