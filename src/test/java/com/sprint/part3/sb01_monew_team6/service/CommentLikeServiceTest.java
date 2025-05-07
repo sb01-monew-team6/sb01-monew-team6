@@ -152,6 +152,8 @@ class CommentLikeServiceTest {
     private Comment createTestComment(Long id, User user, String content) {
         Comment comment = Comment.builder()
                 .content(content)
+                .article(new NewsArticle())
+                .commentLikes(Collections.emptyList())
                 .user(user)
                 .build();
         forceSetId(comment, id);

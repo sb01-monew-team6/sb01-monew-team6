@@ -399,6 +399,7 @@ class CommentServiceTest {
                 .user(user)
                 .article(article)
                 .content(content)
+                .commentLikes(Collections.emptyList())
                 .build();
     }
 //    -----------------------------------------------------------------------------------------------------------------------------------------------------------
