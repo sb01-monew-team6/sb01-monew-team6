@@ -26,7 +26,7 @@ public class CommentController {
     }
 
     @GetMapping
-    public ResponseEntity<?> findAll(
+    public ResponseEntity<PageResponse<CommentDto>> findAll(
             @RequestParam(required = false) Long articleId,
             @RequestParam(required = false) String orderBy,
             @RequestParam(required = false) String direction,
