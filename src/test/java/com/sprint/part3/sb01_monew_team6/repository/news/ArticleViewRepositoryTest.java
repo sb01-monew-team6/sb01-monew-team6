@@ -1,12 +1,17 @@
-package com.sprint.part3.sb01_monew_team6.repository;
+package com.sprint.part3.sb01_monew_team6.repository.news;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE;
 
+import com.sprint.part3.sb01_monew_team6.config.JpaConfig;
+import com.sprint.part3.sb01_monew_team6.config.QueryDslConfig;
 import com.sprint.part3.sb01_monew_team6.config.TestDataJpaConfig;
 import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
+import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
+import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@Import(TestDataJpaConfig.class)
+@Import({JpaConfig.class, QueryDslConfig.class})
 @AutoConfigureTestDatabase(replace = NONE)
 public class ArticleViewRepositoryTest {
   @Autowired

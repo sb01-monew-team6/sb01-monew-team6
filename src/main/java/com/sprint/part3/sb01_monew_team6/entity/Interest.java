@@ -2,6 +2,10 @@ package com.sprint.part3.sb01_monew_team6.entity;
 
 import com.sprint.part3.sb01_monew_team6.entity.base.BaseUpdatableEntity; // BaseUpdatableEntity 임포트
 import jakarta.persistence.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.*;
 // import java.time.Instant; // BaseUpdatableEntity 에서 상속받으므로 제거
 
@@ -50,5 +54,14 @@ public class Interest extends BaseUpdatableEntity {
     if (this.subscriberCount > 0) {
       this.subscriberCount--;
     }
+  }
+  public List<String> getKeywordList() {
+    if (keywords == null || keywords.isBlank()) {
+      return Collections.emptyList();
+    }
+    return Arrays.stream(keywords.split(","))
+        .map(String::trim)
+        .filter(s -> !s.isEmpty())
+        .collect(Collectors.toList());
   }
 }

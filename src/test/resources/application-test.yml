@@ -16,6 +16,17 @@ de:
       embedded:
         version: 8.0.5
 
+cron:
+  news : "0 0 * * * *" #매시간
+  backup : "*/10 * * * * *"   # 매 10초마다 실행
+
+naver:
+  api:
+    url: https://openapi.naver.com/v1/search/news.json  # 네이버 뉴스 API
+    client-id: vilB5hg75QAcJethwR1F                    # 발급받은 Client ID
+    client-secret: _E_DzSvjxA                   # 발급받은 Client Secret
+
+
     #logging:
     #level:
     #org.springframework.security: DEBUG
