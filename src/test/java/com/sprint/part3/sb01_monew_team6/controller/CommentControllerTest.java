@@ -225,10 +225,10 @@ class CommentControllerTest {
                         .header("Monew-Request-User-ID", "1")
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.contents").isArray())
-                .andExpect(jsonPath("$.contents.length()").value(commentList.size()))
-                .andExpect(jsonPath("$.contents[0].content").value(comment1.content()))
-                .andExpect(jsonPath("$.contents[1].content").value(comment2.content()))
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(commentList.size()))
+                .andExpect(jsonPath("$.content[0].content").value(comment1.content()))
+                .andExpect(jsonPath("$.content[1].content").value(comment2.content()))
                 .andExpect(jsonPath("$.hasNext").value(true))
                 .andExpect(jsonPath("$.nextCursor").exists());
     }
