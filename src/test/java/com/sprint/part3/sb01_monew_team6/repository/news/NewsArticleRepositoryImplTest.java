@@ -261,4 +261,79 @@ public class NewsArticleRepositoryImplTest {
         .build();
     assertThat(newsArticleRepository.countArticles(req)).isEqualTo(1L);
   }
+
+  @Test
+  @DisplayName("searchArticles: publishDateTo 기준 필터링 (과거 게시물만 반환)")
+  void search_withPublishDateTo_onlyOldPosts() {
+    //given
+    CursorPageRequestArticleDto request = CursorPageRequestArticleDto.builder()
+        .publishDateTo(Instant.parse("2025-04-02T23:59:59Z"))
+        .orderBy("publishDate")
+        .direction("ASC")
+        .limit(10)
+        .build();
+
+    List<NewsArticle> list = newsArticleRepository.searchArticles(
+        request,
+        null,
+        null,
+        null,
+        10
+    );
+
+    //when,then
+    assertThat(list).extracting(NewsArticle::getSourceUrl)
+        .containsExactly("u1", "u2");
+  }
+  @Test
+  @DisplayName("searchArticles: after만 있을 때 (최근 이후 게시물)")
+  void search_withAfterOnly() {
+    //given
+    CursorPageRequestArticleDto request = CursorPageRequestArticleDto.builder()
+        .orderBy("publishDate")
+        .direction("ASC")
+        .after(Instant.parse("2025-04-01T12:00:00Z"))
+        .limit(10)
+        .build();
+
+    List<NewsArticle> list = newsArticleRepository.searchArticles(
+        request,
+        null,
+        null,
+        request.after(),
+        10
+    );
+
+    //when,then
+    assertThat(list).extracting(NewsArticle::getSourceUrl)
+        .containsExactly("u2", "u3");
+  }
+
+  @Test
+  @DisplayName("countArticles: publishDateFrom만 있을 때 개수 반환")
+  void count_withDateFromOnly() {
+    //given
+    CursorPageRequestArticleDto request = CursorPageRequestArticleDto.builder()
+        .publishDateFrom(Instant.parse("2025-04-02T00:00:00Z"))
+        .build();
+
+    long count = newsArticleRepository.countArticles(request);
+
+    //when,then
+    assertThat(count).isEqualTo(2L);
+  }
+
+  @Test
+  @DisplayName("countArticles: publishDateTo만 있을 때 개수 반환")
+  void count_withDateToOnly() {
+    //given
+    CursorPageRequestArticleDto request = CursorPageRequestArticleDto.builder()
+        .publishDateTo(Instant.parse("2025-04-02T23:59:59Z"))
+        .build();
+
+    long count = newsArticleRepository.countArticles(request);
+
+    //when,then
+    assertThat(count).isEqualTo(2L);
+  }
 }
