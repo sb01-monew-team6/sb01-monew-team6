@@ -15,6 +15,7 @@ import com.sprint.part3.sb01_monew_team6.dto.news.ArticleDto;
 import com.sprint.part3.sb01_monew_team6.dto.news.CollectResponse;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.exception.GlobalExceptionHandler;
+import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.NewsCollectionService;
 import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionServiceImpl;
 import java.time.Instant;
@@ -39,6 +40,8 @@ public class NewsCollectionControllerTest {
   MockMvc mvc;
   @Autowired
   ObjectMapper objectMapper;
+  @MockitoBean
+  private UserRepository userRepository;
   @MockitoBean
   NewsCollectionServiceImpl service;
 

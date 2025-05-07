@@ -17,6 +17,7 @@ import com.sprint.part3.sb01_monew_team6.dto.news.ArticleRestoreResultDto;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.GlobalExceptionHandler;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
+import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.ArticleService;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -38,6 +40,9 @@ import org.springframework.test.web.servlet.MockMvc;
 public class ArticleControllerTest {
   @Autowired
   MockMvc mvc;
+
+  @MockitoBean
+  private UserRepository userRepository;
 
   @MockitoBean
   ArticleService articleService;
@@ -79,7 +84,7 @@ public class ArticleControllerTest {
             .param("orderBy", "publishDate")
             .param("direction", "DESC")
             .param("limit", "1"))
-        .andExpect(status().is5xxServerError());
+        .andExpect(status().is4xxClientError());
   }
 
   @Test
