@@ -1,0 +1,71 @@
+package com.sprint.part3.sb01_monew_team6.storage.s3;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.atLeast;
+
+import com.sprint.part3.sb01_monew_team6.config.S3ClientConfig;
+import com.sprint.part3.sb01_monew_team6.config.SchedulingConfig;
+import java.time.Duration;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.awaitility.Awaitility;
+
+@SpringBootTest(properties = {
+    "cron.backup=0/5 * * * * *",
+    "spring.batch.job.enabled=false",
+    "storage.s3.access-key=testAccessKey",
+    "storage.s3.secret-key=testSecretKey",
+    "storage.s3.region=ap-northeast-2",
+    "storage.s3.bucket=test-bucket",
+    "storage.s3.backup-bucket=test-backup-bucket",
+    "AWS_BUCKET=test-bucket"
+})
+@ActiveProfiles("test")
+@EnableScheduling
+class ArticleBackupSchedulerTest {
+
+  @Autowired
+  private SchedulingConfig scheduler;
+
+  // real bean을 그대로 주입받음
+  @Autowired
+  @Qualifier("backupJob")
+  private Job backupJob;
+
+  // Scheduler가 호출하는 Launcher만 mock으로 대체
+  @MockitoBean
+  private JobLauncher jobLauncher;
+
+  @BeforeEach
+  void setUp() throws Exception {
+    // jobLauncher.run(...) 만 stub
+    JobExecution fakeExecution = new JobExecution(123L);
+    given(jobLauncher.run(eq(backupJob), any(JobParameters.class)))
+        .willReturn(fakeExecution);
+  }
+
+  @Test
+  @DisplayName("스케줄러가_jobLauncher를_주기적으로_호출한다")
+  void scheduler_callJobLauncher() {
+    Awaitility.await()
+        .atMost(Duration.ofSeconds(15))
+        .untilAsserted(() ->
+            then(jobLauncher).should(atLeast(2))
+                .run(eq(backupJob), any(JobParameters.class))
+        );
+  }
+}

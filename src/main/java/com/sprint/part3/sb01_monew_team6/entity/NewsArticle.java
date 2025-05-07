@@ -75,4 +75,7 @@ public class NewsArticle extends BaseEntity {
     a.articleSummary = e.description(); //요약
     return a;
   }
+  public void changeDeleted(){
+    this.isDeleted = true;
+  }
 }
