@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.config;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +22,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 @RequiredArgsConstructor
 @Slf4j
 public class SchedulingConfig {
-  private static final String CRON = "0 0 * * * *"; //매시간
+  //private static final String CRON_NEWS = "0 0 * * * *"; //매시간
+  //private static final String CRON_BACKUP = "0 0 0 * * *"; //매일
   private final JobLauncher jobLauncher;
   private final Job newsJob;
+  private final Job backupJob;
 
-  @Scheduled(cron = CRON)
+  @Scheduled(cron = "${cron.news}")
   public void collectNewsSchedule(){
     // 포맷을 yyyy-MM-dd-HH 로 하면 한 시간에 한 번만 신규 인스턴스가 생성
     String runId = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH")
@@ -45,5 +48,16 @@ public class SchedulingConfig {
     }
 
     log.info("스케줄러에 의해 배치 '{}' 작업이 성공적으로 실행되었습니다", newsJob.getName());
+  }
+
+  @Scheduled(cron = "${cron.backup}")
+  public void dailyBackup() throws Exception{
+    LocalDate today = LocalDate.now();
+    JobParameters parameter = new JobParametersBuilder()
+        .addString("date",today.toString())
+        .addLong("timestamp",System.currentTimeMillis())
+        .toJobParameters();
+
+    jobLauncher.run(backupJob,parameter);
   }
 }

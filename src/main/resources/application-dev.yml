@@ -1,6 +1,5 @@
 spring:
   config:
-    import: application-secret.yml
     activate:
       on-profile: dev
 
@@ -42,5 +41,20 @@ management:
 naver:
   api:
     url: https://openapi.naver.com/v1/search/news.json  # 네이버 뉴스 API
-    client-id: ${naver.api.client-id}                      # 발급받은 Client ID
+    client-id: ${naver.api.client-secret}                    # 발급받은 Client ID
     client-secret: ${naver.api.client-secret}                   # 발급받은 Client Secret
+
+rss:
+  feeds:
+    - name: HANKYUNG
+      url: https://www.hankyung.com/feed/all-news
+    - name: YEONHAP
+      url: https://www.yna.co.kr/rss/news.xml
+    - name: YEONHAP_POLITICS
+      url: https://www.yna.co.kr/rss/politics.xml
+    - name: JTBC
+      url: https://news-ex.jtbc.co.kr/v1/get/rss/issue
+
+cron:
+  news : "0 0 * * * *" #매시간
+  backup : "0 0 0 * * *" #매일

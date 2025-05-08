@@ -49,7 +49,7 @@ public class SecurityConfig {
         // --- 경로별 인가 설정 ---
         .authorizeHttpRequests(authz -> authz
             .requestMatchers(
-                "/",
+                "/**",
                 "/index.html",
                 "/favicon.ico",
                 "/css/**",
