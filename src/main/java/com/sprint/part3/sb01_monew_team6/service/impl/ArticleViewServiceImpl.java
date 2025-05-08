@@ -48,6 +48,7 @@ public class ArticleViewServiceImpl implements ArticleViewService {
       ArticleView newView = ArticleView.builder()
           .article(article)
           .user(user)
+          .articleViewDate(Instant.now())
           .build();
       view = articleViewRepository.save(newView);
     }
