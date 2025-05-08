@@ -30,6 +30,42 @@
         {
           "name": "DB_PASSWORD",
           "value": "REPLACEME_DB_PASSWORD"
+        },
+        {
+          "name": "MONGO_URI",
+          "value": "REPLACEME_MONGO_URI"
+        },
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "prod"
+        },
+        {
+          "name": "AWS_S3_ACCESS_KEY_ID",
+          "value": "id"
+        },
+        {
+          "name": "AWS_S3_SECRET_ACCESS_KEY",
+          "value": "pw"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "REGION"
+        },
+        {
+          "name": "AWS_BUCKET",
+          "value": "BUCKET"
+        },
+        {
+          "name": "NAVER_CLIENT_ID",
+          "value": "ID"
+        },
+        {
+          "name": "NAVER_CLIENT_SECRET",
+          "value": "SECRET"
+        },
+        {
+          "name": "AWS_BACKUP_BUCKET",
+          "value": "AWS_BACKUP_BUCKET"
         }
       ],
       "logConfiguration": {
