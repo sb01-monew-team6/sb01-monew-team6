@@ -65,7 +65,7 @@ rss:
       url: https://news-ex.jtbc.co.kr/v1/get/rss/issue
 
 cron:
-  news: "0 * * * * *"   # 10분마다
+  news: "0 */10 * * * *"   # 10분마다(ex : 16:10, 16:20)
   backup: "0 0 0 * * *"   # 정각
 
 

@@ -22,8 +22,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 @RequiredArgsConstructor
 @Slf4j
 public class SchedulingConfig {
-  //private static final String CRON_NEWS = "0 0 * * * *"; //매시간
-  //private static final String CRON_BACKUP = "0 0 0 * * *"; //매일
   private final JobLauncher jobLauncher;
   private final Job newsJob;
   private final Job backupJob;
@@ -31,7 +29,6 @@ public class SchedulingConfig {
   @Scheduled(cron = "${cron.news}")
   public void collectNewsSchedule() {
     JobParameters params = new JobParametersBuilder()
-        // timestamp 옵션 하나만 있어도 충분히 유니크합니다
         .addLong("timestamp", System.currentTimeMillis())
         .toJobParameters();
 
