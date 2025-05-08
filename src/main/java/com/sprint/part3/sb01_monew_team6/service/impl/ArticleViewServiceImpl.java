@@ -56,6 +56,7 @@ public class ArticleViewServiceImpl implements ArticleViewService {
       // 처음 보는 경우에만 저장
       ArticleView newView = ArticleView.builder()
           .article(article)
+          .articleViewDate(Instant.now())
           .user(user)
           .build();
       view = articleViewRepository.save(newView);

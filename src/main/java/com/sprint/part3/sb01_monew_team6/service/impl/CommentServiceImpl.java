@@ -28,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,7 +92,7 @@ public class CommentServiceImpl implements CommentService {
                 user.getId(),
                 user.getNickname(),
                 savedComment.getContent(),
-                (long)savedComment.getCommentLikes().size(),
+                0L,
                 savedComment.getCreatedAt()
             ),
             null,

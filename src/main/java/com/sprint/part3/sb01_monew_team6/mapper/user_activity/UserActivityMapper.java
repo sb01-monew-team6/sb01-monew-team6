@@ -3,12 +3,16 @@ package com.sprint.part3.sb01_monew_team6.mapper.user_activity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
+import org.mapstruct.NullValueMappingStrategy;
 
 import com.sprint.part3.sb01_monew_team6.dto.UserDto;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.UserActivityDto;
 import com.sprint.part3.sb01_monew_team6.entity.UserActivity;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+	componentModel = "spring",
+	nullValueIterableMappingStrategy = NullValueMappingStrategy.RETURN_DEFAULT
+)
 public interface UserActivityMapper {
 
 	@Mapping(target = "id", source = "userId")
