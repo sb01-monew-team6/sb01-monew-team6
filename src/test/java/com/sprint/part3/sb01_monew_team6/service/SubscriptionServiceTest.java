@@ -4,6 +4,8 @@ import com.sprint.part3.sb01_monew_team6.dto.InterestUpdateRequestDto;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.entity.Subscription;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityRemoveEvent;
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestAlreadyExistsException;
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestNameTooSimilarException;
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestNotFoundException;
@@ -15,18 +17,19 @@ import com.sprint.part3.sb01_monew_team6.repository.SubscriptionRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.InterestServiceImpl;
 import com.sprint.part3.sb01_monew_team6.service.impl.SubscriptionServiceImpl;
-import org.apache.commons.text.similarity.LevenshteinDistance; // InterestService 로직에서 사용
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.StringUtils; // InterestService 로직에서 사용
 
-import java.time.Instant; // InterestService 로직에서 사용
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +40,6 @@ import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -52,6 +54,15 @@ class SubscriptionServiceTest {
 
   @Mock
   private SubscriptionRepository subscriptionRepository;
+
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
+
+  @Captor
+  private ArgumentCaptor<UserActivityAddEvent> userActivityAddEventCaptor;
+
+  @Captor
+  private ArgumentCaptor<UserActivityRemoveEvent> userActivityRemoveEventCaptor;
 
   @InjectMocks
   private SubscriptionServiceImpl subscriptionService; // 구독 서비스 테스트 대상
@@ -367,6 +378,63 @@ class SubscriptionServiceTest {
     verify(subscriptionRepository).findByUserIdAndInterestId(userId, interestId);
     verify(subscriptionRepository, never()).delete(any(Subscription.class));
     verify(interestRepository, never()).findById(anyLong());
+  }
+
+  @Test
+  @DisplayName("구독 정상 성공 시 유저 활동 내역 구독 추가")
+  void addSubscription() {
+    // given
+    Long userId = 1L;
+    Long interestId = 10L;
+
+    User mockUser = mock(User.class);
+    Interest mockInterest = mock(Interest.class);
+
+    when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+    when(interestRepository.findById(interestId)).thenReturn(Optional.of(mockInterest));
+    when(subscriptionRepository.existsByUserIdAndInterestId(userId, interestId)).thenReturn(false);
+    when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(invocation -> {
+      Subscription subToSave = invocation.getArgument(0);
+      ReflectionTestUtils.setField(subToSave, "id", 100L);
+      return subToSave;
+    });
+
+    // when
+    subscriptionService.subscribe(userId, interestId);
+
+    // then
+    verify(eventPublisher, times(1)).publishEvent(userActivityAddEventCaptor.capture());
+    UserActivityAddEvent published = userActivityAddEventCaptor.getValue();
+    assertThat(published.userId()).isEqualTo(userId);
+    assertThat(published.subscription().interestId()).isEqualTo(interestId);
+  }
+
+  @Test
+  @DisplayName("구독 취소 정상 성공 시 유저 활동 내역 구독 삭제")
+  void removeSubscription() {
+    // given
+    Long userId = 1L;
+    Long interestId = 10L;
+
+    User mockUser = mock(User.class);
+    Interest mockInterest = mock(Interest.class);
+    Subscription mockSubscription = Subscription.builder()
+        .user(mockUser)
+        .interest(mockInterest)
+        .build();
+    ReflectionTestUtils.setField(mockSubscription, "id", 100L);
+
+    when(subscriptionRepository.findByUserIdAndInterestId(userId, interestId))
+        .thenReturn(Optional.of(mockSubscription));
+
+    // when
+    subscriptionService.unsubscribe(userId, interestId);
+
+    // then
+    verify(eventPublisher, times(1)).publishEvent(userActivityRemoveEventCaptor.capture());
+    UserActivityRemoveEvent published = userActivityRemoveEventCaptor.getValue();
+    assertThat(published.userId()).isEqualTo(userId);
+    assertThat(published.interestId()).isEqualTo(interestId);
   }
 
 }

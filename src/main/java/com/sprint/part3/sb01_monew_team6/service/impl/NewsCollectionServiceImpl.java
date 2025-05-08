@@ -1,22 +1,37 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
+import static com.sprint.part3.sb01_monew_team6.exception.ErrorCode.*;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.sprint.part3.sb01_monew_team6.client.NaverNewsClient;
 import com.sprint.part3.sb01_monew_team6.client.RssNewsClient;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
+import com.sprint.part3.sb01_monew_team6.entity.Subscription;
+import com.sprint.part3.sb01_monew_team6.entity.enums.ResourceType;
+import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
+import com.sprint.part3.sb01_monew_team6.repository.SubscriptionRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.NewsCollectionService;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.util.RateLimiter;
@@ -24,10 +39,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class NewsCollectionServiceImpl implements NewsCollectionService {
+
   private final NaverNewsClient naver;
   private final List<RssNewsClient> rssClients;
   private final NewsArticleRepository newsArticleRepository;

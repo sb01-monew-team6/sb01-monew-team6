@@ -1,9 +1,12 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.ArticleViewHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.mapper.news.ArticleViewMapper;
@@ -13,7 +16,12 @@ import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.ArticleViewService;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +34,7 @@ public class ArticleViewServiceImpl implements ArticleViewService {
   private final CommentRepository commentRepository;
   private final UserRepository userRepository;
   private final ArticleViewMapper articleViewMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   public ArticleViewDto viewArticle(Long articleId, Long userId){
@@ -50,6 +59,8 @@ public class ArticleViewServiceImpl implements ArticleViewService {
           .user(user)
           .build();
       view = articleViewRepository.save(newView);
+
+      publishUserActivityEvent(user, article, view);
     }
 
     //count 집계
@@ -58,5 +69,28 @@ public class ArticleViewServiceImpl implements ArticleViewService {
 
     //dto 변환
     return articleViewMapper.toDto(view, commentCount, viewCount);
+  }
+
+  private void publishUserActivityEvent(User user, NewsArticle article, ArticleView view) {
+    UserActivityAddEvent event = new UserActivityAddEvent(
+        user.getId(),
+        UserActivityType.ARTICLE_VIEW,
+        null,
+        null,
+        null,
+        new ArticleViewHistoryDto(
+            user.getId(),
+            article.getId(),
+            article.getSource(),
+            article.getSourceUrl(),
+            article.getArticleTitle(),
+            LocalDateTime.ofInstant(article.getArticlePublishedDate(), ZoneOffset.UTC),
+            article.getArticleSummary(),
+            (long)article.getComments().size(),
+            (long)article.getArticleViews().size(),
+            view.getArticleViewDate()
+        )
+    );
+    eventPublisher.publishEvent(event);
   }
 }
