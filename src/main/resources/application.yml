@@ -26,6 +26,6 @@ storage:
     secret-key: ${AWS_S3_SECRET_ACCESS_KEY}
     region: ${AWS_REGION}
     bucket: ${AWS_BUCKET}
-
+    backup-bucket: ${AWS_BACKUP_BUCKET}
 log:
   dir: .logs
