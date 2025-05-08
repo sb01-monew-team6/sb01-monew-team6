@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.util.RateLimiter;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +33,11 @@ public class NewsCollectionServiceImpl implements NewsCollectionService {
   private final NewsArticleRepository newsArticleRepository;
   private final InterestRepository interestRepository;
 
+  long interval = 200; // 200ms
+  long previousCall = System.currentTimeMillis();
+
   @Transactional
-  public Optional<List<NewsArticle>> collectAndSave() {
+  public Optional<List<NewsArticle>> collectAndSave() throws InterruptedException {
     log.info("뉴스 수집 시작");
 
     List<Interest> interests = interestRepository.findAll();
@@ -69,27 +73,27 @@ public class NewsCollectionServiceImpl implements NewsCollectionService {
 
   //Batch Chunk - ItemReader
   //관심사 기준으로 외부 뉴스 수집
-  public List<ExternalNewsItem> fetchCandidates(){
-    log.info("Batch용 뉴스 후보 수집 시작");
+  public List<ExternalNewsItem> fetchCandidates() throws InterruptedException {
+    log.info("Batch - 뉴스 후보 수집 시작");
 
     List<Interest> interests = interestRepository.findAll();
     log.debug("조회된 관심사 개수: {}", interests.size());
 
     //관심사 x
     if(interests.isEmpty() || interests.get(0).getKeywords() == null || interests.get(0).getKeywords().isEmpty()){
-      log.info("Batch용 등록된 관심사가 없어 빈 리스트 반환");
+      log.info("Batch - 등록된 관심사가 없어 빈 리스트 반환");
       return List.of();   // 예외 대신 빈 리스트
     }
     //관심사 o
     List<ExternalNewsItem> items = fetchExternalNews(interests);
-    log.info("Batch용 수집 완료: {}개 아이템", items.size());
+    log.info("Batch - 수집 완료: {}개 뉴스 기사", items.size());
     return items;
   }
 
   //Batch Chunk - ItemWrtier
   //NewsArticle 목록을 받아 DB에 중복 없이 저장
   public void saveAll(List<NewsArticle> articles){
-    log.info("Batch용 뉴스 저장 시작: 입력 {}건", articles.size());
+    log.info("Batch - 뉴스 저장 시작: 입력 {}건(Chunk 단위)", articles.size());
 
     List<NewsArticle> batchArticles = new ArrayList<>();
 
@@ -99,36 +103,59 @@ public class NewsCollectionServiceImpl implements NewsCollectionService {
       }
     }
 
-    log.debug("Batch용 저장 대상 필터링 후: {}건", batchArticles.size());
+    log.debug("Batch - 저장 대상 필터링 후: {}건", batchArticles.size());
 
     if(batchArticles.isEmpty()){
-      log.info("Batch 저장할 뉴스가 없습니다");
-      throw new NewsException(ErrorCode.NEWS_BATCH_NO_NEWS_EXCEPTION,Instant.now(),HttpStatus.NOT_FOUND);
+      log.info("Batch - 저장 대상 없음(조용히 리턴)");
+      return ;
     }
 
     newsArticleRepository.saveAll(batchArticles);
-    log.info("Batch용 뉴스 {}건 저장 완료", batchArticles.size());
+    log.info("Batch - 뉴스 {}건 저장 완료", batchArticles.size());
   }
 
   // 관심사 키워드 기반으로 Naver + RSS 에서 뉴스 아이템 수집
-  private List<ExternalNewsItem> fetchExternalNews(List<Interest> interests) {
+  private List<ExternalNewsItem> fetchExternalNews(List<Interest> interests)
+      throws InterruptedException {
     List<ExternalNewsItem> items = new ArrayList<>();
 
     // 1) 네이버 뉴스 (키워드별)
     for (Interest interest : interests) {
       for (String keyword : interest.getKeywordList()) {
+
+        long now = System.currentTimeMillis();
+        long elapsed = now - previousCall;
+
+        if (elapsed < interval) {
+          Thread.sleep(interval - elapsed); // 정확히 200ms 간격 유지
+        }
+
+        List<ExternalNewsItem> newsItems;
+
         try {
-          List<ExternalNewsItem> newsItems = naver.fetchNews(keyword);
-          log.debug("네이버에서 '{}' 키워드로 {}건 수집", keyword, newsItems.size());
-          items.addAll(newsItems);
-        } catch (Exception e) {
-          log.error("네이버 API 호출 실패 : 키워드='{}'", keyword, e);
+          newsItems = naver.fetchNews(keyword);
+        } catch (Exception ex) {
+          log.error(
+              "네이버 API 호출 실패: keyword='{}', exceptionType='{}', message='{}', " +
+                  "cause='{}'",
+              keyword,
+              ex.getClass().getSimpleName(),
+              ex.getMessage(),
+              ex.getCause(),
+              ex
+          );
           throw new NewsException(
               ErrorCode.NEWS_NAVERCLIENT_EXCEPTION,
               Instant.now(),
               HttpStatus.BAD_GATEWAY
           );
         }
+        if (newsItems.isEmpty()) {
+          log.info("키워드 '{}'에 신규 뉴스가 없어 스킵합니다", keyword);
+          continue;
+        }
+        log.debug("네이버에서 '{}' 키워드로 {}건 저장", keyword, newsItems.size());
+        items.addAll(newsItems);
       }
     }
 
@@ -141,9 +168,15 @@ public class NewsCollectionServiceImpl implements NewsCollectionService {
         log.debug("RSS 클라이언트 '{}'에서 전체 {}건 반환",
             rssClient.getClass().getSimpleName(), feeds.size());
         allRssFeeds.addAll(feeds);
-      } catch (Exception e) {
-        log.error("RSS API 호출 실패 : 클라이언트='{}'",
-            rssClient.getClass().getSimpleName(), e);
+      } catch (Exception ex) {
+        log.error(
+            "RSS 호출 실패: exceptionType='{}', message='{}', " +
+                "cause='{}'",
+            ex.getClass().getSimpleName(),
+            ex.getMessage(),
+            ex.getCause(),
+            ex
+        );
         throw new NewsException(
             ErrorCode.NEWS_RSSCLIENT_EXCEPTION,
             Instant.now(),
@@ -155,7 +188,7 @@ public class NewsCollectionServiceImpl implements NewsCollectionService {
     List<ExternalNewsItem> filteredRss = allRssFeeds.stream()
         .filter(item -> containsKeyword(item, interests))
         .collect(Collectors.toList());
-    log.debug("RSS 필터링 후 {}건 저장 대상 선정", filteredRss.size());
+    log.debug("RSS 필터링 후 {}건 저장", filteredRss.size());
     items.addAll(filteredRss);
 
     return items;
