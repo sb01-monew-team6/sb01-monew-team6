@@ -31,7 +31,7 @@ public class NotificationEventHandler {
 		notificationService.createFromEvent(event);
 	}
 
-	private static void validateByResourceType(NotificationCreateEvent event) {
+	private void validateByResourceType(NotificationCreateEvent event) {
 		switch (event.resourceType()) {
 			case INTEREST:
 				validateResourceContent(event.resourceContent());
@@ -40,28 +40,28 @@ public class NotificationEventHandler {
 		}
 	}
 
-	private static void validateArticleCount(Long articleCount) {
+	private void validateArticleCount(Long articleCount) {
 		if (Objects.isNull(articleCount) || articleCount <= 0) {
 			throw new NotificationDomainException("기사의 개수가 유효하지 않습니다.",
 				Map.of("articleCount", String.valueOf(articleCount)));
 		}
 	}
 
-	private static void validateResourceContent(String resourceContent) {
+	private void validateResourceContent(String resourceContent) {
 		if (Objects.isNull(resourceContent) || resourceContent.isBlank()) {
 			throw new NotificationDomainException("리소스 내용이 유효하지 않습니다.",
 				Map.of("resourceContent", String.valueOf(resourceContent)));
 		}
 	}
 
-	private static void validateUserId(Long userId) {
+	private void validateUserId(Long userId) {
 		if (Objects.isNull(userId) || userId <= 0) {
 			throw new NotificationDomainException("유저 id 가 유효하지 않습니다.",
 				Map.of("userId", String.valueOf(userId)));
 		}
 	}
 
-	private static void validateEvent(NotificationCreateEvent event) {
+	private void validateEvent(NotificationCreateEvent event) {
 		if (Objects.isNull(event)) {
 			throw new UserActivityDomainException("이벤트가 null 일 수 없습니다.",
 				Map.of("event", String.valueOf(event)));

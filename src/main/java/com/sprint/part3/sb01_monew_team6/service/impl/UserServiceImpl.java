@@ -1,5 +1,6 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
+import com.sprint.part3.sb01_monew_team6.dto.UserDto;
 import com.sprint.part3.sb01_monew_team6.dto.UserLoginRequest;
 import com.sprint.part3.sb01_monew_team6.dto.UserRegisterRequest;
 import com.sprint.part3.sb01_monew_team6.entity.User;
@@ -7,6 +8,7 @@ import com.sprint.part3.sb01_monew_team6.exception.user.EmailAlreadyExistsExcept
 import com.sprint.part3.sb01_monew_team6.exception.user.LoginFailedException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserNotFoundException;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
+import com.sprint.part3.sb01_monew_team6.service.UserActivityService;
 import com.sprint.part3.sb01_monew_team6.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +21,7 @@ public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final UserActivityService userActivityService;
 
   @Override
   @Transactional
@@ -38,7 +41,12 @@ public class UserServiceImpl implements UserService {
         .build();
 
     // 4. User 저장
-    return userRepository.save(newUser);
+    User saved = userRepository.save(newUser);
+
+    UserDto userDto = UserDto.fromEntity(saved);
+    userActivityService.createUserActivity(userDto);
+    
+    return saved;
   }
   @Override
   @Transactional(readOnly = true)

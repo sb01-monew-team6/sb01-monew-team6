@@ -2,7 +2,12 @@ package com.sprint.part3.sb01_monew_team6.service;
 
 import com.sprint.part3.sb01_monew_team6.dto.CommentLikeDto;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
+import com.sprint.part3.sb01_monew_team6.entity.CommentLike;
+import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityRemoveEvent;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
 import com.sprint.part3.sb01_monew_team6.exception.user.UserException;
 import com.sprint.part3.sb01_monew_team6.repository.CommentLikeRepository;
@@ -11,17 +16,22 @@ import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.CommentLikeServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 class CommentLikeServiceTest {
 
@@ -34,8 +44,20 @@ class CommentLikeServiceTest {
     @Mock
     private CommentLikeRepository commentLikeRepository;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private CommentLikeServiceImpl commentLikeService;
+
+    @Captor
+    private ArgumentCaptor<NotificationCreateEvent> notificationEventCaptor;
+
+    @Captor
+    private ArgumentCaptor<UserActivityAddEvent> userActivityAddEventCaptor;
+
+    @Captor
+    private ArgumentCaptor<UserActivityRemoveEvent> userActivityRemoveEventCaptor;
 
     public CommentLikeServiceTest() {
         MockitoAnnotations.openMocks(this);
@@ -130,6 +152,8 @@ class CommentLikeServiceTest {
     private Comment createTestComment(Long id, User user, String content) {
         Comment comment = Comment.builder()
                 .content(content)
+                .article(new NewsArticle())
+                .commentLikes(Collections.emptyList())
                 .user(user)
                 .build();
         forceSetId(comment, id);
@@ -148,5 +172,103 @@ class CommentLikeServiceTest {
         } catch (Exception e) {
             throw new RuntimeException("ID 설정 실패", e);
         }
+    }
+
+    @Test
+    @DisplayName("댓글 좋아요 정상 호출 시 알림 이벤트 정상 발생")
+    public void publishNotification() throws Exception {
+        // given
+        Long commentId = 1L;
+        Long userId = 100L;
+
+        User testUser = createTestUser(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
+
+        Comment testComment = createTestComment(commentId, testUser, "댓글입니다");
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(testComment));
+
+        given(commentLikeRepository.existsByCommentIdAndUserId(commentId, userId)).willReturn(false);
+        given(commentLikeRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
+        given(commentLikeRepository.countByCommentId(commentId)).willReturn(1L);
+
+        // when
+        commentLikeService.likeComment(commentId, userId);
+
+        // then
+        verify(eventPublisher, times(1)).publishEvent(notificationEventCaptor.capture());
+        NotificationCreateEvent published = notificationEventCaptor.getValue();
+
+        assertThat(published.resourceId()).isEqualTo(commentId);
+    }
+
+    @Test
+    @DisplayName("댓글 좋아요 정상 호출 시 유저 활동 내역 댓글 좋아요 추가")
+    public void addCommentLike() throws Exception {
+        // given
+        Long commentId = 1L;
+        Long userId = 100L;
+
+        User testUser = createTestUser(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
+
+        Comment testComment = Comment.builder()
+            .user(testUser)
+            .commentLikes(Collections.emptyList())
+            .article(new NewsArticle())
+            .build();
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(testComment));
+
+        CommentLike stub = CommentLike.builder()
+            .user(testUser)
+            .comment(testComment)
+            .build();
+
+        given(commentLikeRepository.existsByCommentIdAndUserId(commentId, userId)).willReturn(false);
+        given(commentLikeRepository.save(any())).willReturn(stub);
+        given(commentLikeRepository.countByCommentId(commentId)).willReturn(1L);
+        doNothing().when(eventPublisher).publishEvent(any(NotificationCreateEvent.class));
+
+        // when
+        commentLikeService.likeComment(commentId, userId);
+
+        // then
+        verify(eventPublisher, times(1)).publishEvent(userActivityAddEventCaptor.capture());
+        UserActivityAddEvent published = userActivityAddEventCaptor.getValue();
+
+        assertThat(published.userId()).isEqualTo(userId);
+        assertThat(published.commentLike().commentUserId()).isEqualTo(testComment.getUser().getId());
+    }
+
+    @Test
+    @DisplayName("댓글 좋아요 취소 정상 호출 시 유저 활동 내역 댓글 좋아요 삭제")
+    public void removeCommentLike() throws Exception {
+        // given
+        Long commentId = 1L;
+        Long userId = 100L;
+
+        User testUser = createTestUser(userId);
+
+        Comment testComment = Comment.builder()
+            .user(testUser)
+            .commentLikes(Collections.emptyList())
+            .article(new NewsArticle())
+            .build();
+
+        CommentLike stub = CommentLike.builder()
+            .user(testUser)
+            .comment(testComment)
+            .build();
+
+        given(commentLikeRepository.findByCommentIdAndUserId(commentId, userId)).willReturn(Optional.of(stub));
+
+        // when
+        commentLikeService.cancelLike(commentId, userId);
+
+        // then
+        verify(eventPublisher, times(1)).publishEvent(userActivityRemoveEventCaptor.capture());
+        UserActivityRemoveEvent published = userActivityRemoveEventCaptor.getValue();
+
+        assertThat(published.userId()).isEqualTo(userId);
+        assertThat(published.articleId()).isEqualTo(testComment.getArticle().getId());
     }
 }
