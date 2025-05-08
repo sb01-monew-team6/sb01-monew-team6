@@ -19,6 +19,10 @@ jobs:
       ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
       ECR_REPOSITORY: ${{ (github.ref_name == 'main' && 'prod/team6-monew') || (github.ref_name == 'develop' && 'dev/team6-monew') }}
       IMAGE_TAG: ${{ github.sha }}
+      NAVER_CLIENT_ID: ${{ secrets.Client_ID }}
+      NAVER_CLIENT_SECRET: ${{ secrets.Client_secret }}
+      AWS_BACKUP_BUCKET: ${{ secrets.AWS_BACKUP_BUCKET }}
+
 
     steps:
       # 0. push 이벤트 발생 시, 어떤 ECR 리포지토리에 어떤 태그의 이미지가 배포되는지 출력해줌
@@ -131,6 +135,9 @@ jobs:
             AWS_S3_SECRET_ACCESS_KEY=${{ env.AWS_S3_SECRET_ACCESS_KEY }}
             AWS_REGION=${{ env.AWS_REGION }}
             AWS_BUCKET=${{ env.AWS_BUCKET }}
+            NAVER_CLIENT_ID=${{ env.NAVER_CLIENT_ID }}
+            NAVER_CLIENT_SECRET=${{ env.NAVER_CLIENT_SECRET }}
+            AWS_BACKUP_BUCKET=${{ env.AWS_BACKUP_BUCKET }}
 
       # 10. ECS 서비스에 새 Task 적용
       - name: Deploy to ECS

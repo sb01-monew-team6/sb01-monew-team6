@@ -50,9 +50,22 @@
         {
           "name": "AWS_REGION",
           "value": "REGION"
-        }, {
+        },
+        {
           "name": "AWS_BUCKET",
           "value": "BUCKET"
+        },
+        {
+          "name": "NAVER_CLIENT_ID",
+          "value": "ID"
+        },
+        {
+          "name": "NAVER_CLIENT_SECRET",
+          "value": "SECRET"
+        },
+        {
+          "name": "AWS_BACKUP_BUCKET",
+          "value": "AWS_BACKUP_BUCKET"
         }
       ],
       "logConfiguration": {
