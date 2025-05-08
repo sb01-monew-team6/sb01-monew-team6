@@ -29,20 +29,19 @@ public class SchedulingConfig {
   private final Job backupJob;
 
   @Scheduled(cron = "${cron.news}")
-  public void collectNewsSchedule(){
-    // 포맷을 yyyy-MM-dd-HH 로 하면 한 시간에 한 번만 신규 인스턴스가 생성
-    String runId = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH")
-        .format(LocalDateTime.now());
+  public void collectNewsSchedule() {
     JobParameters params = new JobParametersBuilder()
-        .addString("run.id", runId)
+        // timestamp 옵션 하나만 있어도 충분히 유니크합니다
+        .addLong("timestamp", System.currentTimeMillis())
         .toJobParameters();
 
-    try{
-      jobLauncher.run(newsJob,params);
-    }catch (JobExecutionAlreadyRunningException
-            | JobRestartException
-            | JobInstanceAlreadyCompleteException
-            | JobParametersInvalidException e) {
+    try {
+      jobLauncher.run(newsJob, params);
+    } catch (JobInstanceAlreadyCompleteException e) {
+      // 이미 완료된 경우엔 그냥 로그만 찍고 넘어가기
+      log.warn("이미 완료된 뉴스 수집 잡 인스턴스가 있어서 건너뜁니다: run.id={}", params.getParameters().get("timestamp"));
+      return;
+    } catch (Exception e) {
       log.error("배치 뉴스 수집 작업 실행 중 오류 발생", e);
       throw new RuntimeException("배치 작업 실행 실패", e);
     }
@@ -59,5 +58,6 @@ public class SchedulingConfig {
         .toJobParameters();
 
     jobLauncher.run(backupJob,parameter);
+    log.info("스케줄러에 의해 배치 '{}' 작업이 성공적으로 실행되었습니다", backupJob.getName());
   }
 }
