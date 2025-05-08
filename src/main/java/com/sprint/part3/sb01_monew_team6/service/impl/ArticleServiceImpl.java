@@ -107,7 +107,7 @@ public class ArticleServiceImpl implements ArticleService {
     List<ArticleDto> dtos = entities.stream()
         .map(a -> ArticleDto.from(
             a,
-            commentRepository.countByArticleId(a.getId()),
+            commentRepository.countByArticleIdAndIsDeletedFalse(a.getId()),
             0L,
             false
         ))

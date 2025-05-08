@@ -412,14 +412,14 @@ void deleteComment_marksDeleted_true() {
     NewsArticle article = createArticle(3L);
     Comment comment = createComment(commentId, user, article, "삭제할 댓글", false);
 
-    given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+    given(commentRepository.findByIdWithArticleAndUser(commentId)).willReturn(Optional.of(comment));
 
     // when
     commentService.softDeleteComment(commentId);
 
     // then
     assertThat(comment.isDeleted()).isTrue();
-    verify(commentRepository).findById(commentId);
+    verify(commentRepository).findByIdWithArticleAndUser(commentId);
 }
 
     @DisplayName("댓글 수정 - 내용 수정 시 CommentDto 반환")
@@ -618,7 +618,7 @@ void deleteComment_marksDeleted_true() {
         NewsArticle article = createArticle(3L);
         Comment comment = createComment(commentId, user, article, "삭제할 댓글", false);
 
-        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+        given(commentRepository.findByIdWithArticleAndUser(commentId)).willReturn(Optional.of(comment));
 
         // when
         commentService.softDeleteComment(commentId);
@@ -627,6 +627,6 @@ void deleteComment_marksDeleted_true() {
         verify(eventPublisher, times(1)).publishEvent(userActivityRemoveEventCaptor.capture());
         UserActivityRemoveEvent published = userActivityRemoveEventCaptor.getValue();
         assertThat(published.userId()).isEqualTo(user.getId());
-        assertThat(published.commentId()).isEqualTo(commentId);
+        assertThat(published.articleId()).isEqualTo(article.getId());
     }
 }

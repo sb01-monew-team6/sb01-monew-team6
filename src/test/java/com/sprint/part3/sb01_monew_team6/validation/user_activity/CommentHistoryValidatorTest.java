@@ -54,12 +54,12 @@ class CommentHistoryValidatorTest {
 		Exception {
 		//given
 		CommentHistoryDto dto = new CommentHistoryDto(
-			1L,
+			0L,
 			"title",
 			1L,
 			"nickName",
 			"content",
-			0L,
+			1L,
 			Instant.now()
 		);
 

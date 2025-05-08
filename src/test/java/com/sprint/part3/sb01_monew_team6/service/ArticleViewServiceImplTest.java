@@ -88,7 +88,7 @@ public class ArticleViewServiceImplTest {
     given(newsArticleRepository.findById(articleId)).willReturn(Optional.of(article));
     given(userRepository.findById(userId)).willReturn(Optional.of(user));
     given(articleViewRepository.save(any(ArticleView.class))).willReturn(view);
-    given(commentRepository.countByArticleId(articleId)).willReturn(5L);
+    given(commentRepository.countByArticleIdAndIsDeletedFalse(articleId)).willReturn(5L);
     given(articleViewRepository.countByArticleId(articleId)).willReturn(1L);
 
     // Mapper가 호출될 때 기대 DTO를 반환하도록 정의
@@ -192,7 +192,7 @@ public class ArticleViewServiceImplTest {
     given(articleViewRepository.findByArticleIdAndUserId(articleId, userId))
         .willReturn(Optional.of(existingView));
 
-    given(commentRepository.countByArticleId(articleId)).willReturn(0L);
+    given(commentRepository.countByArticleIdAndIsDeletedFalse(articleId)).willReturn(0L);
     given(articleViewRepository.countByArticleId(articleId)).willReturn(3L);
 
     ArticleViewDto expectedDto = ArticleViewDto.builder()
@@ -252,7 +252,7 @@ public class ArticleViewServiceImplTest {
     given(newsArticleRepository.findById(articleId)).willReturn(Optional.of(article));
     given(userRepository.findById(userId)).willReturn(Optional.of(user));
     given(articleViewRepository.save(any(ArticleView.class))).willReturn(view);
-    given(commentRepository.countByArticleId(articleId)).willReturn(5L);
+    given(commentRepository.countByArticleIdAndIsDeletedFalse(articleId)).willReturn(5L);
     given(articleViewRepository.countByArticleId(articleId)).willReturn(1L);
 
     ArticleViewDto expectedDto = ArticleViewDto.builder()

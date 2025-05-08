@@ -93,7 +93,7 @@ public class NewsCollectionServiceImpl implements NewsCollectionService {
 		for (Interest interest : interests) {
 			Long articleCount = countPerInterest.getOrDefault(interest.getId(), 0L);
 
-			Subscription subscription = subscriptionRepository.findByInterest(interest)
+			Subscription subscription = subscriptionRepository.findByInterestId(interest.getId())
 				.orElseThrow(() -> new NewsException(NEWS_INVALID_EXCEPTION, Instant.now(), HttpStatus.BAD_REQUEST));
 
 			NotificationCreateEvent event = new NotificationCreateEvent(

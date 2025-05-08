@@ -97,7 +97,7 @@ public class NewsCollectionServiceImplTest {
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
-    given(subscriptionRepository.findByInterest(any())).willReturn(Optional.of(stub));
+    given(subscriptionRepository.findByInterestId(any())).willReturn(Optional.of(stub));
 
     //when
     service.collectAndSave();
@@ -139,7 +139,7 @@ public class NewsCollectionServiceImplTest {
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("u1")).willReturn(false);
-    given(subscriptionRepository.findByInterest(any())).willReturn(Optional.of(stub));
+    given(subscriptionRepository.findByInterestId(any())).willReturn(Optional.of(stub));
 
     //when
     service.collectAndSave();
@@ -185,7 +185,7 @@ public class NewsCollectionServiceImplTest {
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1, e1));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
-    given(subscriptionRepository.findByInterest(any())).willReturn(Optional.of(stub));
+    given(subscriptionRepository.findByInterestId(any())).willReturn(Optional.of(stub));
 
     // when
     service.collectAndSave();
@@ -390,7 +390,7 @@ public class NewsCollectionServiceImplTest {
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
-    given(subscriptionRepository.findByInterest(any())).willReturn(Optional.of(stub));
+    given(subscriptionRepository.findByInterestId(any())).willReturn(Optional.of(stub));
 
     //when
     service.collectAndSave();

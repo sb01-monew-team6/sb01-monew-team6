@@ -65,7 +65,7 @@ public class ArticleViewServiceImpl implements ArticleViewService {
     }
 
     //count 집계
-    long commentCount = commentRepository.countByArticleId(articleId);
+    long commentCount = commentRepository.countByArticleIdAndIsDeletedFalse(articleId);
     long viewCount = articleViewRepository.countByArticleId(articleId);
 
     //dto 변환
