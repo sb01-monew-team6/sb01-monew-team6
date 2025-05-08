@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -18,6 +19,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @RequiredArgsConstructor
+@Slf4j
 public class ArticleBackupTasklet implements Tasklet {
   private final NewsArticleRepository newsArticleRepository;
   private final S3Client s3Client;
@@ -44,8 +46,14 @@ public class ArticleBackupTasklet implements Tasklet {
         .bucket(bucketName)
         .key(key)
         .build();
-    s3Client.putObject(request, RequestBody.fromString(json));
-
+    log.debug("S3 업로드 시도 → bucket={}, key={}", bucketName, key);
+    try {
+      s3Client.putObject(request, RequestBody.fromString(json));
+      log.info("S3 업로드 성공 → s3://{}/{}", bucketName, key);
+    } catch (Exception e) {
+      log.error("S3 업로드 실패 → bucket={}, key={}", bucketName, key, e);
+      throw e;
+    }
     return RepeatStatus.FINISHED;
   }
 }
