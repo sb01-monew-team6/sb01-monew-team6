@@ -152,4 +152,30 @@ public class ArticleViewControllerTest {
     mockMvc.perform(get("/api/articles/sources"))
         .andExpect(status().isInternalServerError());
   }
+
+  @Test
+  @DisplayName("헤더 누락 시 400 Bad Request 반환")
+  void viewArticle_missingHeader() throws Exception {
+    mockMvc.perform(post("/api/articles/{articleId}/article-views", 1L)
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("헤더 타입 불일치 시 500 Internal Server Error 반환")
+  void viewArticle_invalidHeaderType() throws Exception {
+    mockMvc.perform(post("/api/articles/{articleId}/article-views", 1L)
+            .header("Monew-Request-User-ID", "not-a-number")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isInternalServerError());
+  }
+
+  @Test
+  @DisplayName("경로 변수 타입 불일치 시 500 Internal Server Error 반환")
+  void viewArticle_invalidPathVariable() throws Exception {
+    mockMvc.perform(post("/api/articles/{articleId}/article-views", "abc")
+            .header("Monew-Request-User-ID", 1L)
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isInternalServerError());
+  }
 }

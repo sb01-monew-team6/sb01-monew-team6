@@ -8,11 +8,15 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.sprint.part3.sb01_monew_team6.config.JpaConfig;
 import com.sprint.part3.sb01_monew_team6.config.QueryDslConfig;
 import com.sprint.part3.sb01_monew_team6.dto.news.CursorPageRequestArticleDto;
+import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticleInterest;
 import com.sprint.part3.sb01_monew_team6.entity.QNewsArticle;
+import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
+import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,13 +42,25 @@ public class NewsArticleRepositoryImplTest {
 
   @Autowired
   private NewsArticleInterestRepository newsArticleInterestRepository;
+  @Autowired
+  private CommentRepository commentRepository;
+  @Autowired
+  private UserRepository userRepository;
 
   private NewsArticle a1, a2, a3;
   private Interest iSport;
+  private User testUser;
   private final QNewsArticle article = QNewsArticle.newsArticle;
 
   @BeforeEach
   void setUp() {
+    testUser = userRepository.save(
+        User.builder()
+            .nickname("testuser")
+            .email("test@example.com")
+            .password("pass")
+            .build()
+    );
     // publishDate 순서: a1 < a2 < a3
     a1 = newsArticleRepository.save(NewsArticle.builder()
         .source("NAVER")
@@ -374,5 +390,89 @@ public class NewsArticleRepositoryImplTest {
 
     //when,then
     assertThat(count).isEqualTo(2L);
+  }
+  @Test
+  @DisplayName("commentCount 기준 DESC 정렬")
+  void search_withCommentCountDesc() {
+    // a4에 댓글 2개
+    NewsArticle a4 = newsArticleRepository.save(NewsArticle.builder()
+        .source("NAVER").sourceUrl("u4")
+        .articleTitle("WithComments")
+        .articlePublishedDate(Instant.parse("2025-04-05T00:00:00Z"))
+        .articleSummary("s4").build());
+
+    commentRepository.save(Comment.builder()
+        .article(a4).user(testUser).content("c1").isDeleted(false).build());
+    commentRepository.save(Comment.builder()
+        .article(a4).user(testUser).content("c2").isDeleted(false).build());
+    // a3에 댓글 1개
+    commentRepository.save(Comment.builder()
+        .article(a3).user(testUser).content("c3").isDeleted(false).build());
+
+    CursorPageRequestArticleDto req = CursorPageRequestArticleDto.builder()
+        .orderBy("commentCount").direction("DESC").limit(3).build();
+    OrderSpecifier<Long> dummy = new OrderSpecifier<>(Order.DESC, article.id);
+
+    List<NewsArticle> list =
+        newsArticleRepository.searchArticles(req, dummy, null, null, 3);
+
+    assertThat(list).extracting(NewsArticle::getArticleTitle)
+        .containsExactly("WithComments", "Hibernate", "Spring");
+  }
+
+  @Test
+  @DisplayName("commentCount 기준 ASC 정렬")
+  void search_withCommentCountAsc() {
+    CursorPageRequestArticleDto req = CursorPageRequestArticleDto.builder()
+        .orderBy("commentCount").direction("ASC").limit(3).build();
+    OrderSpecifier<Long> dummy = new OrderSpecifier<>(Order.ASC, article.id);
+
+    List<NewsArticle> list =
+        newsArticleRepository.searchArticles(req, dummy, null, null, 3);
+
+    assertThat(list).extracting(NewsArticle::getArticleTitle)
+        .containsExactly("Hibernate", "Spring", "Java");
+  }
+
+  @Test
+  @DisplayName("after+cursor 동시 사용 시 커서 페이징")
+  void search_withAfterAndCursor() {
+    // page1: 가장 오래된 1건(ASC)
+    CursorPageRequestArticleDto p1 = CursorPageRequestArticleDto.builder()
+        .orderBy("publishDate").direction("ASC").limit(1).build();
+    OrderSpecifier<Instant> pubAsc =
+        new OrderSpecifier<>(Order.ASC, QNewsArticle.newsArticle.articlePublishedDate);
+    List<NewsArticle> page1 = newsArticleRepository.searchArticles(p1, pubAsc, null, null, 1);
+
+    Instant after = page1.get(0).getArticlePublishedDate();
+    // String으로만 쓸 게 아니라, ID(Long)도 같이 저장
+    Long cursorId = page1.get(0).getId();
+    String cursorStr = cursorId.toString();
+
+    // page2: after+cursor 조합
+    CursorPageRequestArticleDto p2 = CursorPageRequestArticleDto.builder()
+        .orderBy("publishDate").direction("ASC")
+        .after(after)
+        .cursor(cursorStr)  // DTO에는 String으로 세팅
+        .limit(1)
+        .build();
+
+    // repository 호출 시엔 Long 타입 cursorId를 넘겨야 함
+    List<NewsArticle> page2 = newsArticleRepository.searchArticles(
+        p2, pubAsc, cursorId, after, 1);
+
+    assertThat(page2).hasSize(1)
+        .extracting(NewsArticle::getArticleTitle)
+        .containsExactly("Spring");
+  }
+
+  @Test
+  @DisplayName("countArticles: sourceIn 필터링")
+  void count_withSourceIn() {
+    CursorPageRequestArticleDto req = CursorPageRequestArticleDto.builder()
+        .sourceIn(List.of("NAVER")).build();
+    long cnt = newsArticleRepository.countArticles(req);
+    // setUp()에서 NAVER 기사 2건이므로
+    assertThat(cnt).isEqualTo(2L);
   }
 }
