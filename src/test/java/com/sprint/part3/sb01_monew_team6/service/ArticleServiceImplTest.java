@@ -27,6 +27,7 @@ import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
+import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.ArticleServiceImpl;
 import java.time.Instant;
@@ -56,6 +57,8 @@ public class ArticleServiceImplTest {
   @Mock
   NewsArticleRepository newsArticleRepository;
   @Mock
+  ArticleViewRepository articleViewRepository;
+  @Mock
   CommentRepository commentRepository;
   @Mock
   PageResponseMapper pageResponseMapper;
@@ -76,10 +79,10 @@ public class ArticleServiceImplTest {
   @Test
   @DisplayName("조회 결과가 없으면 빈 페이지 반환")
   void noArticle_thenEmptyPage(){
-    //given
+    // given: orderBy를 publishDate로 변경
     CursorPageRequestArticleDto request = CursorPageRequestArticleDto.builder()
         .userId(1L)
-        .orderBy("id")
+        .orderBy("publishDate")
         .direction("DESC")
         .limit(5)
         .build();
@@ -94,15 +97,16 @@ public class ArticleServiceImplTest {
         .willReturn(List.of());
     given(newsArticleRepository.countArticles(request)).willReturn(0L);
 
-    // mapper stubbing: 빈 Slice → 빈 PageResponse 반환
+    // mapper stub: 빈 Slice → 빈 PageResponse
     PageResponse<ArticleDto> emptyResp = new PageResponse<>(
         List.of(), null, null, 5, false, 0L);
-    given(pageResponseMapper.fromSlice(any(Slice.class), any(), any(), anyLong())).willReturn(emptyResp);
+    given(pageResponseMapper.fromSlice(any(Slice.class), any(), any(), anyLong()))
+        .willReturn(emptyResp);
 
-    //when
+    // when
     PageResponse<ArticleDto> page = articleService.searchArticles(request);
 
-    //then
+    // then
     assertThat(page.contents()).isEmpty();
     assertThat(page.hasNext()).isFalse();
     assertThat(page.totalElements()).isZero();
@@ -113,44 +117,92 @@ public class ArticleServiceImplTest {
 
   @Test
   @DisplayName("조회 정상")
-  void service_thenNormal(){
-    //given
-    CursorPageRequestArticleDto request = new CursorPageRequestArticleDto(
-        1L, "스포츠", null, List.of("NAVER"), null, null, "publishDate", "DESC", null, null, 10
-    );
+  void service_thenNormal() {
+    // given
+    CursorPageRequestArticleDto request = CursorPageRequestArticleDto.builder()
+        .userId(1L)
+        .keyword("스포츠")
+        .sourceIn(List.of("NAVER"))
+        .orderBy("publishDate")
+        .direction("DESC")
+        .limit(10)
+        .build();
 
-    List<NewsArticle> articleList = List.of(
-        NewsArticle.builder().articleTitle("축구").articlePublishedDate(Instant.now()).build()
-    );
-    ReflectionTestUtils.setField(articleList.get(0), "id", 1L);
-    List<ArticleDto> dtoList = List.of(
-        new ArticleDto(1L, "NAVER", "url", "제목", "요약", Instant.now(), 2L, 1L, false)
-    );
-    given(newsArticleRepository.searchArticles(any(), any(), any(), any(), anyInt())).willReturn(articleList);
-    given(newsArticleRepository.countArticles(any())).willReturn(1L);
-    given(commentRepository.countByArticleIdAndIsDeletedFalse(anyLong())).willReturn(2L);
-    doReturn(new PageResponse<>(dtoList, "1", Instant.now(), 10, false, 1L))
-        .when(pageResponseMapper)
-        .fromSlice(any(org.springframework.data.domain.Slice.class),
-            any(), any(), anyLong());
+    NewsArticle article = NewsArticle.builder()
+        .source("NAVER")
+        .sourceUrl("url")
+        .articleTitle("축구")
+        .articlePublishedDate(Instant.parse("2025-05-09T00:00:00Z"))
+        .articleSummary("요약")
+        .build();
+    ReflectionTestUtils.setField(article, "id", 1L);
 
-    //when
+    given(newsArticleRepository.searchArticles(
+        any(CursorPageRequestArticleDto.class),
+        any(), any(), any(), anyInt()))
+        .willReturn(List.of(article));
+    given(newsArticleRepository.countArticles(any()))
+        .willReturn(1L);
+
+    given(commentRepository.countByArticleId(1L))
+        .willReturn(5L);
+    given(commentRepository.countByArticleIdAndIsDeletedFalse(1L))
+        .willReturn(3L);
+
+    given(articleViewRepository.countByArticleId(1L))
+        .willReturn(7L);
+    given(articleViewRepository.existsByArticleIdAndUserId(1L, 1L))
+        .willReturn(true);
+
+    PageResponse<ArticleDto> stubResponse = new PageResponse<>(
+        List.of(new ArticleDto(
+            1L,
+            "NAVER",
+            "url",
+            "축구",
+            "요약",
+            Instant.parse("2025-05-09T00:00:00Z"),
+            3L,   // visibleComments
+            7L,   // viewCount
+            true  // viewedByMe
+        )),
+        "1",
+        Instant.parse("2025-05-09T00:00:00Z"),
+        10,
+        false,
+        1L
+    );
+    given(pageResponseMapper.fromSlice(
+        any(org.springframework.data.domain.Slice.class),
+        any(), any(), anyLong()))
+        .willReturn(stubResponse);
+
+    // when
     PageResponse<ArticleDto> result = articleService.searchArticles(request);
 
-    //then
+    // then
     assertThat(result.contents()).hasSize(1);
     assertThat(result.totalElements()).isEqualTo(1L);
+    assertThat(result.contents().get(0).commentCount()).isEqualTo(3L);
+    assertThat(result.contents().get(0).viewCount()).isEqualTo(7L);
+    assertThat(result.contents().get(0).viewedByMe()).isTrue();
+
     verify(newsArticleRepository).searchArticles(any(), any(), any(), any(), anyInt());
+    verify(newsArticleRepository).countArticles(any());
+    verify(commentRepository).countByArticleId(1L);
     verify(commentRepository).countByArticleIdAndIsDeletedFalse(1L);
+    verify(articleViewRepository).countByArticleId(1L);
+    verify(articleViewRepository).existsByArticleIdAndUserId(1L, 1L);
     verify(pageResponseMapper).fromSlice(any(), any(), any(), anyLong());
   }
 
   @Test
   @DisplayName("커서 파라미터가 null 일 때 예외 없이 동작")
   void cursor_null_thenNormal() {
-    //given
+    // given: orderBy를 publishDate로 변경
     CursorPageRequestArticleDto request = new CursorPageRequestArticleDto(
-        1L, null, null, null, null, null, "id", "ASC", null, null, 1
+        1L, null, null, null, null, null,
+        "publishDate", "ASC", null, null, 1
     );
 
     given(newsArticleRepository.searchArticles(any(), any(), any(), any(), anyInt()))
@@ -159,10 +211,10 @@ public class ArticleServiceImplTest {
     given(pageResponseMapper.fromSlice(any(), any(), any(), anyLong()))
         .willReturn(new PageResponse<>(List.of(), null, null, 1, false, 0L));
 
-    //when
+    // when
     PageResponse<ArticleDto> result = articleService.searchArticles(request);
 
-    //then
+    // then
     assertThat(result.contents()).isEmpty();
     assertThat(result.totalElements()).isZero();
   }
@@ -435,10 +487,10 @@ public class ArticleServiceImplTest {
   @Test
   @DisplayName("searchArticles: cursor 숫자 문자열 파싱 정상")
   void searchArticles_cursorParsing() {
-    //given
+    // given: orderBy를 publishDate로 변경
     CursorPageRequestArticleDto req = new CursorPageRequestArticleDto(
         1L, null, null, null, null, null,
-        "id", "DESC", "42", Instant.EPOCH, 2
+        "publishDate", "DESC", "42", Instant.EPOCH, 2
     );
 
     when(newsArticleRepository.searchArticles(any(), any(), eq(42L), any(), anyInt()))
@@ -447,19 +499,18 @@ public class ArticleServiceImplTest {
     when(pageResponseMapper.fromSlice(any(), any(), any(), anyLong()))
         .thenReturn(new PageResponse<>(List.of(), null, null, 2, false, 0L));
 
-    //when
+    // when
     articleService.searchArticles(req);
 
-    //then
-    // cursor=42L 인자로 정확히 전달됐는지 검증
+    // then: cursor가 Long 42로 파싱되어 전달됐는지
     verify(newsArticleRepository)
         .searchArticles(any(), any(), eq(42L), any(), anyInt());
   }
 
   @Test
-  @DisplayName("searchArticles: buildOrder 분기(publishDate/title/id) 정상")
+  @DisplayName("searchArticles: buildOrder 분기(publishDate/viewCount/commentCount) 정상")
   void searchArticles_buildOrderBranches() {
-    //given
+    // 공통 stub
     when(newsArticleRepository.searchArticles(any(), any(), any(), any(), anyInt()))
         .thenReturn(List.of());
     when(newsArticleRepository.countArticles(any())).thenReturn(0L);
@@ -473,23 +524,21 @@ public class ArticleServiceImplTest {
     );
     articleService.searchArticles(req1);
 
-    // title
+    // viewCount
     CursorPageRequestArticleDto req2 = new CursorPageRequestArticleDto(
         1L, null, null, null, null, null,
-        "title", "DESC", null, null, 1
+        "viewCount", "DESC", null, null, 1
     );
     articleService.searchArticles(req2);
 
-    // id(default)
+    // commentCount
     CursorPageRequestArticleDto req3 = new CursorPageRequestArticleDto(
         1L, null, null, null, null, null,
-        "id", "DESC", null, null, 1
+        "commentCount", "DESC", null, null, 1
     );
-
-    //when
     articleService.searchArticles(req3);
 
-    //then
+    // then: 세 번 모두 repository 호출됨
     verify(newsArticleRepository, times(3))
         .searchArticles(any(), any(), any(), any(), anyInt());
   }
