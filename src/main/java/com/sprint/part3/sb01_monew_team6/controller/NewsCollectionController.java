@@ -21,14 +21,14 @@ public class NewsCollectionController {
   private final NewsCollectionServiceImpl newsCollectionImplService;
 
   @GetMapping
-  public ResponseEntity<Void> getCollectNews() {
+  public ResponseEntity<Void> getCollectNews() throws InterruptedException {
     newsCollectionImplService.collectAndSave();
     return ResponseEntity.ok().build();
   }
 
 
   @PostMapping
-  public ResponseEntity<?> collectNews() {
+  public ResponseEntity<?> collectNews() throws InterruptedException {
     // 뉴스 수집 및 저장
     Optional<List<NewsArticle>> collectedNews = newsCollectionImplService.collectAndSave();
     List<NewsArticle> saved = collectedNews.orElse(List.of());

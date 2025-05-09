@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -19,6 +20,7 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.skip.NonSkippableReadException;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemProcessor;
@@ -34,6 +36,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Configuration
 @EnableBatchProcessing
 @RequiredArgsConstructor
+@Slf4j
 public class BatchConfig {
   private final NewsCollectionServiceImpl service;
 
@@ -50,7 +53,13 @@ public class BatchConfig {
   @Bean
   @StepScope // 실제 배치 Step이 실행될 때 호출됩니다.
   public ItemReader<ExternalNewsItem> newsReader(NewsCollectionServiceImpl service) {
-    List<ExternalNewsItem> allNews = service.fetchCandidates();
+    List<ExternalNewsItem> allNews;
+    try {
+      allNews = service.fetchCandidates();
+    } catch (Exception e) {
+      log.warn("Batch reader에서 예외 발생, 빈 리스트로 대체: {}", e.getMessage());
+      allNews = List.of();
+    }
     return new ListItemReader<>(allNews);
   }
 
@@ -85,6 +94,7 @@ public class BatchConfig {
         .writer(writer)
         .faultTolerant()                                 // fault-tolerant 모드 활성화
         .skipLimit(100)                                // 최대 100개 예외 스킵
+        .skip(NonSkippableReadException.class)         // 읽기 단계에서 래핑되어 올라오는 예외
         .skip(Exception.class)                         // 모든 Exception 스킵
         .retryLimit(3)                                 // 최대 3회 재시도
         .retry(IOException.class)                      // IOException 에 한해 재시도

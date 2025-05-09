@@ -24,8 +24,8 @@ public enum ErrorCode {
 
 	//news
 	NEWS_INVALID_EXCEPTION("유효하지 않은 요청입니다."),
-	NEWS_NAVERCLIENT_EXCEPTION("NAVER API 요청 오류입니다."),
-	NEWS_RSSCLIENT_EXCEPTION("RSS API 요청 오류입니다."),
+	NEWS_NAVERCLIENT_EXCEPTION("네이버 API 호출 실패"),
+	NEWS_RSSCLIENT_EXCEPTION("RSS 호출 실패"),
 	NEWS_NO_INTEREST_EXCEPTION("저장할 관심사가 없습니다."),
 	NEWS_NO_NEW_NEWS_EXCEPTION("저장할 새로운 뉴스가 없습니다."),
 	NEWS_BATCH_NO_INTEREST_EXCEPTION("Batch - 수집할 관심사가 없습니다."),
