@@ -4,6 +4,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
 import com.sprint.part3.sb01_monew_team6.service.impl.ArticleViewServiceImpl;
+import java.util.List;
 import javax.xml.transform.OutputKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -32,5 +33,11 @@ public class ArticleViewController {
       @PathVariable Long articleId, @RequestHeader("Monew-Request-User-ID") Long userId){
     ArticleViewDto articleView = articleViewImplService.viewArticle(articleId, userId);
     return ResponseEntity.status(OK).body(articleView);
+  }
+
+  @GetMapping("/sources")
+  public ResponseEntity<List<String>> getSources(){
+    List<String> sources = articleViewImplService.getSources();
+    return ResponseEntity.status(OK).body(sources);
   }
 }

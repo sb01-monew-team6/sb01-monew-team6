@@ -3,6 +3,7 @@ package com.sprint.part3.sb01_monew_team6.service.impl;
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
 import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
+import com.sprint.part3.sb01_monew_team6.entity.Source;
 import com.sprint.part3.sb01_monew_team6.entity.User;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
@@ -13,6 +14,8 @@ import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.ArticleViewService;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -59,5 +62,12 @@ public class ArticleViewServiceImpl implements ArticleViewService {
 
     //dto 변환
     return articleViewMapper.toDto(view, commentCount, viewCount);
+  }
+
+  // 출처 목록 조회
+  @Override
+  public List<String> getSources(){
+    // enum 값들을 문자열로 변환하여 반환
+    return Arrays.stream(Source.values()).map(Source::name).toList();
   }
 }
