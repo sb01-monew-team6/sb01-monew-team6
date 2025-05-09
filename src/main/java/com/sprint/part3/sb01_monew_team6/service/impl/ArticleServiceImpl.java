@@ -15,6 +15,7 @@ import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
+import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.ArticleService;
 import java.io.IOException;
@@ -53,6 +54,7 @@ public class ArticleServiceImpl implements ArticleService {
   private final PageResponseMapper pageResponseMapper;
   private final S3Client s3Client;
   private final ObjectMapper objectMapper;
+  private final ArticleViewRepository articleViewRepository;
   @Value("${storage.s3.backup-bucket}")
   private String bucketName;
 
@@ -105,12 +107,23 @@ public class ArticleServiceImpl implements ArticleService {
 
     // Entity → DTO 변환
     List<ArticleDto> dtos = entities.stream()
-        .map(a -> ArticleDto.from(
-            a,
-            commentRepository.countByArticleIdAndIsDeletedFalse(a.getId()),
-            0L,
-            false
-        ))
+        .map(a -> {
+          // 정렬 키로는 전체 댓글 수
+          long totalComments = commentRepository.countByArticleId(a.getId());
+          // 화면에 보여줄 댓글 수(삭제된 건 제외)
+          long visibleComments = commentRepository.countByArticleIdAndIsDeletedFalse(a.getId());
+          long viewCnt      = articleViewRepository.countByArticleId(a.getId());
+          boolean viewedByMe = articleViewRepository
+              .existsByArticleIdAndUserId(a.getId(), request.userId());
+
+          // MapStruct 매퍼 (or static factory) 호출
+          return ArticleDto.from(
+              a,
+              visibleComments,
+              viewCnt,
+              viewedByMe
+          );
+        })
         .collect(Collectors.toList());
 
     // Slice 생성
@@ -134,10 +147,10 @@ public class ArticleServiceImpl implements ArticleService {
     switch (req.orderBy()) {
       case "publishDate":
         return new OrderSpecifier<>(dir, newsArticle.articlePublishedDate);
-      case "title":
-        return new OrderSpecifier<>(dir, newsArticle.articleTitle);
-      case "id":
-        return new OrderSpecifier<>(dir, newsArticle.id);
+      case "viewCount":
+        return new OrderSpecifier<>(dir, newsArticle.articleViews.size());
+      case "commentCount":
+        return new OrderSpecifier<>(dir, newsArticle.comments.size());
       default:
         throw new NewsException(ErrorCode.NEWS_ORDERBY_IS_NOT_SUPPORT_EXCEPTION,Instant.now(),HttpStatus.BAD_REQUEST);
     }

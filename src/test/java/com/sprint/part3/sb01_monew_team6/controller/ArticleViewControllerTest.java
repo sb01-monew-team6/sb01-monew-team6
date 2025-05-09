@@ -2,6 +2,7 @@ package com.sprint.part3.sb01_monew_team6.controller;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -12,8 +13,11 @@ import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.GlobalExceptionHandler;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
+import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.ArticleViewServiceImpl;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +36,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(GlobalExceptionHandler.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class ArticleViewControllerTest {
-
   @MockitoBean
-  private MonewRequestUserInterceptor monewRequestUserInterceptor;
+  private UserRepository userRepository;
 
   @Autowired
   private MockMvc mockMvc;
@@ -120,4 +123,59 @@ public class ArticleViewControllerTest {
         .andExpect(jsonPath("$.message").value("유저가 존재하지 않습니다."));
   }
 
+  @Test
+  @DisplayName("200: 정상적으로 NAVER 리스트 반환")
+  void getSources_happyPath() throws Exception {
+    given(articleViewImplService.getSources()).willReturn(List.of("NAVER"));
+
+    mockMvc.perform(get("/api/articles/sources"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json("[\"NAVER\"]"));
+  }
+
+  @Test
+  @DisplayName("200: 빈 리스트 반환 시 []")
+  void getSources_emptyList() throws Exception {
+    given(articleViewImplService.getSources()).willReturn(Collections.emptyList());
+
+    mockMvc.perform(get("/api/articles/sources"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+  }
+
+  @Test
+  @DisplayName("500: 서비스 예외 발생 시 서버 오류 반환")
+  void getSources_serviceThrows() throws Exception {
+    given(articleViewImplService.getSources()).willThrow(new RuntimeException("oops"));
+
+    mockMvc.perform(get("/api/articles/sources"))
+        .andExpect(status().isInternalServerError());
+  }
+
+  @Test
+  @DisplayName("헤더 누락 시 400 Bad Request 반환")
+  void viewArticle_missingHeader() throws Exception {
+    mockMvc.perform(post("/api/articles/{articleId}/article-views", 1L)
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("헤더 타입 불일치 시 500 Internal Server Error 반환")
+  void viewArticle_invalidHeaderType() throws Exception {
+    mockMvc.perform(post("/api/articles/{articleId}/article-views", 1L)
+            .header("Monew-Request-User-ID", "not-a-number")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isInternalServerError());
+  }
+
+  @Test
+  @DisplayName("경로 변수 타입 불일치 시 500 Internal Server Error 반환")
+  void viewArticle_invalidPathVariable() throws Exception {
+    mockMvc.perform(post("/api/articles/{articleId}/article-views", "abc")
+            .header("Monew-Request-User-ID", 1L)
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isInternalServerError());
+  }
 }
