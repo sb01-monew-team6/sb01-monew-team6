@@ -7,6 +7,7 @@ import com.sprint.part3.sb01_monew_team6.service.impl.ArticleViewServiceImpl;
 import javax.xml.transform.OutputKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -32,5 +33,4 @@ public class ArticleViewController {
     ArticleViewDto articleView = articleViewImplService.viewArticle(articleId, userId);
     return ResponseEntity.status(OK).body(articleView);
   }
-
 }
