@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,8 +26,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping({ "/api/articles", "/articles", "/articles/articles" })
 @Validated
+@RequestMapping("/api/articles")
 @RequiredArgsConstructor
 public class ArticleController {
 
@@ -43,22 +44,44 @@ public class ArticleController {
       @RequestParam(name = "sourceIn", required = false)
       List<String> sourceIn,
       @RequestParam(name = "publishDateFrom", required = false)
-      Instant publishDateFrom,
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+      LocalDateTime publishDateFrom,
+
       @RequestParam(name = "publishDateTo", required = false)
-      Instant publishDateTo,
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+      LocalDateTime publishDateTo,
+
       @RequestParam(name = "orderBy", required = true)
       String orderBy,
+
       @RequestParam(name = "direction", required = true)
       String direction,
+
       @RequestParam(name = "cursor", required = false)
       String cursor,
+
       @RequestParam(name = "after", required = false)
-      Instant after,
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+      LocalDateTime after,
+
       @RequestParam(name = "limit", required = true)
       int limit
   ) {
+    // 1) publishDateFrom/To → Instant 범위
+    Instant fromInstant = publishDateFrom != null
+        ? publishDateFrom.atZone(ZoneOffset.UTC).toInstant()
+        : null;
+    Instant toInstant   = publishDateTo != null
+        ? publishDateTo.atZone(ZoneOffset.UTC).toInstant()
+        : null;
+
+    // 2) after → Instant 변환
+    Instant afterInstant = after != null
+        ? after.atZone(ZoneOffset.UTC).toInstant()
+        : null;
+
     CursorPageRequestArticleDto request = new CursorPageRequestArticleDto(
-        userId, keyword, interestId, sourceIn, publishDateFrom, publishDateTo, orderBy, direction, cursor, after, limit
+        userId, keyword, interestId, sourceIn, fromInstant,toInstant, orderBy, direction, cursor, afterInstant, limit
     );
     PageResponse<ArticleDto> article = articleService.searchArticles(request);
     return ResponseEntity.status(OK)
