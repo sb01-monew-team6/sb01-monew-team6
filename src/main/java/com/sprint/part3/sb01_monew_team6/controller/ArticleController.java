@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -67,17 +68,17 @@ public class ArticleController {
       @RequestParam(name = "limit", required = true)
       int limit
   ) {
-    // 1) publishDateFrom/To → Instant 범위
+    ZoneId seoul = ZoneId.of("Asia/Seoul");
+
     Instant fromInstant = publishDateFrom != null
-        ? publishDateFrom.atZone(ZoneOffset.UTC).toInstant()
+        ? publishDateFrom.atZone(seoul).toInstant()
         : null;
     Instant toInstant   = publishDateTo != null
-        ? publishDateTo.atZone(ZoneOffset.UTC).toInstant()
+        ? publishDateTo.atZone(seoul).toInstant()
         : null;
 
-    // 2) after → Instant 변환
     Instant afterInstant = after != null
-        ? after.atZone(ZoneOffset.UTC).toInstant()
+        ? after.atZone(seoul).toInstant()
         : null;
 
     CursorPageRequestArticleDto request = new CursorPageRequestArticleDto(
