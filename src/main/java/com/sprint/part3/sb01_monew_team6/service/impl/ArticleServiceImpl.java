@@ -108,7 +108,10 @@ public class ArticleServiceImpl implements ArticleService {
     // Entity → DTO 변환
     List<ArticleDto> dtos = entities.stream()
         .map(a -> {
-          long commentCnt   = commentRepository.countByArticleIdAndIsDeletedFalse(a.getId());
+          // 정렬 키로는 전체 댓글 수
+          long totalComments = commentRepository.countByArticleId(a.getId());
+          // 화면에 보여줄 댓글 수(삭제된 건 제외)
+          long visibleComments = commentRepository.countByArticleIdAndIsDeletedFalse(a.getId());
           long viewCnt      = articleViewRepository.countByArticleId(a.getId());
           boolean viewedByMe = articleViewRepository
               .existsByArticleIdAndUserId(a.getId(), request.userId());
@@ -116,7 +119,7 @@ public class ArticleServiceImpl implements ArticleService {
           // MapStruct 매퍼 (or static factory) 호출
           return ArticleDto.from(
               a,
-              commentCnt,
+              visibleComments,
               viewCnt,
               viewedByMe
           );

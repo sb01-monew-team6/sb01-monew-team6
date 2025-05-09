@@ -38,4 +38,6 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
       WHERE c.id = :id AND c.isDeleted = false
       """)
   Optional<Comment> findByIdWithArticleAndUser(Long id);
+
+  long countByArticleId(Long articleId);
 }
