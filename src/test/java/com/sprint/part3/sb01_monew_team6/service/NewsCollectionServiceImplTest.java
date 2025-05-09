@@ -1,41 +1,35 @@
 package com.sprint.part3.sb01_monew_team6.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.sprint.part3.sb01_monew_team6.client.NaverNewsClient;
 import com.sprint.part3.sb01_monew_team6.client.RssNewsClient;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
-import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
-import com.sprint.part3.sb01_monew_team6.entity.Subscription;
-import com.sprint.part3.sb01_monew_team6.entity.User;
-import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
-import com.sprint.part3.sb01_monew_team6.repository.SubscriptionRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionServiceImpl;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,31 +38,47 @@ public class NewsCollectionServiceImplTest {
   @Mock RssNewsClient   rssClient;
   @Mock InterestRepository interestRepository;
   @Mock NewsArticleRepository newsArticleRepository;
-  @Mock ApplicationEventPublisher eventPublisher;
-  @Mock SubscriptionRepository subscriptionRepository;
-
-  @Captor
-  private ArgumentCaptor<NotificationCreateEvent> eventCaptor;
 
   private NewsCollectionServiceImpl service;
 
   @BeforeEach
   void setUp() {
-    MockitoAnnotations.openMocks(this);
-    // 단일 목을 실제 리스트로 묶어서 서비스에 주입
     service = new NewsCollectionServiceImpl(
         naverClient,
         List.of(rssClient),
         newsArticleRepository,
-        interestRepository,
-        eventPublisher,
-        subscriptionRepository
+        interestRepository
     );
+  }
+  @Test
+  @DisplayName("관심사 없음 - 뉴스 수집 수행 안 함")
+  void collectAndSave_NoInterests() throws InterruptedException {
+    given(interestRepository.findAll()).willReturn(List.of());
+
+    service.collectAndSave();
+
+    then(naverClient).shouldHaveNoInteractions();
+    then(rssClient).shouldHaveNoInteractions();
+    then(newsArticleRepository).shouldHaveNoInteractions();
   }
 
   @Test
-  @DisplayName("키워드 포함 기사만 저장")
-  void save_News_Only_With_Keyword() {
+  @DisplayName("키워드가 없는 관심사 - 뉴스 수집 수행 안 함")
+  void collectAndSave_InterestsWithoutKeywords() throws InterruptedException {
+    Interest interest = Interest.builder().name("empty").keywords("").build();
+    given(interestRepository.findAll()).willReturn(List.of(interest));
+
+    service.collectAndSave();
+
+    then(naverClient).shouldHaveNoInteractions();
+    then(rssClient).shouldHaveNoInteractions();
+    then(newsArticleRepository).shouldHaveNoInteractions();
+  }
+
+
+  @Test
+  @DisplayName("키워드 포함한 기사만 저장")
+  void save_News_Only_With_Keyword() throws InterruptedException {
     //given
     Interest i = Interest.builder()
         .name("스포츠")
@@ -81,23 +91,9 @@ public class NewsCollectionServiceImplTest {
         "Naver","url1","url1","축구 제목", Instant.now(),""
     );
 
-    Subscription stub = Subscription.builder()
-        .user(User.builder()
-            .email("email@email.com")
-            .nickname("nickname")
-            .password("1234")
-            .build())
-        .interest(Interest.builder()
-            .name("interest")
-            .keywords("keyword")
-            .subscriberCount(1L)
-            .build())
-        .build();
-
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
-    given(subscriptionRepository.findByInterest(any())).willReturn(Optional.of(stub));
 
     //when
     service.collectAndSave();
@@ -109,9 +105,10 @@ public class NewsCollectionServiceImplTest {
       return cnt == 1;
     }));
   }
+
   @Test
   @DisplayName("제목에는 없고 요약(설명)에 키워드가 포함될 시 저장")
-  void save_News_With_Keyword_In_Description() {
+  void save_News_With_Keyword_In_Description() throws InterruptedException {
     //given
     Interest i = Interest.builder()
         .name("k")
@@ -122,24 +119,9 @@ public class NewsCollectionServiceImplTest {
     ExternalNewsItem e1 = new ExternalNewsItem(
         "Naver","u1","u1","title",Instant.now(),"description 축구 "
     );
-
-    Subscription stub = Subscription.builder()
-        .user(User.builder()
-            .email("email@email.com")
-            .nickname("nickname")
-            .password("1234")
-            .build())
-        .interest(Interest.builder()
-            .name("interest")
-            .keywords("keyword")
-            .subscriberCount(1L)
-            .build())
-        .build();
-
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("u1")).willReturn(false);
-    given(subscriptionRepository.findByInterest(any())).willReturn(Optional.of(stub));
 
     //when
     service.collectAndSave();
@@ -157,7 +139,7 @@ public class NewsCollectionServiceImplTest {
 
   @Test
   @DisplayName("중복 URL 하나만 저장")
-  void duplicatedUrl_save_oneUrl() {
+  void duplicatedUrl_save_oneUrl() throws InterruptedException {
     //given
     Interest i = Interest.builder()
         .name("스포츠")
@@ -168,24 +150,9 @@ public class NewsCollectionServiceImplTest {
     ExternalNewsItem e1 = new ExternalNewsItem(
         "Naver", "url1", "url1", "축구제목", Instant.now(), "요약"
     );
-
-    Subscription stub = Subscription.builder()
-        .user(User.builder()
-            .email("email@email.com")
-            .nickname("nickname")
-            .password("1234")
-            .build())
-        .interest(Interest.builder()
-            .name("interest")
-            .keywords("keyword")
-            .subscriberCount(1L)
-            .build())
-        .build();
-
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1, e1));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
-    given(subscriptionRepository.findByInterest(any())).willReturn(Optional.of(stub));
 
     // when
     service.collectAndSave();
@@ -198,7 +165,7 @@ public class NewsCollectionServiceImplTest {
 
   @Test
   @DisplayName("이미 DB에 있는 기사만 나왔을 땐, 예외 없이 종료하고 저장 안 함")
-  void allExisting_throwNoNewsException() {
+  void allExisting_throwNoNewsException() throws InterruptedException {
     // given
     Interest it = Interest.builder()
         .name("k")
@@ -218,7 +185,7 @@ public class NewsCollectionServiceImplTest {
 
   @Test
   @DisplayName("관심사 없으면 예외 없이 종료하고 저장 안 함")
-  void givenNoInterests_throwNewsException() {
+  void givenNoInterests_throwNewsException() throws InterruptedException {
     // Given
     given(interestRepository.findAll()).willReturn(List.of());
 
@@ -231,50 +198,33 @@ public class NewsCollectionServiceImplTest {
   }
 
   @Test
-  @DisplayName("NaverClient 예외 발생 - collectAndSave in Service")
-  void exception_NaverClient_in_collectAndSave() {
+  @DisplayName("네이버 API 호출 실패 예외 처리")
+  void collectAndSave_NaverClientException() throws InterruptedException {
     //given
-    Interest i = Interest.builder()
-        .name("k")
-        .keywords("x")
-        .build();
-    given(interestRepository.findAll()).willReturn(List.of(i));
-    given(naverClient.fetchNews("x")).willThrow(new NewsException(ErrorCode.NEWS_NAVERCLIENT_EXCEPTION,Instant.now(),
-        HttpStatus.BAD_GATEWAY));
+    Interest interest = Interest.builder().name("스포츠").keywords("축구").build();
+    given(interestRepository.findAll()).willReturn(List.of(interest));
+    given(naverClient.fetchNews("축구")).willThrow(new NewsException(ErrorCode.NEWS_NAVERCLIENT_EXCEPTION, Instant.now(), HttpStatus.BAD_GATEWAY));
 
-    //when,then
-    assertThatThrownBy(()->service.collectAndSave())
-        .isInstanceOf(NewsException.class)
-        .hasMessageContaining("NAVER API 요청 오류입니다.");
+    //when & then
+    assertThrows(NewsException.class, () -> service.collectAndSave());
   }
   @Test
-  @DisplayName("RssClient 예외 발생 - collectAndSave in Service")
-  void excpetion_RssClient_in_collectAndSave(){
+  @DisplayName("RSS API 호출 실패 예외 처리")
+  void collectAndSave_RssClientException() throws InterruptedException {
     //given
-    Interest i = Interest.builder()
-        .name("k")
-        .keywords("x")
-        .build();
-    given(interestRepository.findAll()).willReturn(List.of(i));
-    // 네이버는 빈 리스트 반환 → RSS 로직으로 넘어가게
-    given(naverClient.fetchNews("x")).willReturn(List.of());
-    // RSS 에서만 예외
-    given(rssClient.fetchNews())
-        .willThrow(new NewsException(
-            ErrorCode.NEWS_RSSCLIENT_EXCEPTION,
-            Instant.now(),
-            HttpStatus.BAD_GATEWAY));
+    Interest interest = Interest.builder().name("스포츠").keywords("축구").build();
+    given(interestRepository.findAll()).willReturn(List.of(interest));
+    given(naverClient.fetchNews("축구")).willReturn(List.of());
+    given(rssClient.fetchNews()).willThrow(new NewsException(ErrorCode.NEWS_RSSCLIENT_EXCEPTION, Instant.now(), HttpStatus.BAD_GATEWAY));
 
-    // when & then
-    assertThatThrownBy(() -> service.collectAndSave())
-        .isInstanceOf(NewsException.class)
-        .hasMessageContaining("RSS API 요청 오류입니다.");
+    //when&then
+    assertThrows(NewsException.class, () -> service.collectAndSave());
   }
 
   //fetchCandidates()
   @Test
   @DisplayName("관심사가 있을 때 naver, rss 호출 결과를 합쳐 반환한다")
-  void whenInterests_returnsItems() {
+  void whenInterests_returnsItems() throws InterruptedException {
     // given
     Interest i = Interest.builder()
         .name("k")
@@ -304,7 +254,7 @@ public class NewsCollectionServiceImplTest {
 
   @Test
   @DisplayName("관심사 없으면 빈리스트 반환")
-  void retturnEmptyList_whenNoInterests() {
+  void retturnEmptyList_whenNoInterests() throws InterruptedException {
     // given
     given(interestRepository.findAll()).willReturn(List.of());
 
@@ -339,66 +289,16 @@ public class NewsCollectionServiceImplTest {
     }));
   }
   @Test
-  @DisplayName("저장 대상이 없으면 예외 발생")
-  void noNews_throwsException(){
+  @DisplayName("관심사가 없으면 예외 없이 조용히 리턴한다")
+  void noInterest_returnsQuietly(){
     //given
-    NewsArticle a1 = NewsArticle.from(
-        new ExternalNewsItem("Naver","url1","url1","title1",Instant.now(),"desc1"));
-    NewsArticle a2 = NewsArticle.from(
-        new ExternalNewsItem("Rss","url2","url2","title2",Instant.now(),"desc2")
-    );
-    given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(true);
-    given(newsArticleRepository.existsBySourceUrl("url2")).willReturn(true);
+    given(interestRepository.findAll()).willReturn(Collections.emptyList());
 
     // when & then
-    assertThatThrownBy(() -> service.saveAll(List.of(a1, a2)) )
-        .isInstanceOf(NewsException.class)
-        .satisfies(ex->{
-          NewsException ne = (NewsException) ex;
-          assertThat(ne.getCode()).isEqualTo(ErrorCode.NEWS_BATCH_NO_NEWS_EXCEPTION);
-        });
-  }
+    assertThatCode(() -> service.collectAndSave())
+        .doesNotThrowAnyException();
 
-  @Test
-  @DisplayName("기사 저장 정상 호출 시 알림 이벤트 정상 발생")
-  public void publishNotification() throws Exception {
-    //given
-    Interest i = Interest.builder()
-        .name("스포츠")
-        .keywords("축구,야구")
-        .build();
-
-    given(interestRepository.findAll()).willReturn(List.of(i));
-
-    ExternalNewsItem e1 = new ExternalNewsItem(
-        "Naver","url1","url1","축구 제목", Instant.now(),""
-    );
-
-    Subscription stub = Subscription.builder()
-        .user(User.builder()
-            .email("email@email.com")
-            .nickname("nickname")
-            .password("1234")
-            .build())
-        .interest(Interest.builder()
-            .name("interest")
-            .keywords("keyword")
-            .subscriberCount(1L)
-            .build())
-        .build();
-
-    given(naverClient.fetchNews("축구")).willReturn(List.of(e1));
-    given(rssClient.fetchNews()).willReturn(List.of());
-    given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
-    given(subscriptionRepository.findByInterest(any())).willReturn(Optional.of(stub));
-
-    //when
-    service.collectAndSave();
-
-    // then
-    verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
-    NotificationCreateEvent published = eventCaptor.getValue();
-
-    assertThat(published.resourceContent()).isEqualTo("스포츠");
+    verify(naverClient, never()).fetchNews(anyString());
+    verify(newsArticleRepository, never()).existsBySourceUrl(anyString());
   }
 }

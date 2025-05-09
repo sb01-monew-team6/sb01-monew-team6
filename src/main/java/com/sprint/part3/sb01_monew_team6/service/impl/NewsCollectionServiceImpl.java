@@ -34,195 +34,204 @@ import com.sprint.part3.sb01_monew_team6.service.NewsCollectionService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.util.RateLimiter;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class NewsCollectionServiceImpl implements NewsCollectionService {
-	private final NaverNewsClient naver;
-	private final List<RssNewsClient> rssClients;
-	private final NewsArticleRepository newsArticleRepository;
-	private final InterestRepository interestRepository;
-	private final ApplicationEventPublisher eventPublisher;
-	private final SubscriptionRepository subscriptionRepository;
 
-	@Transactional
-	public Optional<List<NewsArticle>> collectAndSave() {
-		log.info("뉴스 수집 시작");
+  private final NaverNewsClient naver;
+  private final List<RssNewsClient> rssClients;
+  private final NewsArticleRepository newsArticleRepository;
+  private final InterestRepository interestRepository;
 
-		List<Interest> interests = interestRepository.findAll();
-		log.debug("조회된 관심사 개수: {}", interests.size());
+  long interval = 200; // 200ms
+  long previousCall = System.currentTimeMillis();
 
-		// 관심사가 하나도 없거나, 모든 관심사에 키워드가 하나도 없으면 조용히 종료
-		boolean hasAnyKeyword = interests.stream()
-			.map(Interest::getKeywordList)
-			.anyMatch(list -> !list.isEmpty());
+  @Transactional
+  public Optional<List<NewsArticle>> collectAndSave() throws InterruptedException {
+    log.info("뉴스 수집 시작");
 
-		if (!hasAnyKeyword) {
-			log.info("모든 관심사에 키워드가 없어 뉴스 수집을 건너뜁니다");
-			return Optional.empty();
-		}
-		// 외부 뉴스 수집
-		List<ExternalNewsItem> externalNewsItems = fetchExternalNews(interests);
-		log.debug("수집된 외부 뉴스 아이템 개수: {}", externalNewsItems.size());
+    List<Interest> interests = interestRepository.findAll();
+    log.debug("조회된 관심사 개수: {}", interests.size());
 
-		// 필터링,엔티티 변환
-		List<NewsArticle> toSave = filterAndPrepareNewsArticles(externalNewsItems, interests);
-		log.debug("저장 준비된 NewsArticle 개수: {}", toSave.size());
+    // 관심사가 하나도 없거나, 모든 관심사에 키워드가 하나도 없으면 조용히 종료
+    boolean hasAnyKeyword = interests.stream()
+        .map(Interest::getKeywordList)
+        .anyMatch(list -> !list.isEmpty());
 
-		//저장
-		if (toSave.isEmpty()) {
-			log.info("저장할 뉴스가 없어 작업을 종료합니다");
-			return Optional.empty();   // 예외 대신 조용히 리턴
-		}
+    if (!hasAnyKeyword) {
+      log.info("모든 관심사에 키워드가 없어 뉴스 수집을 건너뜁니다");
+      return Optional.empty();
+    }
+    // 외부 뉴스 수집
+    List<ExternalNewsItem> externalNewsItems = fetchExternalNews(interests);
+    log.debug("수집된 외부 뉴스 아이템 개수: {}", externalNewsItems.size());
 
-		List<NewsArticle> saved = newsArticleRepository.saveAll(toSave);
-		log.info("뉴스 {}건 저장 완료", toSave.size());
+    // 필터링,엔티티 변환
+    List<NewsArticle> toSave = filterAndPrepareNewsArticles(externalNewsItems, interests);
+    log.debug("저장 준비된 NewsArticle 개수: {}", toSave.size());
 
-		publishNotification(saved, interests);
+    //저장
+    if (toSave.isEmpty()) {
+      log.info("저장할 뉴스가 없어 작업을 종료합니다");
+      return Optional.empty();   // 예외 대신 조용히 리턴
+    }
 
-		return Optional.of(toSave);  // 저장된 뉴스 반환
-	}
+    newsArticleRepository.saveAll(toSave);
+    log.info("뉴스 {}건 저장 완료", toSave.size());
+    return Optional.of(toSave);  // 저장된 뉴스 반환
+  }
 
-	private void publishNotification(List<NewsArticle> saved, List<Interest> interests) {
-		Map<Long, Long> countPerInterest = saved.stream()
-			.flatMap(article -> article.getInterests().stream()
-				.map(Interest::getId))
-			.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+  //Batch Chunk - ItemReader
+  //관심사 기준으로 외부 뉴스 수집
+  public List<ExternalNewsItem> fetchCandidates() throws InterruptedException {
+    log.info("Batch - 뉴스 후보 수집 시작");
 
-		for (Interest interest : interests) {
-			Long articleCount = countPerInterest.getOrDefault(interest.getId(), 0L);
+    List<Interest> interests = interestRepository.findAll();
+    log.debug("조회된 관심사 개수: {}", interests.size());
 
-			Subscription subscription = subscriptionRepository.findByInterest(interest)
-				.orElseThrow(() -> new NewsException(NEWS_INVALID_EXCEPTION, Instant.now(), HttpStatus.BAD_REQUEST));
+    //관심사 x
+    if(interests.isEmpty() || interests.get(0).getKeywords() == null || interests.get(0).getKeywords().isEmpty()){
+      log.info("Batch - 등록된 관심사가 없어 빈 리스트 반환");
+      return List.of();   // 예외 대신 빈 리스트
+    }
+    //관심사 o
+    List<ExternalNewsItem> items = fetchExternalNews(interests);
+    log.info("Batch - 수집 완료: {}개 뉴스 기사", items.size());
+    return items;
+  }
 
-			NotificationCreateEvent event = new NotificationCreateEvent(
-				subscription.getUser().getId(),
-				interest.getId(),
-				ResourceType.INTEREST,
-				interest.getName(),
-				articleCount
-			);
+  //Batch Chunk - ItemWrtier
+  //NewsArticle 목록을 받아 DB에 중복 없이 저장
+  public void saveAll(List<NewsArticle> articles){
+    log.info("Batch - 뉴스 저장 시작: 입력 {}건(Chunk 단위)", articles.size());
 
-			eventPublisher.publishEvent(event);
-		}
-	}
+    List<NewsArticle> batchArticles = new ArrayList<>();
 
-	//Batch Chunk - ItemReader
-	//관심사 기준으로 외부 뉴스 수집
-	public List<ExternalNewsItem> fetchCandidates() {
-		log.info("Batch용 뉴스 후보 수집 시작");
+    for(NewsArticle article:articles){
+      if(!newsArticleRepository.existsBySourceUrl(article.getSourceUrl())){
+        batchArticles.add(article);
+      }
+    }
 
-		List<Interest> interests = interestRepository.findAll();
-		log.debug("조회된 관심사 개수: {}", interests.size());
+    log.debug("Batch - 저장 대상 필터링 후: {}건", batchArticles.size());
 
-		//관심사 x
-		if (interests.isEmpty() || interests.get(0).getKeywords() == null || interests.get(0).getKeywords().isEmpty()) {
-			log.info("Batch용 등록된 관심사가 없어 빈 리스트 반환");
-			return List.of();   // 예외 대신 빈 리스트
-		}
-		//관심사 o
-		List<ExternalNewsItem> items = fetchExternalNews(interests);
-		log.info("Batch용 수집 완료: {}개 아이템", items.size());
-		return items;
-	}
+    if(batchArticles.isEmpty()){
+      log.info("Batch - 저장 대상 없음(조용히 리턴)");
+      return ;
+    }
 
-	//Batch Chunk - ItemWrtier
-	//NewsArticle 목록을 받아 DB에 중복 없이 저장
-	public void saveAll(List<NewsArticle> articles) {
-		log.info("Batch용 뉴스 저장 시작: 입력 {}건", articles.size());
+    newsArticleRepository.saveAll(batchArticles);
+    log.info("Batch - 뉴스 {}건 저장 완료", batchArticles.size());
+  }
 
-		List<NewsArticle> batchArticles = new ArrayList<>();
+  // 관심사 키워드 기반으로 Naver + RSS 에서 뉴스 아이템 수집
+  private List<ExternalNewsItem> fetchExternalNews(List<Interest> interests)
+      throws InterruptedException {
+    List<ExternalNewsItem> items = new ArrayList<>();
 
-		for (NewsArticle article : articles) {
-			if (!newsArticleRepository.existsBySourceUrl(article.getSourceUrl())) {
-				batchArticles.add(article);
-			}
-		}
+    // 1) 네이버 뉴스 (키워드별)
+    for (Interest interest : interests) {
+      for (String keyword : interest.getKeywordList()) {
 
-		log.debug("Batch용 저장 대상 필터링 후: {}건", batchArticles.size());
+        long now = System.currentTimeMillis();
+        long elapsed = now - previousCall;
 
-		if (batchArticles.isEmpty()) {
-			log.info("Batch 저장할 뉴스가 없습니다");
-			throw new NewsException(ErrorCode.NEWS_BATCH_NO_NEWS_EXCEPTION, Instant.now(), HttpStatus.NOT_FOUND);
-		}
+        if (elapsed < interval) {
+          Thread.sleep(interval - elapsed); // 정확히 200ms 간격 유지
+        }
 
-		newsArticleRepository.saveAll(batchArticles);
-		log.info("Batch용 뉴스 {}건 저장 완료", batchArticles.size());
-	}
+        List<ExternalNewsItem> newsItems;
 
-	// 관심사 키워드 기반으로 Naver + RSS 에서 뉴스 아이템 수집
-	private List<ExternalNewsItem> fetchExternalNews(List<Interest> interests) {
-		List<ExternalNewsItem> items = new ArrayList<>();
+        try {
+          newsItems = naver.fetchNews(keyword);
+        } catch (Exception ex) {
+          log.error(
+              "네이버 API 호출 실패: keyword='{}', exceptionType='{}', message='{}', " +
+                  "cause='{}'",
+              keyword,
+              ex.getClass().getSimpleName(),
+              ex.getMessage(),
+              ex.getCause(),
+              ex
+          );
+          throw new NewsException(
+              ErrorCode.NEWS_NAVERCLIENT_EXCEPTION,
+              Instant.now(),
+              HttpStatus.BAD_GATEWAY
+          );
+        }
+        if (newsItems.isEmpty()) {
+          log.info("키워드 '{}'에 신규 뉴스가 없어 스킵합니다", keyword);
+          continue;
+        }
+        log.debug("네이버에서 '{}' 키워드로 {}건 저장", keyword, newsItems.size());
+        items.addAll(newsItems);
+      }
+    }
 
-		// 1) 네이버 뉴스 (키워드별)
-		for (Interest interest : interests) {
-			for (String keyword : interest.getKeywordList()) {
-				try {
-					List<ExternalNewsItem> newsItems = naver.fetchNews(keyword);
-					log.debug("네이버에서 '{}' 키워드로 {}건 수집", keyword, newsItems.size());
-					items.addAll(newsItems);
-				} catch (Exception e) {
-					log.error("네이버 API 호출 실패 : 키워드='{}'", keyword, e);
-					throw new NewsException(
-						ErrorCode.NEWS_NAVERCLIENT_EXCEPTION,
-						Instant.now(),
-						HttpStatus.BAD_GATEWAY
-					);
-				}
-			}
-		}
+    // 2) RSS 뉴스 (전체 피드 한 번만 가져온 뒤, 관심사 키워드로 필터링)
+    //    -- 관심사 루프 밖에서 단 한번만 실행
+    List<ExternalNewsItem> allRssFeeds = new ArrayList<>();
+    for (RssNewsClient rssClient : rssClients) {
+      try {
+        List<ExternalNewsItem> feeds = rssClient.fetchNews();
+        log.debug("RSS 클라이언트 '{}'에서 전체 {}건 반환",
+            rssClient.getClass().getSimpleName(), feeds.size());
+        allRssFeeds.addAll(feeds);
+      } catch (Exception ex) {
+        log.error(
+            "RSS 호출 실패: exceptionType='{}', message='{}', " +
+                "cause='{}'",
+            ex.getClass().getSimpleName(),
+            ex.getMessage(),
+            ex.getCause(),
+            ex
+        );
+        throw new NewsException(
+            ErrorCode.NEWS_RSSCLIENT_EXCEPTION,
+            Instant.now(),
+            HttpStatus.BAD_GATEWAY
+        );
+      }
+    }
+    // 모든 RSS 피드에서 관심사 키워드 매칭된 기사만 필터링
+    List<ExternalNewsItem> filteredRss = allRssFeeds.stream()
+        .filter(item -> containsKeyword(item, interests))
+        .collect(Collectors.toList());
+    log.debug("RSS 필터링 후 {}건 저장", filteredRss.size());
+    items.addAll(filteredRss);
 
-		// 2) RSS 뉴스 (전체 피드 한 번만 가져온 뒤, 관심사 키워드로 필터링)
-		//    -- 관심사 루프 밖에서 단 한번만 실행
-		List<ExternalNewsItem> allRssFeeds = new ArrayList<>();
-		for (RssNewsClient rssClient : rssClients) {
-			try {
-				List<ExternalNewsItem> feeds = rssClient.fetchNews();
-				log.debug("RSS 클라이언트 '{}'에서 전체 {}건 반환",
-					rssClient.getClass().getSimpleName(), feeds.size());
-				allRssFeeds.addAll(feeds);
-			} catch (Exception e) {
-				log.error("RSS API 호출 실패 : 클라이언트='{}'",
-					rssClient.getClass().getSimpleName(), e);
-				throw new NewsException(
-					ErrorCode.NEWS_RSSCLIENT_EXCEPTION,
-					Instant.now(),
-					HttpStatus.BAD_GATEWAY
-				);
-			}
-		}
-		// 모든 RSS 피드에서 관심사 키워드 매칭된 기사만 필터링
-		List<ExternalNewsItem> filteredRss = allRssFeeds.stream()
-			.filter(item -> containsKeyword(item, interests))
-			.collect(Collectors.toList());
-		log.debug("RSS 필터링 후 {}건 저장 대상 선정", filteredRss.size());
-		items.addAll(filteredRss);
+    return items;
+  }
 
-		return items;
-	}
+  private List<NewsArticle> filterAndPrepareNewsArticles (List < ExternalNewsItem > items, List < Interest > interests){
+    List<NewsArticle> toSave = new ArrayList<>();
+    Set<String> seenUrls = new HashSet<>(); // 이미 처리한 URL 기록
 
-	private List<NewsArticle> filterAndPrepareNewsArticles(List<ExternalNewsItem> items, List<Interest> interests) {
-		List<NewsArticle> toSave = new ArrayList<>();
-		Set<String> seenUrls = new HashSet<>(); // 이미 처리한 URL 기록
+    for (ExternalNewsItem item : items) {
+      String url = item.originalLink();
+      if (seenUrls.add(url) && !newsArticleRepository.existsBySourceUrl(url) && containsKeyword(
+          item, interests)) {
+        toSave.add(NewsArticle.from(item));
+      }
+    }
 
-		for (ExternalNewsItem item : items) {
-			String url = item.originalLink();
-			if (seenUrls.add(url) && !newsArticleRepository.existsBySourceUrl(url) && containsKeyword(
-				item, interests)) {
-				toSave.add(NewsArticle.from(item));
-			}
-		}
+    return toSave;
+  }
 
-		return toSave;
-	}
-
-	// 제목 또는 설명에 관심사 키워드가 포함되어 있는지 확인
-	private boolean containsKeyword(ExternalNewsItem item, List<Interest> interests) {
-		return interests.stream()
-			.anyMatch(interest ->
-				interest.getKeywordList().stream()
-					.anyMatch(keyword -> item.title().contains(keyword) || item.description().contains(keyword))
-			);
-	}
+  // 제목 또는 설명에 관심사 키워드가 포함되어 있는지 확인
+  private boolean containsKeyword(ExternalNewsItem item, List<Interest> interests) {
+    return interests.stream()
+        .anyMatch(interest ->
+            interest.getKeywordList().stream()
+                .anyMatch(keyword -> item.title().contains(keyword)|| item.description().contains(keyword))
+        );
+  }
 }
