@@ -134,10 +134,10 @@ public class ArticleServiceImpl implements ArticleService {
     switch (req.orderBy()) {
       case "publishDate":
         return new OrderSpecifier<>(dir, newsArticle.articlePublishedDate);
-      case "title":
-        return new OrderSpecifier<>(dir, newsArticle.articleTitle);
-      case "id":
-        return new OrderSpecifier<>(dir, newsArticle.id);
+      case "viewCount":
+        return new OrderSpecifier<>(dir, newsArticle.articleViews.size());
+      case "commentCount":
+        return new OrderSpecifier<>(dir, newsArticle.comments.size());
       default:
         throw new NewsException(ErrorCode.NEWS_ORDERBY_IS_NOT_SUPPORT_EXCEPTION,Instant.now(),HttpStatus.BAD_REQUEST);
     }
