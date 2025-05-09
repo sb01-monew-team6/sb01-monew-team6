@@ -1,9 +1,13 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import com.sprint.part3.sb01_monew_team6.dto.SubscriptionDto;
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.SubscriptionHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.entity.Subscription;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityRemoveEvent;
 import com.sprint.part3.sb01_monew_team6.exception.interest.InterestNotFoundException;
 import com.sprint.part3.sb01_monew_team6.exception.subscription.SubscriptionAlreadyExistsException;
 import com.sprint.part3.sb01_monew_team6.exception.subscription.SubscriptionNotFoundException;
@@ -13,6 +17,8 @@ import com.sprint.part3.sb01_monew_team6.repository.SubscriptionRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +29,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   private final UserRepository userRepository;
   private final InterestRepository interestRepository;
   private final SubscriptionRepository subscriptionRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   @Transactional
@@ -45,7 +52,27 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     // increment interest count
     interest.incrementSubscriberCount();
 
+    publishUserActivityAddEvent(userId, interestId, interest);
+
     return SubscriptionDto.fromEntity(saved);
+  }
+
+  private void publishUserActivityAddEvent(Long userId, Long interestId, Interest interest) {
+    UserActivityAddEvent event = new UserActivityAddEvent(
+        userId,
+        UserActivityType.SUBSCRIPTION,
+        new SubscriptionHistoryDto(
+            interestId,
+            interest.getName(),
+            interest.getKeywordList(),
+            interest.getSubscriberCount(),
+            interest.getCreatedAt()
+        ),
+        null,
+        null,
+        null
+    );
+    eventPublisher.publishEvent(event);
   }
 
   @Override
@@ -61,5 +88,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     // delete subscription
     subscriptionRepository.delete(subscription);
+
+    publishUserActivityRemoveEvent(userId, interestId);
+  }
+
+  private void publishUserActivityRemoveEvent(Long userId, Long interestId) {
+    UserActivityRemoveEvent event = new UserActivityRemoveEvent(
+        userId,
+        UserActivityType.SUBSCRIPTION,
+        interestId,
+        null,
+        null,
+        null
+    );
+    eventPublisher.publishEvent(event);
   }
 }

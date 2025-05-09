@@ -1,10 +1,13 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.ArticleViewHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.Source;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.mapper.news.ArticleViewMapper;
@@ -14,9 +17,14 @@ import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.ArticleViewService;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +37,7 @@ public class ArticleViewServiceImpl implements ArticleViewService {
   private final CommentRepository commentRepository;
   private final UserRepository userRepository;
   private final ArticleViewMapper articleViewMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   public ArticleViewDto viewArticle(Long articleId, Long userId){
@@ -50,24 +59,48 @@ public class ArticleViewServiceImpl implements ArticleViewService {
       // 처음 보는 경우에만 저장
       ArticleView newView = ArticleView.builder()
           .article(article)
-          .user(user)
           .articleViewDate(Instant.now())
+          .user(user)
           .build();
       view = articleViewRepository.save(newView);
+
+      publishUserActivityEvent(user, article, view);
     }
 
     //count 집계
-    long commentCount = commentRepository.countByArticleId(articleId);
+    long commentCount = commentRepository.countByArticleIdAndIsDeletedFalse(articleId);
     long viewCount = articleViewRepository.countByArticleId(articleId);
 
     //dto 변환
     return articleViewMapper.toDto(view, commentCount, viewCount);
   }
-
   // 출처 목록 조회
   @Override
   public List<String> getSources(){
     // enum 값들을 문자열로 변환하여 반환
     return Arrays.stream(Source.values()).map(Source::name).toList();
+  }
+
+  private void publishUserActivityEvent(User user, NewsArticle article, ArticleView view) {
+    UserActivityAddEvent event = new UserActivityAddEvent(
+        user.getId(),
+        UserActivityType.ARTICLE_VIEW,
+        null,
+        null,
+        null,
+        new ArticleViewHistoryDto(
+            user.getId(),
+            article.getId(),
+            article.getSource(),
+            article.getSourceUrl(),
+            article.getArticleTitle(),
+            LocalDateTime.ofInstant(article.getArticlePublishedDate(), ZoneOffset.UTC),
+            article.getArticleSummary(),
+            (long)article.getComments().size(),
+            (long)article.getArticleViews().size(),
+            view.getArticleViewDate()
+        )
+    );
+    eventPublisher.publishEvent(event);
   }
 }

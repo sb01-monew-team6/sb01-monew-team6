@@ -2,10 +2,8 @@ package com.sprint.part3.sb01_monew_team6.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -17,21 +15,29 @@ import com.sprint.part3.sb01_monew_team6.client.RssNewsClient;
 import com.sprint.part3.sb01_monew_team6.dto.news.ExternalNewsItem;
 import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
+import com.sprint.part3.sb01_monew_team6.entity.Subscription;
+import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.event.NotificationCreateEvent;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.repository.InterestRepository;
+import com.sprint.part3.sb01_monew_team6.repository.SubscriptionRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.NewsCollectionServiceImpl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +46,11 @@ public class NewsCollectionServiceImplTest {
   @Mock RssNewsClient   rssClient;
   @Mock InterestRepository interestRepository;
   @Mock NewsArticleRepository newsArticleRepository;
+  @Mock SubscriptionRepository subscriptionRepository;
+  @Mock ApplicationEventPublisher eventPublisher;
+
+  @Captor
+  ArgumentCaptor<NotificationCreateEvent> eventCaptor;
 
   private NewsCollectionServiceImpl service;
 
@@ -49,7 +60,9 @@ public class NewsCollectionServiceImplTest {
         naverClient,
         List.of(rssClient),
         newsArticleRepository,
-        interestRepository
+        interestRepository,
+        subscriptionRepository,
+        eventPublisher
     );
   }
   @Test
@@ -93,9 +106,23 @@ public class NewsCollectionServiceImplTest {
         "Naver","url1","url1","축구 제목", Instant.now(),""
     );
 
+    Subscription stub = Subscription.builder()
+        .user(User.builder()
+            .email("email@email.com")
+            .nickname("nickname")
+            .password("1234")
+            .build())
+        .interest(Interest.builder()
+            .name("interest")
+            .keywords("keyword")
+            .subscriberCount(1L)
+            .build())
+        .build();
+
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
+    given(subscriptionRepository.findByInterestId(any())).willReturn(Optional.of(stub));
 
     //when
     service.collectAndSave();
@@ -118,12 +145,26 @@ public class NewsCollectionServiceImplTest {
         .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
 
+    Subscription stub = Subscription.builder()
+        .user(User.builder()
+            .email("email@email.com")
+            .nickname("nickname")
+            .password("1234")
+            .build())
+        .interest(Interest.builder()
+            .name("interest")
+            .keywords("keyword")
+            .subscriberCount(1L)
+            .build())
+        .build();
+
     ExternalNewsItem e1 = new ExternalNewsItem(
         "Naver","u1","u1","title",Instant.now(),"description 축구 "
     );
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("u1")).willReturn(false);
+    given(subscriptionRepository.findByInterestId(any())).willReturn(Optional.of(stub));
 
     //when
     service.collectAndSave();
@@ -149,12 +190,26 @@ public class NewsCollectionServiceImplTest {
         .build();
     given(interestRepository.findAll()).willReturn(List.of(i));
 
+    Subscription stub = Subscription.builder()
+        .user(User.builder()
+            .email("email@email.com")
+            .nickname("nickname")
+            .password("1234")
+            .build())
+        .interest(Interest.builder()
+            .name("interest")
+            .keywords("keyword")
+            .subscriberCount(1L)
+            .build())
+        .build();
+
     ExternalNewsItem e1 = new ExternalNewsItem(
         "Naver", "url1", "url1", "축구제목", Instant.now(), "요약"
     );
     given(naverClient.fetchNews("축구")).willReturn(List.of(e1, e1));
     given(rssClient.fetchNews()).willReturn(List.of());
     given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
+    given(subscriptionRepository.findByInterestId(any())).willReturn(Optional.of(stub));
 
     // when
     service.collectAndSave();
@@ -302,5 +357,48 @@ public class NewsCollectionServiceImplTest {
 
     verify(naverClient, never()).fetchNews(anyString());
     verify(newsArticleRepository, never()).existsBySourceUrl(anyString());
+  }
+
+  @Test
+  @DisplayName("기사 저장 정상 호출 시 알림 이벤트 정상 발생")
+  public void publishNotification() throws Exception {
+    //given
+    Interest i = Interest.builder()
+        .name("스포츠")
+        .keywords("축구,야구")
+        .build();
+
+    given(interestRepository.findAll()).willReturn(List.of(i));
+
+    ExternalNewsItem e1 = new ExternalNewsItem(
+        "Naver","url1","url1","축구 제목", Instant.now(),""
+    );
+
+    Subscription stub = Subscription.builder()
+        .user(User.builder()
+            .email("email@email.com")
+            .nickname("nickname")
+            .password("1234")
+            .build())
+        .interest(Interest.builder()
+            .name("interest")
+            .keywords("keyword")
+            .subscriberCount(1L)
+            .build())
+        .build();
+
+    given(naverClient.fetchNews("축구")).willReturn(List.of(e1));
+    given(rssClient.fetchNews()).willReturn(List.of());
+    given(newsArticleRepository.existsBySourceUrl("url1")).willReturn(false);
+    given(subscriptionRepository.findByInterestId(any())).willReturn(Optional.of(stub));
+
+    //when
+    service.collectAndSave();
+
+    // then
+    verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
+    NotificationCreateEvent published = eventCaptor.getValue();
+
+    assertThat(published.resourceContent()).isEqualTo("스포츠");
   }
 }

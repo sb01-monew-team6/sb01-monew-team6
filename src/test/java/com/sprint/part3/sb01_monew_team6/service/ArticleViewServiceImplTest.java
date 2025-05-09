@@ -10,11 +10,13 @@ import static org.mockito.Mockito.never;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
 import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.mapper.news.ArticleViewMapper;
 import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
@@ -23,17 +25,17 @@ import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.ArticleViewServiceImpl;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.servlet.MockMvc;
 
 @ExtendWith(MockitoExtension.class)
 public class ArticleViewServiceImplTest {
@@ -47,9 +49,14 @@ public class ArticleViewServiceImplTest {
   private ArticleViewRepository articleViewRepository;
   @Mock
   private ArticleViewMapper articleViewMapper;
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
 
   @InjectMocks
   private ArticleViewServiceImpl service;
+
+  @Captor
+  private ArgumentCaptor<UserActivityAddEvent> userActivityEventCaptor;
 
   @Test
   @DisplayName("articleId,userId ID가 있으면 저장 후 DTO 반환")
@@ -85,7 +92,7 @@ public class ArticleViewServiceImplTest {
     given(newsArticleRepository.findById(articleId)).willReturn(Optional.of(article));
     given(userRepository.findById(userId)).willReturn(Optional.of(user));
     given(articleViewRepository.save(any(ArticleView.class))).willReturn(view);
-    given(commentRepository.countByArticleId(articleId)).willReturn(5L);
+    given(commentRepository.countByArticleIdAndIsDeletedFalse(articleId)).willReturn(5L);
     given(articleViewRepository.countByArticleId(articleId)).willReturn(1L);
 
     // Mapper가 호출될 때 기대 DTO를 반환하도록 정의
@@ -189,7 +196,7 @@ public class ArticleViewServiceImplTest {
     given(articleViewRepository.findByArticleIdAndUserId(articleId, userId))
         .willReturn(Optional.of(existingView));
 
-    given(commentRepository.countByArticleId(articleId)).willReturn(0L);
+    given(commentRepository.countByArticleIdAndIsDeletedFalse(articleId)).willReturn(0L);
     given(articleViewRepository.countByArticleId(articleId)).willReturn(3L);
 
     ArticleViewDto expectedDto = ArticleViewDto.builder()
@@ -214,6 +221,68 @@ public class ArticleViewServiceImplTest {
     //then
     assertThat(dto).isEqualTo(expectedDto);
     then(articleViewRepository).should(never()).save(any(ArticleView.class));
+  }
+
+  @Test
+  @DisplayName("기사 조회 정상 호출 시 유저 활동 내역 기사 조회 추가")
+  void addArticleView(){
+    //given
+    Long articleId = 1L;
+    Long userId = 2L;
+
+    NewsArticle article = new NewsArticle();
+    article.setSource("Naver");
+    article.setSourceUrl("https://test.api.com");
+    article.setArticleTitle("test");
+    article.setArticlePublishedDate(Instant.parse("2025-04-27T12:00:00Z"));
+    article.setArticleSummary("test");
+    article.setDeleted(false);
+    ReflectionTestUtils.setField(article, "id", articleId);
+
+    User user = User.builder()
+        .email("repo@example.com")
+        .nickname("repoUser")
+        .password("hashedPasswordRepo")
+        .build();
+    ReflectionTestUtils.setField(user, "id", userId);
+
+    ArticleView view = ArticleView.builder()
+        .article(article)
+        .user(user)
+        .articleViewDate(Instant.now())
+        .build();
+    ReflectionTestUtils.setField(view, "id", 10L);
+
+    given(newsArticleRepository.findById(articleId)).willReturn(Optional.of(article));
+    given(userRepository.findById(userId)).willReturn(Optional.of(user));
+    given(articleViewRepository.save(any(ArticleView.class))).willReturn(view);
+    given(commentRepository.countByArticleIdAndIsDeletedFalse(articleId)).willReturn(5L);
+    given(articleViewRepository.countByArticleId(articleId)).willReturn(1L);
+
+    ArticleViewDto expectedDto = ArticleViewDto.builder()
+        .id(view.getId())
+        .viewedBy(userId)
+        .createdAt(view.getArticleViewDate())
+        .articleId(articleId)
+        .source(article.getSource())
+        .sourceUrl(article.getSourceUrl())
+        .articleTitle(article.getArticleTitle())
+        .articlePublishedDate(article.getArticlePublishedDate().toString())
+        .articleSummary(article.getArticleSummary())
+        .articleCommentCount(5L)
+        .articleViewCount(1L)
+        .build();
+    given(articleViewMapper.toDto(view, 5L, 1L))
+        .willReturn(expectedDto);
+
+    // when
+    service.viewArticle(articleId, userId);
+
+    // then
+    verify(eventPublisher, times(1)).publishEvent(userActivityEventCaptor.capture());
+    UserActivityAddEvent published = userActivityEventCaptor.getValue();
+    assertThat(published.userId()).isEqualTo(userId);
+    assertThat(published.articleView().articleId()).isEqualTo(articleId);
   }
 
   @DisplayName("getSources() 호출 시 모든 enum 값 반환")

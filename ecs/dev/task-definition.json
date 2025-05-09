@@ -38,6 +38,34 @@
         {
           "name": "SPRING_PROFILES_ACTIVE",
           "value": "dev"
+        },
+        {
+          "name": "AWS_S3_ACCESS_KEY_ID",
+          "value": "Id"
+        },
+        {
+          "name": "AWS_S3_SECRET_ACCESS_KEY",
+          "value": "pw"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "REGION"
+        },
+        {
+          "name": "AWS_BUCKET",
+          "value": "BUCKET"
+        },
+        {
+          "name": "NAVER_CLIENT_ID",
+          "value": "ID"
+        },
+        {
+          "name": "NAVER_CLIENT_SECRET",
+          "value": "SECRET"
+        },
+        {
+          "name": "AWS_BACKUP_BUCKET",
+          "value": "AWS_BACKUP_BUCKET"
         }
       ],
       "logConfiguration": {

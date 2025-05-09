@@ -1,8 +1,11 @@
 package com.sprint.part3.sb01_monew_team6.repository;
 
+import com.sprint.part3.sb01_monew_team6.entity.Interest;
 import com.sprint.part3.sb01_monew_team6.entity.Subscription;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional; // Optional 임포트
 
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
@@ -25,4 +28,11 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
 
   void deleteByInterestId(Long interestId);
+
+  @Query("""
+        SELECT s FROM Subscription s
+        JOIN FETCH s.user
+        WHERE s.interest.id = :interestId
+    """)
+  Optional<Subscription> findByInterestId(Long interestId);
 }

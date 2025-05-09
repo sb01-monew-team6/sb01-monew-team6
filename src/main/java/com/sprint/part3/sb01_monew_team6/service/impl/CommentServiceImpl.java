@@ -1,9 +1,15 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
+import static com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType.*;
+
 import com.sprint.part3.sb01_monew_team6.dto.*;
+import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
 import com.sprint.part3.sb01_monew_team6.entity.NewsArticle;
 import com.sprint.part3.sb01_monew_team6.entity.User;
+import com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityAddEvent;
+import com.sprint.part3.sb01_monew_team6.event.UserActivityRemoveEvent;
 import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentException;
 import com.sprint.part3.sb01_monew_team6.exception.comment.CommentNotFoundException;
@@ -18,10 +24,13 @@ import com.sprint.part3.sb01_monew_team6.service.CommentLikeService;
 import com.sprint.part3.sb01_monew_team6.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +44,10 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final CommentLikeService commentLikeService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
+    @Transactional
     public CommentDto register(CommentRegisterRequest request) {
         log.info("[registerComment] 댓글 등록 요청: userId={}, articleId={}", request.userId(), request.articleId());
         //  1. Article 조회
@@ -58,6 +69,8 @@ public class CommentServiceImpl implements CommentService {
         Comment savedComment = commentRepository.save(comment);
         log.info("[register] 댓글 저장 완료: commentId={}", savedComment.getId());
 
+        publishUserActivityAddEvent(article, user, savedComment);
+
         //  5. 저장된 데이터를 CommentDto로 변환 후 반환
         return CommentDto.builder()
                 .id(savedComment.getId())
@@ -69,6 +82,26 @@ public class CommentServiceImpl implements CommentService {
                 .likedByMe(false)
                 .createdAt(savedComment.getCreatedAt())
                 .build();
+    }
+
+    private void publishUserActivityAddEvent(NewsArticle article, User user, Comment savedComment) {
+        UserActivityAddEvent event = new UserActivityAddEvent(
+            user.getId(),
+            COMMENT,
+            null,
+            new CommentHistoryDto(
+                article.getId(),
+                article.getArticleTitle(),
+                user.getId(),
+                user.getNickname(),
+                savedComment.getContent(),
+                0L,
+                savedComment.getCreatedAt()
+            ),
+            null,
+            null
+        );
+        eventPublisher.publishEvent(event);
     }
 
     @Override
@@ -176,12 +209,26 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public void softDeleteComment(Long id) {
         log.info("[CommentServiceImpl] 댓글 논리 삭제 시작: id:{}", id);
-        Comment comment = commentRepository.findById(id)
+        Comment comment = commentRepository.findByIdWithArticleAndUser(id)
                 .orElseThrow(() -> new CommentNotFoundException());
 
         comment.softDelete();
         commentRepository.save(comment);
         log.info("[CommentServiceImpl] 댓글 논리 삭제 성공: id:{}", id);
+
+        publishUserActivityRemoveEvent(comment.getUser().getId(), comment.getArticle().getId());
+    }
+
+    private void publishUserActivityRemoveEvent(Long userId, Long articleId) {
+        UserActivityRemoveEvent event = new UserActivityRemoveEvent(
+            userId,
+            COMMENT,
+            null,
+            null,
+            articleId,
+            null
+        );
+        eventPublisher.publishEvent(event);
     }
 
     @Transactional
