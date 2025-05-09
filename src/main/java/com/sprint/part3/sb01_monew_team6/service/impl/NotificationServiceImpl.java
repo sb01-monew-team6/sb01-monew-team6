@@ -118,7 +118,7 @@ public class NotificationServiceImpl implements NotificationService {
 		User user = userRepository.findByIdAndIsDeletedFalse(event.userId())
 			.orElseThrow(() -> new NotificationDomainException("유저를 찾을 수 없습니다.", Map.of("userId", event.userId())));
 
-		String content = generateContent(event, user);
+		String content = generateContent(event);
 
 		Notification notification = Notification.createNotification(
 			user,
@@ -130,7 +130,7 @@ public class NotificationServiceImpl implements NotificationService {
 		notificationRepository.save(notification);
 	}
 
-	private static String generateContent(NotificationCreateEvent event, User user) {
+	private String generateContent(NotificationCreateEvent event) {
 		return switch (event.resourceType()) {
 			case INTEREST -> String.format(
 				"[%s]와 관련된 기사가 %d건 등록되었습니다.",
@@ -138,7 +138,10 @@ public class NotificationServiceImpl implements NotificationService {
 			);
 			case COMMENT -> String.format(
 				"[%s]님이 나의 댓글을 좋아합니다.",
-				user.getNickname()
+				userRepository.findByIdAndIsDeletedFalse(event.resourceId())
+					.orElseThrow(
+						() -> new NotificationDomainException("유저를 찾을 수 없습니다.", Map.of("resourceId", event.resourceId())))
+					.getNickname()
 			);
 		};
 	}

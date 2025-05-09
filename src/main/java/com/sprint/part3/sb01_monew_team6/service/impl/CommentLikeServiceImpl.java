@@ -23,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Optional;
 
 import java.time.Instant;
@@ -38,9 +40,10 @@ public class CommentLikeServiceImpl implements CommentLikeService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
+    @Transactional
     public CommentLikeDto likeComment(Long commentId, Long userId) {
         log.info("[likeComment] 댓글 좋아요 처리 시작: commentId={}, userId={}", commentId, userId);
-        Comment comment = commentRepository.findById(commentId)
+        Comment comment = commentRepository.findByIdWithArticleAndCommentLikesAndUser(commentId)
                 .orElseThrow(() -> new CommentException(ErrorCode.COMMENT_NOT_FOUND, Instant.now(), HttpStatus.NOT_FOUND));
 
         User user = userRepository.findById(userId)
@@ -59,7 +62,7 @@ public class CommentLikeServiceImpl implements CommentLikeService {
 
         log.info("[likeComment] 좋아요 완료: commentLikeId={}, commentId={}, userId={}", commentLike.getId(), commentId, userId);
 
-        publishNotification(commentId, userId);
+        publishNotification(comment.getUser().getId(), userId);
 
         publishUserActivityAddEvent(userId, comment, user, commentLike);
 
@@ -87,8 +90,8 @@ public class CommentLikeServiceImpl implements CommentLikeService {
                 comment.getId(),
                 comment.getArticle().getId(),
                 comment.getArticle().getArticleTitle(),
-                user.getId(),
-                user.getNickname(),
+                comment.getUser().getId(),
+                comment.getUser().getNickname(),
                 comment.getContent(),
                 (long)comment.getCommentLikes().size(),
                 comment.getCreatedAt(),
@@ -99,10 +102,10 @@ public class CommentLikeServiceImpl implements CommentLikeService {
         eventPublisher.publishEvent(event);
     }
 
-    private void publishNotification(Long commentId, Long userId) {
+    private void publishNotification(Long commentUserId, Long userId) {
         NotificationCreateEvent event = new NotificationCreateEvent(
+            commentUserId,
             userId,
-            commentId,
             ResourceType.COMMENT,
             null,
             null
@@ -111,6 +114,7 @@ public class CommentLikeServiceImpl implements CommentLikeService {
     }
 
     @Override
+    @Transactional
     public void cancelLike(Long commentId, Long userId) {
         log.info("[cancelLike] 좋아요 취소 요청: commentId={}, userId={}", commentId, userId);
         Optional<CommentLike> optional = commentLikeRepository.findByCommentIdAndUserId(commentId, userId);
@@ -118,20 +122,20 @@ public class CommentLikeServiceImpl implements CommentLikeService {
             commentLikeRepository.delete(optional.get());
             log.info("[cancelLike] 좋아요 취소 완료: commentId={}, userId={}", commentId, userId);
 
-            publishUserActivityRemoveEvent(userId, optional.get().getComment().getArticle().getId());
+            publishUserActivityRemoveEvent(userId, commentId);
         } else {
             log.warn("[cancelLike] 좋아요 기록 없음: commentId={}, userId={}", commentId, userId);
             throw new CommentException(ErrorCode.COMMENT_LIKE_NOT_FOUND, Instant.now(), HttpStatus.NOT_FOUND);
         }
     }
 
-    private void publishUserActivityRemoveEvent(Long userId, Long articleId) {
+    private void publishUserActivityRemoveEvent(Long userId, Long commentId) {
         UserActivityRemoveEvent event = new UserActivityRemoveEvent(
             userId,
             UserActivityType.COMMENT_LIKE,
             null,
+            commentId,
             null,
-            articleId,
             null
         );
         eventPublisher.publishEvent(event);

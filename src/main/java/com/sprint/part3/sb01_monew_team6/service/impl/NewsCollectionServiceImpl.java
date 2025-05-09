@@ -49,6 +49,8 @@ public class NewsCollectionServiceImpl implements NewsCollectionService {
   private final List<RssNewsClient> rssClients;
   private final NewsArticleRepository newsArticleRepository;
   private final InterestRepository interestRepository;
+  private final SubscriptionRepository subscriptionRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   long interval = 200; // 200ms
   long previousCall = System.currentTimeMillis();
@@ -83,13 +85,40 @@ public class NewsCollectionServiceImpl implements NewsCollectionService {
       return Optional.empty();   // 예외 대신 조용히 리턴
     }
 
-    newsArticleRepository.saveAll(toSave);
+    List<NewsArticle> saved = newsArticleRepository.saveAll(toSave);
     log.info("뉴스 {}건 저장 완료", toSave.size());
+
+    publishNotification(saved, interests);
+
     return Optional.of(toSave);  // 저장된 뉴스 반환
   }
 
   //Batch Chunk - ItemReader
   //관심사 기준으로 외부 뉴스 수집
+  private void publishNotification(List<NewsArticle> saved, List<Interest> interests) {
+    Map<Long, Long> countPerInterest = saved.stream()
+        .flatMap(article -> article.getInterests().stream()
+            .map(Interest::getId))
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+    for (Interest interest : interests) {
+      Long articleCount = countPerInterest.getOrDefault(interest.getId(), 0L);
+
+      Subscription subscription = subscriptionRepository.findByInterestId(interest.getId())
+          .orElseThrow(() -> new NewsException(NEWS_INVALID_EXCEPTION, Instant.now(), HttpStatus.BAD_REQUEST));
+
+      NotificationCreateEvent event = new NotificationCreateEvent(
+          subscription.getUser().getId(),
+          interest.getId(),
+          ResourceType.INTEREST,
+          interest.getName(),
+          articleCount
+      );
+
+      eventPublisher.publishEvent(event);
+    }
+  }
+
   public List<ExternalNewsItem> fetchCandidates() throws InterruptedException {
     log.info("Batch - 뉴스 후보 수집 시작");
 
@@ -104,6 +133,7 @@ public class NewsCollectionServiceImpl implements NewsCollectionService {
     //관심사 o
     List<ExternalNewsItem> items = fetchExternalNews(interests);
     log.info("Batch - 수집 완료: {}개 뉴스 기사", items.size());
+
     return items;
   }
 

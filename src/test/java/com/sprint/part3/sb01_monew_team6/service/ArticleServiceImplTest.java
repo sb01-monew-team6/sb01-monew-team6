@@ -128,7 +128,7 @@ public class ArticleServiceImplTest {
     );
     given(newsArticleRepository.searchArticles(any(), any(), any(), any(), anyInt())).willReturn(articleList);
     given(newsArticleRepository.countArticles(any())).willReturn(1L);
-    given(commentRepository.countByArticleId(anyLong())).willReturn(2L);
+    given(commentRepository.countByArticleIdAndIsDeletedFalse(anyLong())).willReturn(2L);
     doReturn(new PageResponse<>(dtoList, "1", Instant.now(), 10, false, 1L))
         .when(pageResponseMapper)
         .fromSlice(any(org.springframework.data.domain.Slice.class),
@@ -141,7 +141,7 @@ public class ArticleServiceImplTest {
     assertThat(result.contents()).hasSize(1);
     assertThat(result.totalElements()).isEqualTo(1L);
     verify(newsArticleRepository).searchArticles(any(), any(), any(), any(), anyInt());
-    verify(commentRepository).countByArticleId(1L);
+    verify(commentRepository).countByArticleIdAndIsDeletedFalse(1L);
     verify(pageResponseMapper).fromSlice(any(), any(), any(), anyLong());
   }
 

@@ -56,6 +56,7 @@ public class ArticleViewServiceImpl implements ArticleViewService {
       // 처음 보는 경우에만 저장
       ArticleView newView = ArticleView.builder()
           .article(article)
+          .articleViewDate(Instant.now())
           .user(user)
           .build();
       view = articleViewRepository.save(newView);
@@ -64,7 +65,7 @@ public class ArticleViewServiceImpl implements ArticleViewService {
     }
 
     //count 집계
-    long commentCount = commentRepository.countByArticleId(articleId);
+    long commentCount = commentRepository.countByArticleIdAndIsDeletedFalse(articleId);
     long viewCount = articleViewRepository.countByArticleId(articleId);
 
     //dto 변환

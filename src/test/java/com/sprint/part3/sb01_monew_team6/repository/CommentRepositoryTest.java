@@ -32,7 +32,7 @@ public class CommentRepositoryTest {
 
   @Test
   @DisplayName("기사에 달린 댓글 수를 반환")
-  void countByArticleId_returnCorrectCount() {
+  void countByArticleId_returnCorrectCountAndIsDeletedFalse() {
     User user = User.builder()
         .email("repo@example.com")
         .nickname("repoUser")
@@ -55,7 +55,7 @@ public class CommentRepositoryTest {
     em.flush();
 
     // when
-    long cnt = commentRepository.countByArticleId(article.getId());
+    long cnt = commentRepository.countByArticleIdAndIsDeletedFalse(article.getId());
 
     // then
     assertThat(cnt).isEqualTo(3);

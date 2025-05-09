@@ -1,5 +1,7 @@
 package com.sprint.part3.sb01_monew_team6.service.impl;
 
+import static com.sprint.part3.sb01_monew_team6.entity.enums.UserActivityType.*;
+
 import com.sprint.part3.sb01_monew_team6.dto.*;
 import com.sprint.part3.sb01_monew_team6.dto.user_activity.CommentHistoryDto;
 import com.sprint.part3.sb01_monew_team6.entity.Comment;
@@ -28,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +47,7 @@ public class CommentServiceImpl implements CommentService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
+    @Transactional
     public CommentDto register(CommentRegisterRequest request) {
         log.info("[registerComment] 댓글 등록 요청: userId={}, articleId={}", request.userId(), request.articleId());
         //  1. Article 조회
@@ -83,7 +87,7 @@ public class CommentServiceImpl implements CommentService {
     private void publishUserActivityAddEvent(NewsArticle article, User user, Comment savedComment) {
         UserActivityAddEvent event = new UserActivityAddEvent(
             user.getId(),
-            UserActivityType.COMMENT,
+            COMMENT,
             null,
             new CommentHistoryDto(
                 article.getId(),
@@ -91,7 +95,7 @@ public class CommentServiceImpl implements CommentService {
                 user.getId(),
                 user.getNickname(),
                 savedComment.getContent(),
-                (long)savedComment.getCommentLikes().size(),
+                0L,
                 savedComment.getCreatedAt()
             ),
             null,
@@ -205,23 +209,23 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public void softDeleteComment(Long id) {
         log.info("[CommentServiceImpl] 댓글 논리 삭제 시작: id:{}", id);
-        Comment comment = commentRepository.findById(id)
+        Comment comment = commentRepository.findByIdWithArticleAndUser(id)
                 .orElseThrow(() -> new CommentNotFoundException());
 
         comment.softDelete();
         commentRepository.save(comment);
         log.info("[CommentServiceImpl] 댓글 논리 삭제 성공: id:{}", id);
 
-        publishUserActivityRemoveEvent(comment.getUser().getId(), id);
+        publishUserActivityRemoveEvent(comment.getUser().getId(), comment.getArticle().getId());
     }
 
-    private void publishUserActivityRemoveEvent(Long userId, Long commentId) {
+    private void publishUserActivityRemoveEvent(Long userId, Long articleId) {
         UserActivityRemoveEvent event = new UserActivityRemoveEvent(
             userId,
-            UserActivityType.COMMENT,
+            COMMENT,
             null,
-            commentId,
             null,
+            articleId,
             null
         );
         eventPublisher.publishEvent(event);

@@ -74,7 +74,7 @@ class CommentLikeServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
 
         Comment testComment = createTestComment(commentId, testUser, "댓글입니다");
-        given(commentRepository.findById(commentId)).willReturn(Optional.of(testComment));
+        given(commentRepository.findByIdWithArticleAndCommentLikesAndUser(commentId)).willReturn(Optional.of(testComment));
 
         given(commentLikeRepository.existsByCommentIdAndUserId(commentId, userId)).willReturn(false);
         given(commentLikeRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
@@ -106,7 +106,7 @@ class CommentLikeServiceTest {
     void likeComment_withInvalidUserId_shouldThrowException() {
         Comment testComment = createTestComment(1L, null, "댓글");
 
-        given(commentRepository.findById(1L)).willReturn(Optional.of(testComment));
+        given(commentRepository.findByIdWithArticleAndCommentLikesAndUser(1L)).willReturn(Optional.of(testComment));
         given(userRepository.findById(999L)).willReturn(Optional.empty());
 
         assertThrows(UserException.class, () -> commentLikeService.likeComment(1L, 999L));
@@ -185,7 +185,7 @@ class CommentLikeServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
 
         Comment testComment = createTestComment(commentId, testUser, "댓글입니다");
-        given(commentRepository.findById(commentId)).willReturn(Optional.of(testComment));
+        given(commentRepository.findByIdWithArticleAndCommentLikesAndUser(commentId)).willReturn(Optional.of(testComment));
 
         given(commentLikeRepository.existsByCommentIdAndUserId(commentId, userId)).willReturn(false);
         given(commentLikeRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
@@ -198,7 +198,7 @@ class CommentLikeServiceTest {
         verify(eventPublisher, times(1)).publishEvent(notificationEventCaptor.capture());
         NotificationCreateEvent published = notificationEventCaptor.getValue();
 
-        assertThat(published.resourceId()).isEqualTo(commentId);
+        assertThat(published.resourceId()).isEqualTo(userId);
     }
 
     @Test
@@ -216,7 +216,7 @@ class CommentLikeServiceTest {
             .commentLikes(Collections.emptyList())
             .article(new NewsArticle())
             .build();
-        given(commentRepository.findById(commentId)).willReturn(Optional.of(testComment));
+        given(commentRepository.findByIdWithArticleAndCommentLikesAndUser(commentId)).willReturn(Optional.of(testComment));
 
         CommentLike stub = CommentLike.builder()
             .user(testUser)

@@ -24,7 +24,7 @@ public class CommentHistoryValidator implements UserActivityValidator<CommentHis
 				Map.of("articleId", String.valueOf(comment.articleId())));
 		}
 
-		if (Objects.isNull(comment.likeCount()) || comment.likeCount() <= 0) {
+		if (Objects.isNull(comment.likeCount()) || comment.likeCount() < 0) {
 			throw new UserActivityDomainException("댓글 좋아요 수 가 유효하지 않습니다.",
 				Map.of("likeCount", String.valueOf(comment.likeCount())));
 		}

@@ -32,7 +32,7 @@ public class CommentController {
             @RequestParam(required = false) String direction,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) String after,
-            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false, defaultValue = "0") Integer limit,
             @RequestHeader(value = "Monew-Request-User-ID", required = false) Long requestUserId
     ) {
         // 잘못된 articleId 값 처리: articleId가 null일 때는 모든 댓글을 조회하도록 설정
@@ -40,12 +40,14 @@ public class CommentController {
             return ResponseEntity.badRequest().build(); // 잘못된 articleId에 대해 400 반환
         }
 
+        limit = limit == 0 ? 10 : limit;
+
         // 잘못된 limit 값 처리: limit이 0 이하일 경우 400 반환
-        if(limit != null && limit <= 0) {
+        if(limit <= 0) {
             return ResponseEntity.badRequest().build(); // 잘못된 limit 값에 대해 400 반환
         }
 
-        if (orderBy == null || direction == null || limit == null || requestUserId == null) {
+        if (orderBy == null || direction == null || requestUserId == null) {
             return ResponseEntity.badRequest().build(); //  400 Bad Request
         }
 
@@ -67,15 +69,14 @@ public class CommentController {
     }
 
     @PostMapping("/{commentId}/comment-likes")
-    public ResponseEntity<CommentLikeDto> likeComment(@PathVariable Long commentId,
-                                                      @RequestHeader("Monew-Request-User-ID") Long userId
+    public ResponseEntity<CommentLikeDto> likeComment(@PathVariable Long commentId, @RequestHeader(value = "Monew-Request-User-ID") Long userId
     ) {
         CommentLikeDto dto = commentService.likeComment(commentId, userId);
         return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/{commentId}/comment-likes")
-    public ResponseEntity<Void> cancelCommentLike(@PathVariable Long commentId, @RequestHeader("Monew-Request-User-ID") Long userId) {
+    public ResponseEntity<Void> cancelCommentLike(@PathVariable Long commentId, @RequestHeader(value = "Monew-Request-User-ID") Long userId) {
         log.info("[cancelCommentLike] 댓글 좋아요 취소 요청: commentId={}, userId={}", commentId, userId);
         commentLikeService.cancelLike(commentId, userId);
         return ResponseEntity.ok().build();
