@@ -17,6 +17,6 @@ public interface ArticleViewMapper {
   @Mapping(target = "articlePublishedDate",   expression = "java(articleView.getArticle().getArticlePublishedDate().toString())")
   @Mapping(target = "articleSummary",         source = "articleView.article.articleSummary")
   @Mapping(target = "articleCommentCount",    source = "commentCount")
-  @Mapping(target = "articleViewCount",       source = "viewCount")
+  @Mapping(target = "articleViewCount",     source = "viewCount")
   ArticleViewDto toDto(ArticleView articleView, long commentCount, long viewCount);
 }

@@ -15,6 +15,7 @@ import com.sprint.part3.sb01_monew_team6.exception.ErrorCode;
 import com.sprint.part3.sb01_monew_team6.exception.news.NewsException;
 import com.sprint.part3.sb01_monew_team6.mapper.PageResponseMapper;
 import com.sprint.part3.sb01_monew_team6.repository.CommentRepository;
+import com.sprint.part3.sb01_monew_team6.repository.news.ArticleViewRepository;
 import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.service.ArticleService;
 import java.io.IOException;
@@ -53,6 +54,7 @@ public class ArticleServiceImpl implements ArticleService {
   private final PageResponseMapper pageResponseMapper;
   private final S3Client s3Client;
   private final ObjectMapper objectMapper;
+  private final ArticleViewRepository articleViewRepository;
   @Value("${storage.s3.backup-bucket}")
   private String bucketName;
 
@@ -105,12 +107,20 @@ public class ArticleServiceImpl implements ArticleService {
 
     // Entity → DTO 변환
     List<ArticleDto> dtos = entities.stream()
-        .map(a -> ArticleDto.from(
-            a,
-            commentRepository.countByArticleIdAndIsDeletedFalse(a.getId()),
-            0L,
-            false
-        ))
+        .map(a -> {
+          long commentCnt   = commentRepository.countByArticleIdAndIsDeletedFalse(a.getId());
+          long viewCnt      = articleViewRepository.countByArticleId(a.getId());
+          boolean viewedByMe = articleViewRepository
+              .existsByArticleIdAndUserId(a.getId(), request.userId());
+
+          // MapStruct 매퍼 (or static factory) 호출
+          return ArticleDto.from(
+              a,
+              commentCnt,
+              viewCnt,
+              viewedByMe
+          );
+        })
         .collect(Collectors.toList());
 
     // Slice 생성
