@@ -7,6 +7,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.sprint.part3.sb01_monew_team6.dto.news.ArticleViewDto;
 import com.sprint.part3.sb01_monew_team6.entity.ArticleView;
@@ -20,6 +23,7 @@ import com.sprint.part3.sb01_monew_team6.repository.news.NewsArticleRepository;
 import com.sprint.part3.sb01_monew_team6.repository.UserRepository;
 import com.sprint.part3.sb01_monew_team6.service.impl.ArticleViewServiceImpl;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,7 +31,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.MockMvc;
 
 @ExtendWith(MockitoExtension.class)
 public class ArticleViewServiceImplTest {
@@ -210,4 +216,19 @@ public class ArticleViewServiceImplTest {
     then(articleViewRepository).should(never()).save(any(ArticleView.class));
   }
 
+  @DisplayName("getSources() 호출 시 모든 enum 값 반환")
+  @Test
+  void getSources_returnsAllEnumNames() {
+    // when
+    List<String> sources = service.getSources();
+
+    // then
+    assertThat(sources).containsExactly(
+        "NAVER",
+        "JTBC",
+        "HANKYUNG",
+        "YEONHAP",
+        "YEONHAP_POLITICS"
+    );
+  }
 }
